@@ -114,7 +114,7 @@ export default function LetterScreen() {
 
             {/* Letter body */}
             <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 11, color: "#4A2F18", marginBottom: 12 }}>
-              To my daughter, Maya —
+              To my daughter, Maya
             </Text>
 
             <Text style={{ fontFamily: "Georgia", fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 14 }}>
@@ -126,7 +126,7 @@ export default function LetterScreen() {
             </Text>
 
             <Text style={{ fontFamily: "Georgia", fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 20 }}>
-              Most of all, I leave you my certainty — that you were the bravest thing I ever did.
+              Most of all, I leave you my certainty: that you were the bravest thing I ever did.
             </Text>
 
             <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 13, color: "#4A2F18", marginBottom: 20 }}>

@@ -1,235 +1,605 @@
 import { useRef, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, Animated, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Animated,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Feather } from "@expo/vector-icons";
 
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
+// ─── Brand tokens ─────────────────────────────────────────────────────────────
+const BG = "#F5EDDF";
 const INK = "#2D241A";
 const INK_SOFT = "#4A3D2E";
 const INK_MUTED = "#8A7A66";
-const CREAM = "#FAF3E2";
-const BUTTER = "#F5DEAA";
+const AMBER = "#D27F14";
+const AMBER_DEEP = "#B06600";
+const CREAM_PAPER = "#FAF3E2";
+const SAGE = "#9CAF88";
+const SAGE_DEEP = "#6F8564";
+const RULE = "rgba(74,47,24,0.14)";
 
-const UPCOMING = [
-  { id: "1", day: "14", month: "JUN", title: "Maya's 18th Birthday", sub: "Sealed letter ready to send", dot: AMBER },
-  { id: "2", day: "25", month: "DEC", title: "Christmas — whole family", sub: "4 min voice note, not yet sealed", dot: "#9CAF88" },
-  { id: "3", day: "03", month: "AUG", title: "Dad's retirement", sub: "Milestone trigger · draft started", dot: AMBER },
+// ─── Data ─────────────────────────────────────────────────────────────────────
+type TaskStatus = "done" | "prog" | "pending";
+
+interface Task {
+  id: string;
+  status: TaskStatus;
+  title: string;
+  sub: string;
+  progress?: number; // 0–1, only for "prog"
+}
+
+const TASKS: Task[] = [
+  {
+    id: "1",
+    status: "done",
+    title: "Medicare Part B — coordination of benefits",
+    sub: "Confirmed · we flagged 2 unused preventive benefits · brief sent to your email",
+  },
+  {
+    id: "2",
+    status: "prog",
+    title: "Hospice eligibility review · Lila",
+    sub: "Step 2 of 4 · waiting on PCP form · Naomi will follow up Thursday",
+    progress: 0.55,
+  },
+  {
+    id: "3",
+    status: "prog",
+    title: "Executor draft · for Maya",
+    sub: "Draft ready for your review · 4 minutes · sealed when you say so",
+    progress: 0.8,
+  },
+  {
+    id: "4",
+    status: "pending",
+    title: "Annual benefits sweep · September",
+    sub: "We'll re-check Parts A–D · no action needed from you",
+  },
 ];
 
-const AUDIO_STORIES = [
-  { id: "1", title: "The porch in Alabama", person: "Grandma Ruth", duration: "3:42" },
-  { id: "2", title: "Our first Sunday dinner", person: "Dad", duration: "2:18" },
-];
+const CHIPS = ["Medicare", "Hospice", "Estate logistics"];
 
-const CHART_BARS = [60, 72, 55, 80];
+// ─── Task icon ─────────────────────────────────────────────────────────────────
+function TaskIco({ status }: { status: TaskStatus }) {
+  if (status === "done") {
+    // filled sage circle with a checkmark character
+    return (
+      <View
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 11,
+          backgroundColor: SAGE_DEEP,
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: 2,
+          flexShrink: 0,
+        }}
+      >
+        <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "700", lineHeight: 14 }}>
+          ✓
+        </Text>
+      </View>
+    );
+  }
+  if (status === "prog") {
+    // filled amber circle with a bullet
+    return (
+      <View
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 11,
+          backgroundColor: AMBER,
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: 2,
+          flexShrink: 0,
+        }}
+      >
+        <View
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: "#FFFFFF",
+          }}
+        />
+      </View>
+    );
+  }
+  // pending — hollow ring
+  return (
+    <View
+      style={{
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        backgroundColor: "transparent",
+        borderWidth: 1,
+        borderColor: "rgba(110,80,40,0.4)",
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: 2,
+        flexShrink: 0,
+      }}
+    >
+      <View
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: INK_MUTED,
+          opacity: 0.35,
+        }}
+      />
+    </View>
+  );
+}
 
+// ─── Task row ──────────────────────────────────────────────────────────────────
+function TaskRow({ task }: { task: Task }) {
+  const isDone = task.status === "done";
+  const isProg = task.status === "prog";
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        gap: 10,
+        backgroundColor: isDone
+          ? "rgba(156,175,136,0.07)"
+          : "rgba(255,250,232,0.7)",
+        borderWidth: 1,
+        borderColor: isDone
+          ? "rgba(110,139,94,0.4)"
+          : "rgba(184,132,60,0.22)",
+        borderRadius: 12,
+        paddingHorizontal: 13,
+        paddingVertical: 14,
+        alignItems: "flex-start",
+      }}
+    >
+      <TaskIco status={task.status} />
+
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontFamily: "Georgia",
+            fontSize: 14.5,
+            color: INK,
+            lineHeight: 20,
+          }}
+        >
+          {task.title}
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Georgia",
+            fontStyle: "italic",
+            fontSize: 12,
+            color: INK_SOFT,
+            lineHeight: 17,
+            marginTop: 3,
+          }}
+        >
+          {task.sub}
+        </Text>
+
+        {/* Progress bar — only for in-progress tasks */}
+        {isProg && task.progress !== undefined && (
+          <View
+            style={{
+              marginTop: 8,
+              height: 3,
+              backgroundColor: "rgba(74,47,24,0.10)",
+              borderRadius: 999,
+              overflow: "hidden",
+            }}
+          >
+            <View
+              style={{
+                height: 3,
+                width: `${task.progress * 100}%`,
+                backgroundColor: AMBER,
+                borderRadius: 999,
+              }}
+            />
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function ConciergeScreen() {
   const router = useRouter();
   const opacity = useRef(new Animated.Value(0)).current;
-  const slideY = useRef(new Animated.Value(20)).current;
+  const slideY = useRef(new Animated.Value(16)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-      Animated.timing(slideY, { toValue: 0, duration: 600, useNativeDriver: true }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideY, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: AMBER }}>
-      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-        {/* Amber hero section */}
-        <SafeAreaView edges={["top"]}>
-          <Animated.View style={{ opacity, transform: [{ translateY: slideY }] }}>
-            {/* App header */}
-            <View style={{ paddingHorizontal: 22, paddingTop: 6, paddingBottom: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Feather name="menu" size={18} color="rgba(45,36,26,0.55)" />
-              <Text style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 3.2, color: "rgba(45,36,26,0.55)", textTransform: "uppercase" }}>
-                HEARTLOOM
-              </Text>
-              <Feather name="bell" size={17} color="rgba(45,36,26,0.55)" />
-            </View>
+    <View style={{ flex: 1, backgroundColor: BG }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 
-            {/* Hero text */}
-            <View style={{ paddingHorizontal: 22, paddingTop: 10, paddingBottom: 24 }}>
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 26, fontWeight: "500", color: "#FFFFFF", lineHeight: 33, marginBottom: 9 }}>
-                Opportunities{"\n"}to say{" "}
-                <Text style={{ fontStyle: "italic", color: "rgba(255,255,255,0.82)" }}>I love you.</Text>
-              </Text>
-              <Text style={{ fontSize: 12.5, lineHeight: 19, color: "rgba(255,255,255,0.78)", maxWidth: 280 }}>
-                Gentle cues for the moments that matter — birthdays, milestones, quiet Sundays.
-              </Text>
-            </View>
-          </Animated.View>
-        </SafeAreaView>
-
-        {/* Wave transition */}
-        <View style={{ height: 32, backgroundColor: BUTTER, borderTopLeftRadius: 600, borderTopRightRadius: 600, marginTop: -2 }} />
-
-        {/* ── Butter/cream body ── */}
-        <Animated.View style={{ backgroundColor: BUTTER, opacity, transform: [{ translateY: slideY }] }}>
-
-          {/* Chart card */}
-          <View style={{ marginHorizontal: 18, marginTop: -10, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, shadowColor: INK, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 16, elevation: 6, marginBottom: 14 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: INK }}>Engagement this week</Text>
-              <Text style={{ color: INK_MUTED, fontSize: 14 }}>›</Text>
-            </View>
-            {/* Simple bar chart */}
-            <View style={{ height: 72, flexDirection: "row", alignItems: "flex-end", gap: 6, paddingHorizontal: 4 }}>
-              {CHART_BARS.map((h, i) => (
-                <View key={i} style={{ flex: 1, height: `${h}%` as any, backgroundColor: i === 3 ? AMBER : "#E8A851", borderRadius: 3, opacity: i === 3 ? 1 : 0.65 }} />
-              ))}
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 4 }}>
-              {["Mon", "Thu", "Tue", "Wed"].map((d) => (
-                <Text key={d} style={{ fontSize: 8, color: INK_MUTED }}>{d}</Text>
-              ))}
-            </View>
-          </View>
-
-          {/* Context-aware card */}
-          <View style={{ marginHorizontal: 18, backgroundColor: "#FFFFFF", borderRadius: 16, padding: 14, borderLeftWidth: 3, borderLeftColor: AMBER, shadowColor: INK, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 3, marginBottom: 20 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: BUTTER, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ fontSize: 13, color: AMBER_DEEP }}>✉</Text>
-              </View>
-              <Text style={{ fontSize: 11.5, fontWeight: "700", color: INK, flex: 1 }}>Context-aware{"\n"}message</Text>
-              <Text style={{ color: INK_MUTED, fontSize: 16 }}>×</Text>
-            </View>
-            <Text style={{ fontSize: 11, lineHeight: 16, color: INK_SOFT, marginBottom: 12 }}>
-              Gentle prompts suggest the right moment to send a note, based on upcoming family milestones.
+        {/* ── Header ────────────────────────────────────────────────────── */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingTop: 8,
+            paddingBottom: 12,
+            backgroundColor: BG,
+            borderBottomWidth: 1,
+            borderBottomColor: RULE,
+          }}
+        >
+          {/* Back button */}
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => ({
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              borderWidth: 1,
+              borderColor: RULE,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Text style={{ fontSize: 22, color: INK_SOFT, lineHeight: 26 }}>
+              ‹
             </Text>
-            {/* Message input */}
-            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: CREAM, borderRadius: 24, paddingHorizontal: 14, paddingVertical: 8 }}>
-              <TextInput
-                placeholder="Write a message…"
-                placeholderTextColor={INK_MUTED}
-                style={{ flex: 1, fontSize: 11.5, color: INK_SOFT }}
-                editable={false}
-              />
-              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: AMBER, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ color: "#FFFFFF", fontSize: 10 }}>➤</Text>
-              </View>
-            </View>
-          </View>
+          </Pressable>
 
-          {/* Divider */}
-          <View style={{ height: 1, backgroundColor: "rgba(45,36,26,0.07)", marginHorizontal: 20, marginBottom: 20 }} />
+          {/* Title */}
+          <Text
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontFamily: "Georgia",
+              fontStyle: "italic",
+              fontSize: 14,
+              color: INK_SOFT,
+            }}
+          >
+            Concierge
+          </Text>
 
-          {/* Upcoming section */}
-          <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
-            <Text style={{ fontSize: 10, letterSpacing: 1.8, textTransform: "uppercase", color: INK_MUTED, fontWeight: "700", marginBottom: 12 }}>
-              Upcoming
-            </Text>
-            <View style={{ gap: 8 }}>
-              {UPCOMING.map((item) => (
-                <Pressable
-                  key={item.id}
-                  onPress={() => router.push("/letter")}
-                  style={({ pressed }) => ({
-                    backgroundColor: "#EBE0CA",
-                    borderRadius: 14,
-                    padding: 12,
-                    flexDirection: "row",
-                    gap: 10,
-                    alignItems: "center",
-                    opacity: pressed ? 0.85 : 1,
-                    borderWidth: 1,
-                    borderColor: "rgba(45,36,26,0.06)",
-                  })}
-                >
-                  {/* Date badge */}
-                  <View style={{ backgroundColor: "#6F8564", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, alignItems: "center", minWidth: 40 }}>
-                    <Text style={{ fontFamily: "Georgia", fontSize: 18, fontWeight: "600", color: "#FFFFFF", lineHeight: 20 }}>{item.day}</Text>
-                    <Text style={{ fontSize: 7.5, letterSpacing: 1.5, color: "rgba(255,255,255,0.85)", marginTop: 1 }}>{item.month}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: INK, marginBottom: 2 }}>{item.title}</Text>
-                    <Text style={{ fontSize: 10, color: INK_SOFT }}>{item.sub}</Text>
-                  </View>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: item.dot }} />
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          {/* Divider */}
-          <View style={{ height: 1, backgroundColor: "rgba(45,36,26,0.07)", marginHorizontal: 20, marginBottom: 20 }} />
-
-          {/* Audio legacy */}
-          <View style={{ paddingHorizontal: 20, paddingBottom: 32 }}>
-            {/* Today's prompt */}
-            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 14, padding: 14, borderLeftWidth: 3, borderLeftColor: AMBER, marginBottom: 14, shadowColor: INK, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
-              <Text style={{ fontSize: 8.5, fontWeight: "700", letterSpacing: 1.8, color: AMBER_DEEP, marginBottom: 5 }}>TODAY'S PROMPT</Text>
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 13.5, lineHeight: 19, color: INK, fontWeight: "500" }}>
-                "Tell me about the first home you ever loved."
-              </Text>
-            </View>
-
-            {/* Record button */}
-            <Pressable
-              onPress={() => router.push({ pathname: "/record", params: { promptId: "2" } })}
-              style={({ pressed }) => ({
-                alignItems: "center",
-                marginBottom: 14,
-                opacity: pressed ? 0.85 : 1,
-              })}
+          {/* "Available" badge */}
+          <View style={{ width: 48, alignItems: "flex-end" }}>
+            <Text
+              style={{
+                fontSize: 11,
+                letterSpacing: 0.16 * 11,
+                color: INK_MUTED,
+              }}
             >
-              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: AMBER, alignItems: "center", justifyContent: "center", shadowColor: AMBER, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.5, shadowRadius: 12, elevation: 6, borderWidth: 4, borderColor: "rgba(210,127,20,0.2)" }}>
-                <View style={{ width: 16, height: 16, borderRadius: 3, backgroundColor: "#FFFFFF" }} />
-              </View>
-              <Text style={{ marginTop: 8, fontSize: 10.5, color: INK_SOFT, letterSpacing: 0.5 }}>Tap to record</Text>
-            </Pressable>
+              Available
+            </Text>
+          </View>
+        </View>
 
-            {/* Saved stories */}
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-              <Text style={{ fontSize: 14, fontFamily: "Georgia", fontWeight: "500", color: INK }}>Saved stories</Text>
-              <Pressable onPress={() => router.push("/stories")} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-                <Text style={{ fontSize: 10, color: AMBER_DEEP, fontWeight: "500", textDecorationLine: "underline" }}>See all</Text>
-              </Pressable>
-            </View>
-            <View style={{ gap: 8 }}>
-              {AUDIO_STORIES.map((story) => (
-                <Pressable
-                  key={story.id}
-                  onPress={() => router.push("/stories")}
-                  style={({ pressed }) => ({
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 13,
-                    padding: 10,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                    opacity: pressed ? 0.85 : 1,
-                    shadowColor: INK,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 4,
-                    elevation: 1,
-                  })}
-                >
-                  <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: AMBER, alignItems: "center", justifyContent: "center" }}>
-                    <Text style={{ color: "#FFFFFF", fontSize: 9, marginLeft: 1 }}>▶</Text>
+        {/* ── Scrollable content ────────────────────────────────────────── */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
+          <Animated.View
+            style={{ opacity, transform: [{ translateY: slideY }] }}
+          >
+            {/* ── Naomi card ──────────────────────────────────────────── */}
+            <View
+              style={{
+                marginHorizontal: 22,
+                marginTop: 20,
+                backgroundColor: "rgba(255,250,232,0.7)",
+                borderWidth: 1,
+                borderColor: "rgba(184,132,60,0.22)",
+                borderRadius: 16,
+                padding: 14,
+                // matching pt-naomi: background with radial gradient feel
+              }}
+            >
+              {/* Top row: avatar + text */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 14,
+                  alignItems: "flex-start",
+                  marginBottom: 10,
+                }}
+              >
+                {/* Avatar with online dot */}
+                <View style={{ position: "relative", flexShrink: 0 }}>
+                  {/* Gradient avatar: linear-gradient(135deg, sage, #4f6940) */}
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 28,
+                      backgroundColor: SAGE_DEEP,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Georgia",
+                        fontSize: 22,
+                        color: "#FFFFFF",
+                        fontWeight: "600",
+                        letterSpacing: 0.04 * 22,
+                      }}
+                    >
+                      N
+                    </Text>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: "Georgia", fontSize: 12, fontWeight: "600", color: INK }}>{story.title}</Text>
-                    <Text style={{ fontSize: 9.5, color: INK_MUTED, marginTop: 1 }}>{story.person} · {story.duration}</Text>
-                  </View>
-                  {/* Mini waveform */}
-                  <View style={{ flexDirection: "row", gap: 2, alignItems: "center" }}>
-                    {[7, 12, 18, 10, 15, 8].map((h, i) => (
-                      <View key={i} style={{ width: 2, height: h, borderRadius: 1, backgroundColor: "#8B6039", opacity: 0.55 }} />
+                  {/* Online dot */}
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 2,
+                      right: 2,
+                      width: 12,
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: SAGE_DEEP,
+                      borderWidth: 2,
+                      borderColor: BG,
+                    }}
+                  />
+                </View>
+
+                {/* Name + subtitle + chips */}
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: "Georgia",
+                      fontSize: 16,
+                      color: INK,
+                      lineHeight: 21,
+                    }}
+                  >
+                    Naomi Park, RN, MSW
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Georgia",
+                      fontStyle: "italic",
+                      fontSize: 12,
+                      color: INK_MUTED,
+                      marginTop: 2,
+                      marginBottom: 6,
+                      lineHeight: 17,
+                    }}
+                  >
+                    Your Concierge · 11 years in geriatric care · Bay Area
+                  </Text>
+
+                  {/* Specialty chips */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      gap: 4,
+                    }}
+                  >
+                    {CHIPS.map((chip) => (
+                      <View
+                        key={chip}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: RULE,
+                          backgroundColor: CREAM_PAPER,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          borderRadius: 24,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            letterSpacing: 0.12 * 10,
+                            color: INK,
+                            fontWeight: "600",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {chip}
+                        </Text>
+                      </View>
                     ))}
                   </View>
+                </View>
+              </View>
+
+              {/* Action buttons row */}
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                {/* Primary: Message Naomi */}
+                <Pressable
+                  onPress={() => router.push("/(tabs)/chat")}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    minHeight: 44,
+                    backgroundColor: INK,
+                    borderRadius: 26,
+                    paddingVertical: 10,
+                    paddingHorizontal: 18,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13.5,
+                      fontWeight: "500",
+                      color: BG,
+                    }}
+                  >
+                    Message Naomi
+                  </Text>
                 </Pressable>
+
+                {/* Ghost: Schedule a call */}
+                <Pressable
+                  onPress={() =>
+                    Alert.alert(
+                      "Schedule a call",
+                      "Call scheduling coming soon."
+                    )
+                  }
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    minHeight: 44,
+                    backgroundColor: "transparent",
+                    borderWidth: 1,
+                    borderColor: RULE,
+                    borderRadius: 26,
+                    paddingVertical: 10,
+                    paddingHorizontal: 18,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: pressed ? 0.75 : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13.5,
+                      fontWeight: "500",
+                      color: INK,
+                    }}
+                  >
+                    Schedule a call
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* ── Section title: "In motion for you" ──────────────────── */}
+            <Text
+              style={{
+                marginTop: 22,
+                marginBottom: 8,
+                marginHorizontal: 22,
+                fontFamily: "System",
+                fontSize: 10,
+                letterSpacing: 0.32 * 10,
+                textTransform: "uppercase",
+                color: INK_MUTED,
+              }}
+            >
+              In motion for you
+            </Text>
+
+            {/* ── Task list ───────────────────────────────────────────── */}
+            <View
+              style={{
+                marginHorizontal: 22,
+                gap: 8,
+              }}
+            >
+              {TASKS.map((task) => (
+                <TaskRow key={task.id} task={task} />
               ))}
             </View>
-          </View>
-        </Animated.View>
-      </ScrollView>
+
+            {/* ── Promise card ────────────────────────────────────────── */}
+            <View
+              style={{
+                marginHorizontal: 22,
+                marginTop: 20,
+                backgroundColor: "#2C1D10",
+                borderWidth: 1,
+                borderColor: "rgba(210,127,20,0.20)",
+                borderRadius: 16,
+                padding: 18,
+                paddingBottom: 16,
+                overflow: "hidden",
+              }}
+            >
+              {/* Ambient amber glow — simulated with a View overlay */}
+              <View
+                style={{
+                  position: "absolute",
+                  top: -40,
+                  right: -40,
+                  width: 140,
+                  height: 140,
+                  borderRadius: 70,
+                  backgroundColor: "rgba(210,127,20,0.22)",
+                  pointerEvents: "none",
+                }}
+              />
+
+              <Text
+                style={{
+                  fontFamily: "System",
+                  fontSize: 10.5,
+                  letterSpacing: 0.28 * 10.5,
+                  color: "rgba(245,224,165,0.7)",
+                  textTransform: "uppercase",
+                  marginBottom: 0,
+                }}
+              >
+                THE LAND OF PROMISE
+              </Text>
+
+              <Text
+                style={{
+                  fontFamily: "Georgia",
+                  fontStyle: "italic",
+                  fontSize: 18,
+                  lineHeight: 24,
+                  color: BG,
+                  marginTop: 10,
+                  marginBottom: 8,
+                }}
+              >
+                "You will never sit on hold for your family again."
+              </Text>
+
+              <Text
+                style={{
+                  fontFamily: "Georgia",
+                  fontStyle: "italic",
+                  fontSize: 13,
+                  color: "rgba(245,224,165,0.78)",
+                  lineHeight: 19,
+                }}
+              >
+                A real human, in your timezone, who knows your family's story before they pick up.
+              </Text>
+            </View>
+
+          </Animated.View>
+        </ScrollView>
+
+        <SafeAreaView edges={["bottom"]} />
+      </SafeAreaView>
     </View>
   );
 }

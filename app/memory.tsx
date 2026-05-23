@@ -1,157 +1,454 @@
-import { useRef, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Animated,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
-const AMBER = "#D27F14";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const SCREEN_BG = "#EAD9C0";
+// ── Colors ──────────────────────────────────────────────────────────────────
+const BG         = "#F5EDDF";
+const INK        = "#2D241A";
+const INK_SOFT   = "#4A3D2E";
+const INK_MUTED  = "#8A7A66";
+const AMBER      = "#D27F14";
+const AMBER_DEEP = "#B06600";
+const AMBER_DIM  = "#6B4A2B";
+const WHITE      = "#FFFFFF";
+const PARCHMENT  = "#FBF2DD";
 
-const MEMORY_DATA: Record<string, { year: string; title: string; description: string; icon: string; color: string; person: string; stories: number }> = {
-  "1": { year: "1998", title: "Wedding Day", description: "The chapel on the lake at Tahoe. It rained the night before and the morning was impossibly clear. Every family member within a hundred miles was there.", icon: "♡", color: "#6F8564", person: "Eleanor & Robert", stories: 4 },
-  "2": { year: "2006", title: "First Letter", description: "The first letter ever sealed in the family — written in one sitting on a Thursday night. It was for Maya, though Maya wasn't born yet.", icon: "✉", color: "#4A2F18", person: "Eleanor", stories: 1 },
-  "3": { year: "2012", title: "A Summer", description: "The long summer where everyone gathered at the cabin. No phones, no plans. Just the lake and whoever showed up.", icon: "☀", color: "#5C3A1E", person: "The Family", stories: 7 },
-  "4": { year: "2019", title: "Graduation", description: "Maya graduated top of her class. The speech she gave made the whole auditorium go quiet.", icon: "✦", color: "#FAF3E2", person: "Maya", stories: 3 },
-  "5": { year: "2034", title: "Maya's Day", description: "A letter sealed and waiting. It will open the moment the day arrives. She doesn't know it exists yet.", icon: "★", color: AMBER, person: "For Maya", stories: 0 },
-};
+// ── Waveform bars from prototype SVG ─────────────────────────────────────────
+// Two groups: played (amber) vs unplayed (dim brown)
+// Each entry: x position in original 320-wide SVG → relative width bar heights
+const WAVE_PLAYED = [
+  12, 20, 32, 16, 40, 24, 48, 32, 20, 56, 36, 16, 32, 44, 20, 52,
+];
+const WAVE_UNPLAYED = [
+  24, 32, 16, 40, 20, 48, 24, 32, 16, 36, 20, 44, 32, 16, 24, 32,
+  20, 32, 16, 48, 24, 20, 32, 16, 40, 20, 32, 16, 24, 32, 20, 32, 32,
+];
+// Playhead at 30% through the track
+const PLAYHEAD_PCT = 0.3;
+
+// ── Voice list ────────────────────────────────────────────────────────────────
+const VOICES = [
+  {
+    initials: "EH",
+    bgColor: AMBER,
+    name: "Eleanor",
+    detail: "4 recordings · 38 min",
+    last: "the sound of the screen door",
+  },
+  {
+    initials: "JH",
+    bgColor: "#4A6741",
+    name: "James",
+    detail: "6 recordings · 1h 12 min",
+    last: "how I asked your mother to marry me",
+  },
+  {
+    initials: "LM",
+    bgColor: "#F5EDDF",
+    name: "Lila (Mom)",
+    detail: "11 recordings · 3h 04 min",
+    last: "1976, the summer of the brown station wagon",
+  },
+  {
+    initials: "MR",
+    bgColor: "#3A2D24",
+    name: "Maya",
+    detail: "2 recordings · 18 min",
+    last: "what I want to remember about right now",
+  },
+];
 
 export default function MemoryScreen() {
-  const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const memory = MEMORY_DATA[id ?? "1"] ?? MEMORY_DATA["1"];
-
-  const opacity = useRef(new Animated.Value(0)).current;
-  const slideY = useRef(new Animated.Value(20)).current;
-  const circleScale = useRef(new Animated.Value(0.7)).current;
+  const router  = useRouter();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 450, useNativeDriver: true }),
-      Animated.timing(slideY, { toValue: 0, duration: 450, useNativeDriver: true }),
-      Animated.spring(circleScale, { toValue: 1, tension: 80, friction: 9, useNativeDriver: true }),
+      Animated.timing(fadeAnim,  { toValue: 1, duration: 380, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 380, useNativeDriver: true }),
     ]).start();
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: SCREEN_BG }}>
+    <View style={{ flex: 1, backgroundColor: BG }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-        {/* Header */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14, flexDirection: "row", alignItems: "center" }}>
+        {/* ── Header ──────────────────────────────────────────────────── */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(74,47,24,0.14)",
+            backgroundColor: BG,
+          }}
+        >
+          {/* Back button */}
           <Pressable
             onPress={() => router.back()}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginRight: 12, padding: 4 })}
+            style={({ pressed }) => ({
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              borderWidth: 1,
+              borderColor: "rgba(74,47,24,0.14)",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.65 : 1,
+            })}
+            accessibilityLabel="Back to Home"
           >
-            <Feather name="x" size={20} color={INK_SOFT} />
+            <Text style={{ fontSize: 20, color: INK_SOFT, lineHeight: 24, marginTop: -1 }}>‹</Text>
           </Pressable>
-          <Text style={{ flex: 1, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", fontWeight: "700", color: INK_MUTED }}>
-            Memory
+
+          {/* Title */}
+          <Text
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontFamily: "Georgia",
+              fontStyle: "italic",
+              fontSize: 14,
+              color: INK_SOFT,
+            }}
+          >
+            Audio Legacy
+          </Text>
+
+          {/* Step badge */}
+          <Text
+            style={{
+              fontSize: 11,
+              letterSpacing: 1.4,
+              color: INK_MUTED,
+              minWidth: 68,
+              textAlign: "right",
+            }}
+          >
+            12h · 7 voices
           </Text>
         </View>
 
+        {/* ── Body ────────────────────────────────────────────────────── */}
         <Animated.ScrollView
           showsVerticalScrollIndicator={false}
-          style={{ opacity, transform: [{ translateY: slideY }] }}
-          contentContainerStyle={{ padding: 24, alignItems: "center", paddingBottom: 48 }}
+          style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 26, paddingBottom: 48 }}
         >
-          {/* Circle icon */}
-          <Animated.View
+          {/* Eyebrow */}
+          <Text
             style={{
-              width: 120,
-              height: 120,
-              borderRadius: 60,
-              backgroundColor: memory.color,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 24,
-              transform: [{ scale: circleScale }],
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.25,
-              shadowRadius: 16,
-              elevation: 8,
-              borderWidth: memory.color === "#FAF3E2" ? 1.5 : 0,
-              borderColor: "rgba(45,36,26,0.1)",
+              fontSize: 10,
+              fontWeight: "700",
+              letterSpacing: 1.8,
+              color: INK_MUTED,
+              marginBottom: 8,
             }}
           >
-            <Text style={{ fontSize: 36 }}>{memory.icon}</Text>
-          </Animated.View>
-
-          <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: INK_MUTED, fontWeight: "700", marginBottom: 6 }}>
-            {memory.year}
-          </Text>
-          <Text style={{ fontFamily: "Georgia", fontSize: 26, fontWeight: "600", color: INK, textAlign: "center", marginBottom: 8 }}>
-            {memory.title}
-          </Text>
-          <Text style={{ fontSize: 12, color: INK_MUTED, marginBottom: 24 }}>
-            {memory.person}
+            ORAL HISTORY
           </Text>
 
-          {/* Description */}
-          <View style={{ backgroundColor: "rgba(255,255,255,0.6)", borderRadius: 16, padding: 20, width: "100%", marginBottom: 20, borderWidth: 1, borderColor: "rgba(45,36,26,0.07)" }}>
-            <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 15, lineHeight: 23, color: INK_SOFT, textAlign: "center" }}>
-              "{memory.description}"
-            </Text>
+          {/* Display heading */}
+          <Text
+            style={{
+              fontFamily: "Georgia",
+              fontSize: 24,
+              fontWeight: "500",
+              color: INK,
+              lineHeight: 30,
+              letterSpacing: -0.3,
+              marginBottom: 22,
+            }}
+          >
+            Their voice.{"\n"}
+            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>Pressed into time.</Text>
+          </Text>
+
+          {/* ── Audio player card ───────────────────────────────────── */}
+          <View
+            style={{
+              backgroundColor: WHITE,
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 28,
+              shadowColor: INK,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 4,
+            }}
+          >
+            {/* Card head: avatar + title */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: AMBER,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "700", color: WHITE }}>EH</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "Georgia",
+                    fontStyle: "italic",
+                    fontSize: 14,
+                    color: INK,
+                    lineHeight: 19,
+                    marginBottom: 2,
+                  }}
+                >
+                  "the sound of the screen door"
+                </Text>
+                <Text style={{ fontSize: 11, color: INK_MUTED }}>
+                  Eleanor M. Hayes · May 13, 2026 · 1:42
+                </Text>
+              </View>
+            </View>
+
+            {/* Waveform */}
+            <View
+              style={{
+                height: 60,
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 12,
+                position: "relative",
+              }}
+            >
+              {/* Played portion */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 2,
+                  width: `${PLAYHEAD_PCT * 100}%`,
+                  height: 60,
+                }}
+              >
+                {WAVE_PLAYED.map((h, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: (h / 60) * 56,
+                      backgroundColor: AMBER,
+                      borderRadius: 2,
+                      opacity: 0.95,
+                    }}
+                  />
+                ))}
+              </View>
+
+              {/* Playhead line */}
+              <View
+                style={{
+                  width: 2,
+                  height: 60,
+                  backgroundColor: AMBER_DEEP,
+                  marginHorizontal: 1,
+                }}
+              />
+
+              {/* Unplayed portion */}
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 2,
+                  height: 60,
+                }}
+              >
+                {WAVE_UNPLAYED.map((h, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: (h / 60) * 56,
+                      backgroundColor: AMBER_DIM,
+                      borderRadius: 2,
+                      opacity: 0.55,
+                    }}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* Controls row */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+              }}
+            >
+              {/* Play button */}
+              <Pressable
+                onPress={() => setIsPlaying((p) => !p)}
+                style={({ pressed }) => ({
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: INK,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.8 : 1,
+                })}
+                accessibilityLabel={isPlaying ? "Pause" : "Play"}
+              >
+                <Text style={{ fontSize: 16, color: WHITE, marginLeft: isPlaying ? 0 : 2 }}>
+                  {isPlaying ? "⏸" : "▶"}
+                </Text>
+              </Pressable>
+
+              {/* Time */}
+              <Text style={{ fontSize: 13, fontWeight: "600", color: INK_SOFT, letterSpacing: 0.5 }}>
+                <Text style={{ color: AMBER_DEEP }}>0:32</Text>
+                <Text style={{ color: INK_MUTED }}> / 1:42</Text>
+              </Text>
+
+              {/* Speed button */}
+              <Pressable
+                style={({ pressed }) => ({
+                  backgroundColor: "rgba(74,47,24,0.08)",
+                  borderRadius: 12,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+                accessibilityLabel="Playback speed"
+              >
+                <Text style={{ fontSize: 12, fontWeight: "600", color: INK_SOFT }}>1.0×</Text>
+              </Pressable>
+            </View>
+
+            {/* Transcript */}
+            <View
+              style={{
+                backgroundColor: PARCHMENT,
+                borderRadius: 10,
+                padding: 14,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Georgia",
+                  fontStyle: "italic",
+                  fontSize: 13,
+                  color: INK_SOFT,
+                  lineHeight: 20,
+                  marginBottom: 8,
+                }}
+              >
+                "…and the screen door — that screen door — would{" "}
+                <Text style={{ backgroundColor: "rgba(210,127,20,0.25)", color: AMBER_DEEP }}>slap</Text>
+                {" "}twice, never once, and we'd know exactly who was home. My mother's slap was slow. Mine was a hurry. Yours, Maya — yours was the laughing kind. I want you to remember that sound when nothing else makes sense…"
+              </Text>
+              <Text style={{ fontSize: 10.5, color: INK_MUTED }}>Auto-transcribed · edit ›</Text>
+            </View>
           </View>
 
-          {/* Stories count */}
-          {memory.stories > 0 && (
-            <Pressable
-              onPress={() => router.push("/stories")}
-              style={({ pressed }) => ({
-                width: "100%",
-                backgroundColor: "#FFFFFF",
-                borderRadius: 14,
-                padding: 16,
+          {/* ── Section title ─────────────────────────────────────── */}
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: "700",
+              letterSpacing: 0.3,
+              color: INK_MUTED,
+              textTransform: "uppercase",
+              marginBottom: 14,
+            }}
+          >
+            Voices in the family choir
+          </Text>
+
+          {/* ── Voice list ────────────────────────────────────────── */}
+          {VOICES.map((voice, i) => (
+            <View
+              key={i}
+              style={{
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 12,
-                marginBottom: 12,
-                opacity: pressed ? 0.88 : 1,
-                shadowColor: INK,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.06,
-                shadowRadius: 6,
-                elevation: 2,
-              })}
+                paddingVertical: 13,
+                borderBottomWidth: i < VOICES.length - 1 ? 1 : 0,
+                borderBottomColor: "rgba(74,47,24,0.08)",
+              }}
             >
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: AMBER, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ color: "#FFFFFF", fontSize: 10, marginLeft: 2 }}>▶</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13.5, fontFamily: "Georgia", fontWeight: "600", color: INK }}>
-                  {memory.stories} saved {memory.stories === 1 ? "story" : "stories"}
+              {/* Avatar */}
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: voice.bgColor,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: voice.bgColor === "#F5EDDF" ? 1 : 0,
+                  borderColor: "rgba(74,47,24,0.2)",
+                  flexShrink: 0,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "700",
+                    color: voice.bgColor === "#F5EDDF" ? INK_SOFT : WHITE,
+                  }}
+                >
+                  {voice.initials}
                 </Text>
-                <Text style={{ fontSize: 10.5, color: INK_MUTED, marginTop: 1 }}>Tap to listen</Text>
               </View>
-              <Feather name="chevron-right" size={16} color={INK_MUTED} />
-            </Pressable>
-          )}
 
-          {/* Add to this memory */}
+              {/* Info */}
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: INK, marginBottom: 2 }}>
+                  {voice.name} · {voice.detail}
+                </Text>
+                <Text style={{ fontSize: 11.5, color: INK_MUTED }} numberOfLines={1}>
+                  Last: "{voice.last}"
+                </Text>
+              </View>
+            </View>
+          ))}
+
+          {/* ── CTA button ────────────────────────────────────────── */}
           <Pressable
             onPress={() => router.push("/record")}
             style={({ pressed }) => ({
-              width: "100%",
-              backgroundColor: AMBER,
-              borderRadius: 14,
+              backgroundColor: INK,
+              borderRadius: 26,
               paddingVertical: 15,
               alignItems: "center",
-              opacity: pressed ? 0.88 : 1,
-              shadowColor: AMBER,
+              marginTop: 24,
+              opacity: pressed ? 0.82 : 1,
+              shadowColor: INK,
               shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.5,
+              shadowOpacity: 0.25,
               shadowRadius: 14,
-              elevation: 5,
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 8,
+              elevation: 4,
             })}
           >
-            <Text style={{ fontSize: 14.5, fontWeight: "600", color: "#FFFFFF" }}>Add to this memory</Text>
-            <Feather name="mic" size={15} color="rgba(255,255,255,0.85)" />
+            <Text style={{ fontSize: 15, fontWeight: "500", color: PARCHMENT, letterSpacing: 0.2 }}>
+              Record a new memory
+            </Text>
           </Pressable>
         </Animated.ScrollView>
       </SafeAreaView>

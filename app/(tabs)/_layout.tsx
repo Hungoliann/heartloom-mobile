@@ -59,6 +59,9 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <Feather name="user" size={20} color={color} />,
         }}
       />
+      <Tabs.Screen name="vault" options={{ href: null }} />
+      <Tabs.Screen name="family" options={{ href: null }} />
+      <Tabs.Screen name="legacy" options={{ href: null }} />
     </Tabs>
   );
 }

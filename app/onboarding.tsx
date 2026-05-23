@@ -1,328 +1,346 @@
-import { useRef, useState, useCallback } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
   Pressable,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
-  Dimensions,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../src/store/auth.store";
 
-const { width: W } = Dimensions.get("window");
+// ── Brand colors (extracted from prototype CSS) ──────────────────────────────
+const CREAM = "#FAF3E2";        // --pt-cream / app background
+const INK = "#2D241A";          // --pt-ink
+const INK_SOFT = "#4A3D2E";     // --pt-ink-soft
+const INK_MUTED = "#8A7A66";    // --pt-ink-mute
+const AMBER_DEEP = "#B06600";   // --pt-amber-deep (italic em colour)
+const RULE = "rgba(74,47,24,0.14)"; // --pt-rule (border colour)
+const PAPER_BG = "rgba(255,251,243,0.6)"; // textarea background base
 
-const CREAM = "#FAF3E2";
-const PARCHMENT = "#FBF2DD";
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-
-type Slide = {
-  key: string;
-  icon: string;
-  iconBg: string;
-  title: string;
-  titleHighlight?: string;
-  sub: string;
-  tag?: string;
-};
-
-const SLIDES: Slide[] = [
-  {
-    key: "welcome",
-    icon: "♡",
-    iconBg: "transparent",
-    title: "Hi. I'm here\nto help you record ",
-    titleHighlight: "something that lasts.",
-    sub: "In about ten minutes you'll have an heirloom — sealed, certified, and waiting for the day that matters.",
-  },
-  {
-    key: "letters",
-    icon: "✉",
-    iconBg: "#4A2F18",
-    title: "Write letters\nto the future.",
-    sub: "Seal a message for Maya's wedding day, Theo's graduation, or just a quiet Tuesday in 2035. We'll deliver it exactly when you choose.",
-    tag: "Future Letters",
-  },
-  {
-    key: "voice",
-    icon: "◉",
-    iconBg: AMBER,
-    title: "Your voice,\nthreaded in time.",
-    sub: "A 60-second story from you is worth a thousand photos. Record once — your family hears it forever, exactly the way you said it.",
-    tag: "Voice Memories",
-  },
-  {
-    key: "family",
-    icon: "✦",
-    iconBg: "#6F8564",
-    title: "One family.\nOne living story.",
-    sub: "Every letter, memory, and milestone — woven together so nothing important gets lost between generations.",
-    tag: "Family Timeline",
-  },
-];
-
-function DottedCircle({ size, dotRadius }: { size: number; dotRadius: number }) {
-  const count = 24;
-  const r = size / 2 - dotRadius;
-  return (
-    <View style={{ width: size, height: size, position: "relative" }}>
-      {Array.from({ length: count }).map((_, i) => {
-        const angle = (i / count) * 2 * Math.PI - Math.PI / 2;
-        const x = size / 2 + r * Math.cos(angle) - dotRadius;
-        const y = size / 2 + r * Math.sin(angle) - dotRadius;
-        return (
-          <View
-            key={i}
-            style={{
-              position: "absolute",
-              left: x,
-              top: y,
-              width: dotRadius * 2,
-              height: dotRadius * 2,
-              borderRadius: dotRadius,
-              backgroundColor: "rgba(210,127,20,0.35)",
-            }}
-          />
-        );
-      })}
-    </View>
-  );
-}
-
-function SlideView({ slide }: { slide: Slide }) {
-  const isFirst = slide.key === "welcome";
-
-  return (
-    <View style={{ width: W, alignItems: "center", paddingHorizontal: 32, paddingTop: 20 }}>
-      {/* Icon area */}
-      <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 36, height: 130 }}>
-        {isFirst ? (
-          <View style={{ width: 120, height: 120, alignItems: "center", justifyContent: "center" }}>
-            <DottedCircle size={120} dotRadius={3} />
-            <View style={{ position: "absolute" }}>
-              <Text style={{ fontSize: 44, color: AMBER, lineHeight: 50 }}>♡</Text>
-            </View>
-          </View>
-        ) : (
-          <View
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: 44,
-              backgroundColor: slide.iconBg,
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: slide.iconBg,
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.35,
-              shadowRadius: 20,
-              elevation: 8,
-            }}
-          >
-            <Text style={{ fontSize: 32, color: "#FFFFFF", lineHeight: 38 }}>{slide.icon}</Text>
-          </View>
-        )}
-        {slide.tag && (
-          <View
-            style={{
-              marginTop: 12,
-              backgroundColor: "rgba(210,127,20,0.12)",
-              borderRadius: 99,
-              paddingHorizontal: 11,
-              paddingVertical: 4,
-              borderWidth: 1,
-              borderColor: "rgba(210,127,20,0.25)",
-            }}
-          >
-            <Text style={{ fontSize: 9, fontWeight: "700", letterSpacing: 1.4, color: AMBER_DEEP, textTransform: "uppercase" }}>
-              {slide.tag}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Title */}
-      <Text
-        style={{
-          fontFamily: "Georgia",
-          fontSize: isFirst ? 28 : 26,
-          fontWeight: "500",
-          color: INK,
-          textAlign: "center",
-          lineHeight: isFirst ? 36 : 34,
-          marginBottom: 14,
-        }}
-      >
-        {slide.title}
-        {slide.titleHighlight && (
-          <Text style={{ fontStyle: "italic", color: AMBER }}>{slide.titleHighlight}</Text>
-        )}
-      </Text>
-
-      {/* Subtitle */}
-      <Text
-        style={{
-          fontSize: 14,
-          lineHeight: 22,
-          color: INK_SOFT,
-          textAlign: "center",
-          maxWidth: 300,
-        }}
-      >
-        {slide.sub}
-      </Text>
-    </View>
-  );
-}
+const MAX_CHARS = 240;
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const setHasOnboarded = useAuthStore((s) => s.setHasOnboarded);
-  const scrollRef = useRef<ScrollView>(null);
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const idx = Math.round(e.nativeEvent.contentOffset.x / W);
-    setActiveIdx(idx);
-  }, []);
-
-  function handleNext() {
-    scrollRef.current?.scrollTo({ x: (activeIdx + 1) * W, animated: true });
-  }
+  const [text, setText] = useState("");
+  const [textareaFocused, setTextareaFocused] = useState(false);
 
   function handleDraftLetter() {
     setHasOnboarded();
-    router.replace({ pathname: "/(auth)/sign-in", params: { next: "/record" } });
+    router.replace("/record");
   }
 
-  function handleExplore() {
+  function handleVoiceRecord() {
     setHasOnboarded();
-    router.replace("/(auth)/sign-in");
+    router.replace({ pathname: "/record", params: { mode: "voice" } });
   }
 
-  const isLast = activeIdx === SLIDES.length - 1;
+  const charCount = text.length;
 
   return (
     <View style={{ flex: 1, backgroundColor: CREAM }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
-        {/* HEARTLOOM wordmark */}
-        <View style={{ alignItems: "center", paddingTop: 8, paddingBottom: 4 }}>
-          <Text style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 3.5, color: INK_MUTED, textTransform: "uppercase" }}>
-            HEARTLOOM
-          </Text>
-        </View>
-
-        {/* Slides */}
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={onScroll}
-          scrollEventThrottle={16}
+        <KeyboardAvoidingView
           style={{ flex: 1 }}
-          contentContainerStyle={{ alignItems: "center" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
         >
-          {SLIDES.map((slide) => (
-            <SlideView key={slide.key} slide={slide} />
-          ))}
-        </ScrollView>
-
-        {/* Bottom section */}
-        <View style={{ paddingHorizontal: 28, paddingBottom: 12 }}>
-          {/* Dot indicators */}
-          <View style={{ flexDirection: "row", justifyContent: "center", gap: 7, marginBottom: 24 }}>
-            {SLIDES.map((_, i) => (
-              <View
-                key={i}
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 22,
+              paddingBottom: 32,
+              alignItems: "center",
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── HEARTLOOM wordmark ─────────────────────────────────────── */}
+            {/*
+              Prototype: .pt-wordmark
+                font-family: var(--serif-alt) → Playfair Display / Georgia
+                font-size: 13px
+                letter-spacing: 0.34em
+                text-align: center
+                color: var(--pt-ink)
+              Screen inner padding-top is 70px (welcome variant adds extra)
+            */}
+            <View style={{ width: "100%", alignItems: "center", paddingTop: 20, paddingBottom: 0 }}>
+              <Text
                 style={{
-                  width: i === activeIdx ? 20 : 7,
-                  height: 7,
-                  borderRadius: 3.5,
-                  backgroundColor: i === activeIdx ? AMBER : "rgba(210,127,20,0.25)",
+                  fontFamily: "Georgia",
+                  fontSize: 13,
+                  fontWeight: "400",
+                  letterSpacing: 4.5,
+                  color: INK,
+                  textAlign: "center",
                 }}
-              />
-            ))}
-          </View>
+              >
+                HEARTLOOM
+              </Text>
+            </View>
 
-          {isLast ? (
-            <>
-              {/* Draft CTA — primary */}
+            {/* ── Display heading ────────────────────────────────────────── */}
+            {/*
+              Prototype: .pt-display.pt-welcome__h.pt-welcome__h--prompt
+                font-family: var(--serif-alt) → Playfair Display / Georgia
+                font-weight: 500
+                font-size: 28px (--prompt override)
+                line-height: 1.18
+                letter-spacing: -0.012em
+                color: var(--pt-ink)
+                margin: 4px 0 6px  (--prompt override adds gap: 16px in the inner flex)
+              em → color: var(--pt-amber-deep), font-style: italic
+            */}
+            <View style={{ width: "100%", marginTop: 20, marginBottom: 0 }}>
+              <Text
+                style={{
+                  fontFamily: "Georgia",
+                  fontSize: 28,
+                  fontWeight: "500",
+                  lineHeight: 33,
+                  letterSpacing: -0.34,
+                  color: INK,
+                  textAlign: "center",
+                }}
+              >
+                {"What is one thing\nyou want them\nto "}
+                <Text
+                  style={{
+                    fontStyle: "italic",
+                    color: AMBER_DEEP,
+                  }}
+                >
+                  know forever?
+                </Text>
+              </Text>
+            </View>
+
+            {/* ── Subtext ────────────────────────────────────────────────── */}
+            {/*
+              Prototype: .pt-welcome__sub
+                font-family: var(--serif) → Boska / Source Serif 4 / Georgia
+                font-size: 15px
+                color: var(--pt-ink-soft)
+                margin: 0
+              Gap between elements is 16px (flex gap in .pt-scr__inner)
+            */}
+            <Text
+              style={{
+                fontFamily: "Georgia",
+                fontSize: 15,
+                lineHeight: 23,
+                color: INK_SOFT,
+                textAlign: "center",
+                marginTop: 18,
+                marginBottom: 0,
+                width: "100%",
+              }}
+            >
+              A sentence is enough. We'll thread it into something that lasts.
+            </Text>
+
+            {/* ── Textarea (pt-firstline) ─────────────────────────────────── */}
+            {/*
+              Prototype: .pt-firstline
+                position: relative; display: block; margin: 6px 0 4px
+              .pt-firstline__input
+                width: 100%; min-height: 110px
+                border: 1px solid var(--pt-rule)
+                border-radius: 14px
+                padding: 14px 16px 28px
+                background: repeating-linear-gradient lined + rgba(255,251,243,.6)
+                font-family: var(--script) or var(--serif) → Georgia
+                font-size: 19px; line-height: 28px
+                color: var(--pt-ink)
+              .pt-firstline__count
+                position: absolute; right: 14px; bottom: 8px
+                font-size: 10.5px; letter-spacing: 0.05em; color: var(--pt-ink-mute)
+            */}
+            <View
+              style={{
+                width: "100%",
+                marginTop: 16,
+                marginBottom: 0,
+                position: "relative",
+              }}
+            >
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: textareaFocused ? "#D27F14" : RULE,
+                  borderRadius: 14,
+                  backgroundColor: PAPER_BG,
+                  // Shadow ring on focus is done via borderColor only (RN limitation)
+                  overflow: "hidden",
+                }}
+              >
+                <TextInput
+                  value={text}
+                  onChangeText={(v) => setText(v.slice(0, MAX_CHARS))}
+                  onFocus={() => setTextareaFocused(true)}
+                  onBlur={() => setTextareaFocused(false)}
+                  placeholder="Be brave enough to be soft…"
+                  placeholderTextColor="rgba(74,47,24,0.42)"
+                  multiline
+                  textAlignVertical="top"
+                  style={{
+                    fontFamily: "Georgia",
+                    fontStyle: "italic",
+                    fontSize: 19,
+                    lineHeight: 28,
+                    color: INK,
+                    minHeight: 110,
+                    paddingHorizontal: 16,
+                    paddingTop: 14,
+                    // Extra bottom padding leaves room for the char counter
+                    paddingBottom: 32,
+                  }}
+                />
+              </View>
+
+              {/* Char counter — sits at bottom-right of the textarea container */}
+              <Text
+                style={{
+                  position: "absolute",
+                  right: 14,
+                  bottom: 8,
+                  fontFamily: "System",
+                  fontSize: 10.5,
+                  letterSpacing: 0.5,
+                  color: INK_MUTED,
+                }}
+              >
+                {charCount} / {MAX_CHARS}
+              </Text>
+            </View>
+
+            {/* ── Button row (pt-welcome__row) ────────────────────────────── */}
+            {/*
+              Prototype: .pt-welcome__row
+                flex-direction: column; gap: 8px; margin-top: 4px
+              .pt-btn
+                width: 100%; min-height: 50px; padding: 13px 22px
+                border-radius: 26px; font-size: 15px; font-weight: 500
+              .pt-btn--primary
+                background: var(--pt-ink) → #2D241A
+                color: var(--pt-cream) → #FAF3E2
+              .pt-btn--ghost
+                background: transparent; color: var(--pt-ink)
+                border: 1px solid var(--pt-rule)
+              .pt-btn--inline → font-size: 13px; min-height: 42px
+              .pt-btn__ico → margin-right: 6px
+            */}
+            <View style={{ width: "100%", marginTop: 16, alignSelf: "stretch" }}>
+              {/* Primary: Draft Your First Future Letter */}
               <Pressable
                 onPress={handleDraftLetter}
                 style={({ pressed }) => ({
+                  width: "100%",
+                  alignSelf: "stretch",
                   backgroundColor: INK,
-                  borderRadius: 14,
-                  paddingVertical: 17,
+                  borderRadius: 26,
+                  minHeight: 50,
+                  paddingVertical: 13,
+                  paddingHorizontal: 22,
+                  flexDirection: "row",
                   alignItems: "center",
-                  opacity: pressed ? 0.88 : 1,
-                  shadowColor: INK,
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.35,
-                  shadowRadius: 16,
-                  elevation: 6,
-                  marginBottom: 10,
+                  justifyContent: "center",
+                  opacity: pressed ? 0.9 : 1,
+                  marginBottom: 8,
                 })}
               >
-                <Text style={{ fontSize: 15, fontWeight: "600", color: CREAM, letterSpacing: 0.2 }}>
-                  Draft a Future Letter ✎
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "500",
+                    color: CREAM,
+                    marginRight: 2,
+                  }}
+                >
+                  {"✎ "}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "500",
+                    color: CREAM,
+                  }}
+                >
+                  Draft Your First Future Letter
                 </Text>
               </Pressable>
 
-              {/* Explore — secondary */}
+              {/* Ghost: Record 60 seconds instead */}
               <Pressable
-                onPress={handleExplore}
+                onPress={handleVoiceRecord}
                 style={({ pressed }) => ({
-                  borderRadius: 14,
-                  paddingVertical: 15,
+                  width: "100%",
+                  alignSelf: "stretch",
+                  backgroundColor: "transparent",
+                  borderRadius: 26,
+                  minHeight: 42,
+                  paddingVertical: 10,
+                  paddingHorizontal: 22,
+                  flexDirection: "row",
                   alignItems: "center",
-                  opacity: pressed ? 0.7 : 1,
+                  justifyContent: "center",
                   borderWidth: 1,
-                  borderColor: "rgba(45,36,26,0.15)",
-                  marginBottom: 14,
+                  borderColor: "rgba(74,47,24,0.35)",
+                  opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Text style={{ fontSize: 14, color: INK_SOFT }}>Explore the app first</Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "500",
+                    color: INK,
+                    marginRight: 2,
+                  }}
+                >
+                  {"● "}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "500",
+                    color: INK,
+                  }}
+                >
+                  Record 60 seconds instead
+                </Text>
               </Pressable>
+            </View>
 
-              <Text style={{ fontSize: 11.5, color: INK_MUTED, textAlign: "center", lineHeight: 18 }}>
-                No account yet. No commitment.{"\n"}We'll do that last.
-              </Text>
-            </>
-          ) : (
-            <>
-              {/* Next button */}
-              <Pressable
-                onPress={handleNext}
-                style={({ pressed }) => ({
-                  backgroundColor: INK,
-                  borderRadius: 14,
-                  paddingVertical: 17,
-                  alignItems: "center",
-                  opacity: pressed ? 0.88 : 1,
-                  shadowColor: INK,
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.35,
-                  shadowRadius: 16,
-                  elevation: 6,
-                  marginBottom: 14,
-                })}
-              >
-                <Text style={{ fontSize: 15, fontWeight: "600", color: CREAM, letterSpacing: 0.2 }}>Next</Text>
-              </Pressable>
-
-              <Pressable onPress={handleDraftLetter} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, alignItems: "center" })}>
-                <Text style={{ fontSize: 12, color: INK_MUTED }}>Skip</Text>
-              </Pressable>
-            </>
-          )}
-        </View>
+            {/* ── Footer ─────────────────────────────────────────────────── */}
+            {/*
+              Prototype: .pt-welcome__foot
+                font-family: var(--serif-alt) → Playfair Display / Georgia
+                font-style: italic
+                font-size: 12px
+                color: var(--pt-ink-mute)
+                margin: 4px 0 0
+            */}
+            <Text
+              style={{
+                fontFamily: "Georgia",
+                fontStyle: "italic",
+                fontSize: 12,
+                color: INK_MUTED,
+                textAlign: "center",
+                marginTop: 16,
+                lineHeight: 18,
+                width: "100%",
+              }}
+            >
+              No account yet. No payment. We'll only ask for more when life does.
+            </Text>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );

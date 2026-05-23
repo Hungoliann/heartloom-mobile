@@ -31,8 +31,10 @@
       "expo-router",
       "expo-notifications",
       [
-        "expo-av",
-        { "microphonePermission": "Heartloom needs microphone access to record voice memories." }
+        "expo-audio",
+        {
+          "microphonePermission": "Heartloom needs microphone access to record voice memories."
+        }
       ]
     ],
     "scheme": "heartloom"

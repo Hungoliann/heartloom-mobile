@@ -1,239 +1,345 @@
-import { useRef, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
 
-const CATEGORIES = [
+// ── Brand tokens (matching prototype.css) ──────────────────────────────────
+const CREAM = "#FAF3E2";
+const PAPER = "#FBF4DC";
+const INK = "#2D241A";
+const INK_SOFT = "#4A3D2E";
+const INK_MUTE = "#8A7A66";
+const AMBER = "#D27F14";
+const AMBER_DEEP = "#B06600";
+const RULE = "rgba(74,47,24,0.14)";
+
+// ── Vault node data ─────────────────────────────────────────────────────────
+const NODES = [
   {
-    id: "1",
-    title: "Will & Testament",
-    description: "Your final wishes and estate",
-    emoji: "📜",
-    count: 1,
-    status: "complete",
-    color: "#B86241",
-    bg: "#F5E5DA",
+    id: "letter",
+    icon: "✉",
+    label: "Future Letter",
+    sub: "For Maya · sealed",
+    filled: true,
   },
   {
-    id: "2",
-    title: "Health Directive",
-    description: "Medical and end-of-life care",
-    emoji: "🏥",
-    count: 2,
-    status: "complete",
-    color: "#8BAE72",
-    bg: "#EEF5E8",
+    id: "will",
+    icon: "§",
+    label: "Digital Will",
+    sub: "Add when ready",
+    filled: false,
   },
   {
-    id: "3",
-    title: "Financial Records",
-    description: "Accounts, assets, and debts",
-    emoji: "📊",
-    count: 0,
-    status: "empty",
-    color: "#2B4D61",
-    bg: "#D8E8F0",
+    id: "directive",
+    icon: "✤",
+    label: "Advance Directive",
+    sub: "Hospice-ready",
+    filled: false,
   },
   {
-    id: "4",
-    title: "Funeral Wishes",
-    description: "Ceremony, burial, and tributes",
-    emoji: "🕊️",
-    count: 1,
-    status: "draft",
-    color: "#2D4530",
-    bg: "#DEE9DF",
-  },
-  {
-    id: "5",
-    title: "Important Notes",
-    description: "Messages, passwords, and more",
-    emoji: "📝",
-    count: 3,
-    status: "complete",
-    color: "#8C7B65",
-    bg: "#F0EAE0",
+    id: "executor",
+    icon: "⚶",
+    label: "Executor Access",
+    sub: "Name a trusted person",
+    filled: false,
   },
 ];
 
-const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  complete: { label: "Complete", color: "#5C7A45", bg: "#EEF5E8" },
-  draft: { label: "In progress", color: "#B8863C", bg: "#FBF0D9" },
-  empty: { label: "Not started", color: "#8C7B65", bg: "#F0EAE0" },
-};
+// ── Hallmark coin SVG ────────────────────────────────────────────────────────
+function HallmarkCoin() {
+  return (
+    <Svg width={64} height={64} viewBox="0 0 120 120" fill="none">
+      <Circle cx={60} cy={60} r={56} stroke="#8B6039" strokeWidth={1.5} />
+      <Circle
+        cx={60}
+        cy={60}
+        r={48}
+        stroke="#8B6039"
+        strokeWidth={0.8}
+        strokeDasharray="2 4"
+        opacity={0.55}
+      />
+      <Path
+        d="M40 66c5 5 10 5 20 0 10-5 15-5 20 0"
+        stroke="#8B6039"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <SvgText
+        x={60}
+        y={52}
+        textAnchor="middle"
+        fontFamily="Georgia"
+        fontSize={12}
+        fontStyle="italic"
+        fill="#8B6039"
+        letterSpacing={1.5}
+      >
+        HEARTLOOM
+      </SvgText>
+      <SvgText
+        x={60}
+        y={84}
+        textAnchor="middle"
+        fontFamily="System"
+        fontSize={6.5}
+        fill="#8B6039"
+        letterSpacing={2.5}
+      >
+        DELIVERED
+      </SvgText>
+    </Svg>
+  );
+}
 
 export default function VaultScreen() {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 600, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  const completedCount = CATEGORIES.filter((c) => c.status === "complete").length;
-  const progress = completedCount / CATEGORIES.length;
+  const router = useRouter();
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FAF6EE" }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-          <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-            {/* Header */}
-            <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
-              <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#8C7B65", marginBottom: 6 }}>
-                Secured documents
-              </Text>
-              <Text style={{ fontFamily: "Georgia", fontSize: 28, color: "#2C1F0E", lineHeight: 34 }}>
-                Your Vault
-              </Text>
-              <Text style={{ fontSize: 14, color: "#8C7B65", marginTop: 6 }}>
-                Documents and wishes, kept safe
-              </Text>
+    <View style={{ flex: 1, backgroundColor: CREAM }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
+
+        {/* ── Header ───────────────────────────────────────────────────── */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingTop: 8,
+            paddingBottom: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: RULE,
+          }}
+        >
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => ({
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              borderWidth: 1,
+              borderColor: RULE,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: pressed ? "rgba(210,127,20,0.08)" : "transparent",
+            })}
+            accessibilityLabel="Back"
+          >
+            <Text style={{ fontSize: 18, color: INK_SOFT, lineHeight: 22 }}>‹</Text>
+          </Pressable>
+
+          <Text
+            style={{
+              flex: 1,
+              textAlign: "center",
+              fontFamily: "Georgia",
+              fontStyle: "italic",
+              fontSize: 14,
+              color: INK_SOFT,
+            }}
+          >
+            Your Vault
+          </Text>
+
+          {/* Spacer to balance the back button */}
+          <View style={{ width: 48 }} />
+        </View>
+
+        {/* ── Scrollable body ──────────────────────────────────────────── */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 22, paddingBottom: 40, gap: 16 }}
+        >
+          {/* Eyebrow */}
+          <Text
+            style={{
+              fontFamily: "System",
+              fontSize: 10.5,
+              fontWeight: "600",
+              letterSpacing: 2.2,
+              color: AMBER_DEEP,
+              textTransform: "uppercase",
+              marginBottom: -8,
+            }}
+          >
+            A DIGITAL SAFETY DEPOSIT BOX
+          </Text>
+
+          {/* Display heading */}
+          <Text
+            style={{
+              fontFamily: "Georgia",
+              fontSize: 26,
+              fontWeight: "500",
+              lineHeight: 31,
+              letterSpacing: -0.3,
+              color: INK,
+            }}
+          >
+            Where your letter{" "}
+            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>
+              actually lives.
+            </Text>
+          </Text>
+
+          {/* ── Vault grid ────────────────────────────────────────────── */}
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: RULE,
+              borderRadius: 16,
+              padding: 14,
+              backgroundColor: PAPER,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 10,
+              }}
+            >
+              {NODES.map((node) => (
+                <View
+                  key={node.id}
+                  style={{
+                    width: "47.5%",
+                    minHeight: 84,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderStyle: node.filled ? "solid" : "dashed",
+                    borderColor: node.filled ? INK : "rgba(74,47,24,0.25)",
+                    backgroundColor: node.filled ? INK : "rgba(255,251,243,0.45)",
+                    padding: 12,
+                    gap: 4,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      color: node.filled ? AMBER : AMBER_DEEP,
+                      lineHeight: 22,
+                    }}
+                  >
+                    {node.icon}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: "Georgia",
+                      fontSize: 13.5,
+                      fontWeight: "500",
+                      color: node.filled ? CREAM : INK,
+                      lineHeight: 17,
+                    }}
+                  >
+                    {node.label}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: node.filled ? "rgba(250,243,226,0.70)" : INK_MUTE,
+                      lineHeight: 15,
+                    }}
+                  >
+                    {node.sub}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* ── Bronze Delivery Hallmark ──────────────────────────────── */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: "rgba(139,96,57,0.35)",
+              borderRadius: 14,
+              backgroundColor: "rgba(201,167,122,0.10)",
+              marginTop: 4,
+            }}
+          >
+            {/* Coin */}
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                flexShrink: 0,
+              }}
+            >
+              <HallmarkCoin />
             </View>
 
-            {/* Progress card */}
-            <View style={{ marginHorizontal: 20, marginTop: 20, marginBottom: 24 }}>
-              <View
+            {/* Body */}
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text
                 style={{
-                  backgroundColor: "#2C1F0E",
-                  borderRadius: 20,
-                  padding: 24,
-                  shadowColor: "#2C1F0E",
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.22,
-                  shadowRadius: 16,
-                  elevation: 8,
+                  fontFamily: "Georgia",
+                  fontSize: 13.5,
+                  color: INK,
+                  fontWeight: "500",
+                  lineHeight: 17,
                 }}
               >
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                  <View>
-                    <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: 0.5, marginBottom: 4 }}>
-                      Vault completeness
-                    </Text>
-                    <Text style={{ fontFamily: "Georgia", fontSize: 32, color: "#D4A853", fontWeight: "300" }}>
-                      {Math.round(progress * 100)}%
-                    </Text>
-                  </View>
-                  <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" }}>
-                    <Feather name="shield" size={20} color="#D4A853" />
-                  </View>
-                </View>
-
-                {/* Progress bar */}
-                <View style={{ height: 4, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 2, marginBottom: 12 }}>
-                  <View
-                    style={{
-                      height: 4,
-                      width: `${progress * 100}%`,
-                      backgroundColor: "#D4A853",
-                      borderRadius: 2,
-                    }}
-                  />
-                </View>
-
-                <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-                  {completedCount} of {CATEGORIES.length} sections complete
-                </Text>
-              </View>
-            </View>
-
-            {/* Category cards */}
-            <View style={{ paddingHorizontal: 24, marginBottom: 8 }}>
-              <Text style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: "#8C7B65", marginBottom: 14 }}>
-                Documents
+                Bronze Delivery Hallmark
+              </Text>
+              <Text
+                style={{
+                  fontSize: 11.5,
+                  color: INK_MUTE,
+                  lineHeight: 16,
+                }}
+              >
+                Pressed into the seal when the letter reaches them. Provable, dateable, irreversible.
               </Text>
             </View>
+          </View>
 
-            <View style={{ paddingHorizontal: 20, gap: 12 }}>
-              {CATEGORIES.map((cat) => {
-                const statusMeta = STATUS_LABELS[cat.status];
-                return (
-                  <Pressable
-                    key={cat.id}
-                    style={({ pressed }) => ({
-                      backgroundColor: "#FFFFFF",
-                      borderRadius: 18,
-                      padding: 20,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 16,
-                      borderWidth: 1.5,
-                      borderColor: "#EDE4D4",
-                      opacity: pressed ? 0.85 : 1,
-                      transform: [{ scale: pressed ? 0.98 : 1 }],
-                      shadowColor: "#2C1F0E",
-                      shadowOffset: { width: 0, height: 3 },
-                      shadowOpacity: 0.07,
-                      shadowRadius: 8,
-                      elevation: 3,
-                    })}
-                  >
-                    {/* Icon */}
-                    <View
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 16,
-                        backgroundColor: cat.bg,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text style={{ fontSize: 24 }}>{cat.emoji}</Text>
-                    </View>
+          {/* Footer line */}
+          <Text
+            style={{
+              textAlign: "center",
+              fontFamily: "Georgia",
+              fontStyle: "italic",
+              fontSize: 12,
+              color: INK_SOFT,
+              marginTop: 6,
+              marginBottom: 4,
+            }}
+          >
+            Bank-grade encryption. Heirloom-grade tactility.
+          </Text>
 
-                    {/* Content */}
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, color: "#2C1F0E", fontWeight: "600", marginBottom: 3 }}>
-                        {cat.title}
-                      </Text>
-                      <Text style={{ fontSize: 12, color: "#8C7B65", marginBottom: 8 }}>{cat.description}</Text>
-                      <View
-                        style={{
-                          alignSelf: "flex-start",
-                          backgroundColor: statusMeta.bg,
-                          borderRadius: 6,
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                        }}
-                      >
-                        <Text style={{ fontSize: 11, fontWeight: "600", color: statusMeta.color }}>
-                          {cat.count > 0 ? `${cat.count} file${cat.count > 1 ? "s" : ""} · ` : ""}{statusMeta.label}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Feather name="chevron-right" size={18} color="#C4B8A6" />
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Upload button */}
-            <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-              <Pressable
-                style={({ pressed }) => ({
-                  backgroundColor: "#F5EDD6",
-                  borderRadius: 16,
-                  padding: 18,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  borderWidth: 1.5,
-                  borderStyle: "dashed",
-                  borderColor: "#D4A853",
-                  opacity: pressed ? 0.8 : 1,
-                })}
-              >
-                <Feather name="upload" size={18} color="#D4A853" />
-                <Text style={{ fontSize: 15, color: "#D4A853", fontWeight: "600" }}>Upload a document</Text>
-              </Pressable>
-            </View>
-          </Animated.View>
+          {/* ── Continue button ───────────────────────────────────────── */}
+          <Pressable
+            onPress={() => router.push("/done" as any)}
+            style={({ pressed }) => ({
+              width: "100%",
+              minHeight: 50,
+              borderRadius: 26,
+              backgroundColor: INK,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 13,
+              paddingHorizontal: 22,
+              opacity: pressed ? 0.88 : 1,
+              marginTop: 4,
+            })}
+          >
+            <Text
+              style={{
+                fontFamily: "System",
+                fontSize: 15,
+                fontWeight: "500",
+                color: CREAM,
+              }}
+            >
+              Continue
+            </Text>
+          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </View>

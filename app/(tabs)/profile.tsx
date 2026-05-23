@@ -126,7 +126,7 @@ export default function ProfileScreen() {
 
                 {/* First entry (complete) */}
                 <View style={{ marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.08)" }}>
-                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To my daughter, Maya —</Text>
+                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To my daughter, Maya</Text>
                   <Text style={{ fontFamily: "Georgia", fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
                     I leave the cabin in Tahoe, the recipe box, and the letter inside the second drawer.
                   </Text>
@@ -141,7 +141,7 @@ export default function ProfileScreen() {
 
                 {/* Second entry (in progress) */}
                 <View style={{ marginBottom: 4 }}>
-                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To my son, Theo —</Text>
+                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To my son, Theo</Text>
                   <Text style={{ fontFamily: "Georgia", fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
                     I leave the workshop, the blue Volvo…
                     <Text style={{ color: "#A95F0A" }}>|</Text>
@@ -206,6 +206,35 @@ export default function ProfileScreen() {
             {/* Divider */}
             <View style={{ height: 1, backgroundColor: "rgba(45,36,26,0.07)", marginHorizontal: 20, marginBottom: 20 }} />
 
+            {/* My content links */}
+            <View style={{ paddingHorizontal: 20, gap: 2, marginBottom: 24 }}>
+              <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: INK_MUTED, marginBottom: 8 }}>My Content</Text>
+              {[
+                { icon: "mail", label: "Future Letters", route: "/(tabs)/legacy" },
+                { icon: "users", label: "Family", route: "/(tabs)/family" },
+                { icon: "archive", label: "Vault", route: "/(tabs)/vault" },
+              ].map((row) => (
+                <Pressable
+                  key={row.label}
+                  onPress={() => router.push(row.route as any)}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 4,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "rgba(45,36,26,0.06)",
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Feather name={row.icon as any} size={16} color={AMBER} />
+                  <Text style={{ flex: 1, fontSize: 13.5, color: INK_SOFT }}>{row.label}</Text>
+                  <Feather name="chevron-right" size={15} color={INK_MUTED} />
+                </Pressable>
+              ))}
+            </View>
+
             {/* Profile rows */}
             <View style={{ paddingHorizontal: 20, gap: 2, marginBottom: 20 }}>
               <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: INK_MUTED, marginBottom: 8 }}>Account</Text>
@@ -242,9 +271,13 @@ export default function ProfileScreen() {
                   alignItems: "center",
                   gap: 12,
                   paddingVertical: 13,
-                  paddingHorizontal: 4,
-                  marginTop: 4,
+                  paddingHorizontal: 14,
+                  marginTop: 8,
                   opacity: pressed ? 0.7 : 1,
+                  borderRadius: 13,
+                  borderWidth: 1.5,
+                  borderColor: "rgba(184,98,65,0.3)",
+                  backgroundColor: "rgba(184,98,65,0.06)",
                 })}
               >
                 <Feather name="log-out" size={16} color={TERRA} />
