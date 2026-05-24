@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      concierge_tasks: {
+        Row: {
+          created_at: string | null
+          family_id: string
+          id: string
+          progress: number | null
+          status: string
+          sub: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          family_id: string
+          id?: string
+          progress?: number | null
+          status?: string
+          sub?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          progress?: number | null
+          status?: string
+          sub?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concierge_tasks_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string | null
@@ -122,6 +163,66 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "letters_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          audio_duration: string | null
+          audio_label: string | null
+          audio_quote: string | null
+          audio_year: string | null
+          author_id: string | null
+          body: string | null
+          created_at: string | null
+          family_id: string
+          id: string
+          message_type: string
+          scheduled_body: string | null
+          scheduled_head: string | null
+        }
+        Insert: {
+          audio_duration?: string | null
+          audio_label?: string | null
+          audio_quote?: string | null
+          audio_year?: string | null
+          author_id?: string | null
+          body?: string | null
+          created_at?: string | null
+          family_id: string
+          id?: string
+          message_type?: string
+          scheduled_body?: string | null
+          scheduled_head?: string | null
+        }
+        Update: {
+          audio_duration?: string | null
+          audio_label?: string | null
+          audio_quote?: string | null
+          audio_year?: string | null
+          author_id?: string | null
+          body?: string | null
+          created_at?: string | null
+          family_id?: string
+          id?: string
+          message_type?: string
+          scheduled_body?: string | null
+          scheduled_head?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_family_id_fkey"
             columns: ["family_id"]
             isOneToOne: false
             referencedRelation: "families"
