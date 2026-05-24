@@ -7,7 +7,6 @@ import { useAuthStore } from "../../src/store/auth.store";
 import { Colors } from "../../src/constants/colors";
 
 const PAPER = "#FFFAF0";
-const PARCHMENT = "#FBF2DD";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -67,7 +66,7 @@ export default function ProfileScreen() {
 
               <View
                 style={{
-                  backgroundColor: PARCHMENT,
+                  backgroundColor: Colors.parchment,
                   borderRadius: 6,
                   padding: 14,
                   paddingLeft: 20,

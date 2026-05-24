@@ -7,7 +7,6 @@ import { useAuthStore } from "../../src/store/auth.store";
 import { usePinnedLetter } from "../../src/hooks/useLetters";
 import { Colors } from "../../src/constants/colors";
 
-const PAPER = "#FBF4DC";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -90,7 +89,7 @@ function SuggestRow({
         borderWidth: 1,
         borderColor: Colors.rule,
         borderRadius: 12,
-        backgroundColor: PAPER,
+        backgroundColor: Colors.paper,
         opacity: pressed ? 0.88 : 1,
         transform: pressed ? [{ scale: 0.985 }] : [{ scale: 1 }],
       })}

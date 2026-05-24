@@ -6,8 +6,6 @@ import { Colors } from "../../src/constants/colors";
 import { useLetters } from "../../src/hooks/useLetters";
 import { useDocuments } from "../../src/hooks/useDocuments";
 
-// ── Vault-only token (not in shared Colors) ──────────────────────────────────
-const PAPER = "#FBF4DC";
 
 // ── Hallmark coin SVG ────────────────────────────────────────────────────────
 function HallmarkCoin() {
@@ -198,7 +196,7 @@ export default function VaultScreen() {
               borderColor: Colors.rule,
               borderRadius: 16,
               padding: 14,
-              backgroundColor: PAPER,
+              backgroundColor: Colors.paper,
             }}
           >
             <View
