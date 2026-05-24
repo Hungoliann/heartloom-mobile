@@ -3,16 +3,9 @@ import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useLetters } from "../../src/hooks/useLetters";
+import { Colors } from "../../src/constants/colors";
 
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const CREAM = "#FAF3E2";
 const PAPER = "#FBF4DC";
-const SAGE_DEEP = "#6F8564";
-const RULE = "rgba(74,47,24,0.14)";
 
 type EntryTag = "SEALED" | "SUGGESTED" | "AUDIO";
 
@@ -95,9 +88,9 @@ type Tab = "forward" | "backward" | "all";
 
 function TagPill({ tag }: { tag: EntryTag }) {
   const config: Record<EntryTag, { bg: string; color: string }> = {
-    SEALED: { bg: "rgba(210,127,20,0.15)", color: AMBER_DEEP },
-    SUGGESTED: { bg: "rgba(111,133,100,0.15)", color: SAGE_DEEP },
-    AUDIO: { bg: "rgba(74,61,46,0.1)", color: INK_SOFT },
+    SEALED: { bg: "rgba(210,127,20,0.15)", color: Colors.amberDeep },
+    SUGGESTED: { bg: "rgba(111,133,100,0.15)", color: Colors.sageDeep },
+    AUDIO: { bg: "rgba(74,61,46,0.1)", color: Colors.inkSoft },
   };
   const c = config[tag];
   return (
@@ -139,7 +132,7 @@ function YearMarker({ year }: { year: string }) {
           fontFamily: "Georgia",
           fontSize: 13,
           fontWeight: "700",
-          color: INK_SOFT,
+          color: Colors.inkSoft,
           letterSpacing: 0.5,
         }}
       >
@@ -164,8 +157,8 @@ function EntryCard({
         borderRadius: 14,
         padding: 14,
         borderWidth: entry.isToday ? 1.5 : 1,
-        borderColor: entry.isToday ? "rgba(210,127,20,0.35)" : RULE,
-        shadowColor: INK,
+        borderColor: entry.isToday ? "rgba(210,127,20,0.35)" : Colors.rule,
+        shadowColor: Colors.ink,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 5,
@@ -177,7 +170,7 @@ function EntryCard({
         style={{
           fontSize: 10.5,
           fontWeight: "700",
-          color: INK_MUTED,
+          color: Colors.inkMuted,
           letterSpacing: 0.5,
           marginBottom: 4,
         }}
@@ -194,7 +187,7 @@ function EntryCard({
           fontFamily: "Georgia",
           fontSize: 14,
           fontWeight: "600",
-          color: INK,
+          color: Colors.ink,
           lineHeight: 20,
           marginBottom: 3,
         }}
@@ -204,7 +197,7 @@ function EntryCard({
 
       {/* Subtitle */}
       {entry.sub ? (
-        <Text style={{ fontSize: 11, color: INK_MUTED, lineHeight: 16 }}>
+        <Text style={{ fontSize: 11, color: Colors.inkMuted, lineHeight: 16 }}>
           {entry.sub}
         </Text>
       ) : null}
@@ -220,11 +213,11 @@ function EntryCard({
                 width: 34,
                 height: 34,
                 borderRadius: 17,
-                backgroundColor: AMBER,
+                backgroundColor: Colors.amber,
                 alignItems: "center",
                 justifyContent: "center",
                 opacity: pressed ? 0.8 : 1,
-                shadowColor: AMBER,
+                shadowColor: Colors.amber,
                 shadowOffset: { width: 0, height: 3 },
                 shadowOpacity: 0.4,
                 shadowRadius: 5,
@@ -294,7 +287,7 @@ export default function TimelineScreen() {
   ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: CREAM }}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 
         {/* ── Header ── */}
@@ -305,9 +298,9 @@ export default function TimelineScreen() {
             paddingHorizontal: 16,
             paddingTop: 8,
             paddingBottom: 12,
-            backgroundColor: CREAM,
+            backgroundColor: Colors.cream,
             borderBottomWidth: 1,
-            borderBottomColor: RULE,
+            borderBottomColor: Colors.rule,
           }}
         >
           {/* Back button */}
@@ -318,14 +311,14 @@ export default function TimelineScreen() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: RULE,
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.6 : 1,
               flexShrink: 0,
             })}
           >
-            <Text style={{ fontSize: 20, color: INK_SOFT, lineHeight: 24, marginTop: -1 }}>‹</Text>
+            <Text style={{ fontSize: 20, color: Colors.inkSoft, lineHeight: 24, marginTop: -1 }}>‹</Text>
           </Pressable>
 
           {/* Title */}
@@ -336,7 +329,7 @@ export default function TimelineScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Timeline
@@ -347,7 +340,7 @@ export default function TimelineScreen() {
             style={{
               fontSize: 11,
               letterSpacing: 1.6,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               minWidth: 48,
               textAlign: "right",
             }}
@@ -370,19 +363,19 @@ export default function TimelineScreen() {
                   fontSize: 26,
                   lineHeight: 32,
                   letterSpacing: -0.3,
-                  color: INK,
+                  color: Colors.ink,
                   marginBottom: 8,
                 }}
               >
                 A life,{"\n"}
-                <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>
+                <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>
                   laid down in seasons.
                 </Text>
               </Text>
               <Text
                 style={{
                   fontSize: 13,
-                  color: INK_MUTED,
+                  color: Colors.inkMuted,
                   lineHeight: 20,
                   marginBottom: 16,
                 }}
@@ -411,9 +404,9 @@ export default function TimelineScreen() {
                       paddingVertical: 8,
                       borderRadius: 999,
                       alignItems: "center",
-                      backgroundColor: isActive ? INK : "rgba(74,47,24,0.08)",
+                      backgroundColor: isActive ? Colors.ink : "rgba(74,47,24,0.08)",
                       borderWidth: isActive ? 0 : 1,
-                      borderColor: RULE,
+                      borderColor: Colors.rule,
                       opacity: pressed ? 0.8 : 1,
                     })}
                   >
@@ -421,7 +414,7 @@ export default function TimelineScreen() {
                       style={{
                         fontSize: 13,
                         fontWeight: "500",
-                        color: isActive ? CREAM : INK_MUTED,
+                        color: isActive ? Colors.cream : Colors.inkMuted,
                         letterSpacing: 0.2,
                       }}
                     >
@@ -475,14 +468,14 @@ export default function TimelineScreen() {
                           borderRadius: 5,
                           backgroundColor:
                             entry.tag === "SEALED"
-                              ? AMBER
+                              ? Colors.amber
                               : entry.tag === "AUDIO"
-                              ? SAGE_DEEP
+                              ? Colors.sageDeep
                               : entry.tag === "SUGGESTED"
                               ? "rgba(111,133,100,0.5)"
                               : "rgba(74,47,24,0.25)",
                           borderWidth: 2,
-                          borderColor: CREAM,
+                          borderColor: Colors.cream,
                           marginTop: 16,
                           zIndex: 2,
                         }}
@@ -513,11 +506,11 @@ export default function TimelineScreen() {
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 1,
-                  borderColor: RULE,
+                  borderColor: Colors.rule,
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Text style={{ fontSize: 13, fontWeight: "500", color: INK }}>
+                <Text style={{ fontSize: 13, fontWeight: "500", color: Colors.ink }}>
                   Load 2025 →
                 </Text>
               </Pressable>
@@ -535,11 +528,11 @@ export default function TimelineScreen() {
             width: 56,
             height: 56,
             borderRadius: 28,
-            backgroundColor: AMBER,
+            backgroundColor: Colors.amber,
             alignItems: "center",
             justifyContent: "center",
             opacity: pressed ? 0.85 : 1,
-            shadowColor: AMBER,
+            shadowColor: Colors.amber,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.5,
             shadowRadius: 12,
