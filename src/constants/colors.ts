@@ -1,0 +1,13 @@
+export const Colors = {
+  amber:     "#D27F14",
+  amberDeep: "#B06600",
+  ink:       "#2D241A",
+  inkSoft:   "#4A3D2E",
+  inkMuted:  "#8A7A66",
+  cream:     "#FAF3E2",
+  sageDeep:  "#6F8564",
+  sage:      "#9CAF88",
+  bg:        "#F5EDDF",
+  terra:     "#B86241",
+  rule:      "rgba(74,47,24,0.14)",
+} as const;
