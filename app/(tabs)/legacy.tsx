@@ -3,62 +3,16 @@ import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { useLetters } from "../../src/hooks/useLetters";
 
-const LETTERS = [
-  {
-    id: "1",
-    for: "Maya",
-    title: "On your 18th birthday",
-    deliverAt: "June 14, 2031",
-    deliverLabel: "In 5 years",
-    status: "sealed",
-    duration: "8 min",
-    preview: "There's so much I want you to know when you reach this day...",
-    color: "#D4A853",
-    emoji: "🌸",
-  },
-  {
-    id: "2",
-    for: "James",
-    title: "When you meet someone special",
-    deliverAt: "Milestone",
-    deliverLabel: "On a milestone",
-    status: "sealed",
-    duration: "12 min",
-    preview: "I've been thinking about what I'd tell you about love...",
-    color: "#8BAE72",
-    emoji: "💛",
-  },
-  {
-    id: "3",
-    for: "Mom",
-    title: "Everything I never said",
-    deliverAt: "Delivered Aug 12, 2024",
-    deliverLabel: "Delivered",
-    status: "delivered",
-    duration: "6 min",
-    preview: "I've been carrying these words for a long time...",
-    color: "#B86241",
-    emoji: "🍂",
-  },
-  {
-    id: "4",
-    for: "Everyone",
-    title: "A note for the whole family",
-    deliverAt: "Christmas 2025",
-    deliverLabel: "Dec 25, 2025",
-    status: "sealed",
-    duration: "15 min",
-    preview: "This one's for all of you, whenever you need it...",
-    color: "#2B4D61",
-    emoji: "🕊️",
-  },
-];
+const LETTER_COLORS = ["#D27F14", "#6F8564", "#B86241", "#4A3D2E", "#8A7A66"];
+const LETTER_EMOJIS = ["✉", "★", "♡", "✦", "◆"];
 
 export default function LegacyScreen() {
   const router = useRouter();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
+  const { data: letters = [], isLoading } = useLetters();
 
   useEffect(() => {
     Animated.parallel([
@@ -66,6 +20,24 @@ export default function LegacyScreen() {
       Animated.timing(translateY, { toValue: 0, duration: 600, useNativeDriver: true }),
     ]).start();
   }, []);
+
+  const sealed = letters.filter((l) => !l.delivered_at && l.deliver_at).length;
+  const delivered = letters.filter((l) => !!l.delivered_at).length;
+
+  const mappedLetters = letters.map((l, i) => ({
+    id: l.id,
+    for: l.recipient_name ?? "Family",
+    title: l.title,
+    status: l.delivered_at ? "delivered" : "sealed",
+    deliverLabel: l.deliver_at
+      ? new Date(l.deliver_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : l.delivered_at
+      ? "Delivered"
+      : "Draft",
+    preview: l.body?.slice(0, 100) ?? "",
+    color: LETTER_COLORS[i % LETTER_COLORS.length],
+    emoji: LETTER_EMOJIS[i % LETTER_EMOJIS.length],
+  }));
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FAF6EE" }}>
@@ -80,16 +52,16 @@ export default function LegacyScreen() {
               Future Letters
             </Text>
             <Text style={{ fontSize: 14, color: "#8C7B65", marginTop: 6 }}>
-              {LETTERS.filter((l) => l.status === "sealed").length} sealed · {LETTERS.filter((l) => l.status === "delivered").length} delivered
+              {sealed} sealed · {delivered} delivered
             </Text>
           </View>
 
           {/* Stats row */}
           <View style={{ flexDirection: "row", marginHorizontal: 20, gap: 12, marginBottom: 20 }}>
             {[
-              { label: "Total", value: LETTERS.length.toString(), color: "#2C1F0E" },
-              { label: "Sealed", value: LETTERS.filter((l) => l.status === "sealed").length.toString(), color: "#D4A853" },
-              { label: "Delivered", value: LETTERS.filter((l) => l.status === "delivered").length.toString(), color: "#8BAE72" },
+              { label: "Total", value: letters.length.toString(), color: "#2C1F0E" },
+              { label: "Sealed", value: sealed.toString(), color: "#D4A853" },
+              { label: "Delivered", value: delivered.toString(), color: "#8BAE72" },
             ].map((stat) => (
               <View
                 key={stat.label}
@@ -102,11 +74,46 @@ export default function LegacyScreen() {
           </View>
 
           {/* Letters list */}
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 14, paddingBottom: 32 }}>
-            {LETTERS.map((letter, index) => (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 14, paddingBottom: 100 }}>
+            {/* Loading skeletons */}
+            {isLoading && [1, 2, 3].map((i) => (
+              <View
+                key={i}
+                style={{ height: 140, borderRadius: 20, backgroundColor: "rgba(45,36,26,0.06)", marginBottom: 14 }}
+              />
+            ))}
+
+            {/* Empty state */}
+            {!isLoading && letters.length === 0 && (
+              <View style={{ alignItems: "center", paddingVertical: 48, gap: 12 }}>
+                <Text style={{ fontSize: 32 }}>✉</Text>
+                <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 20, color: "#2C1F0E", textAlign: "center" }}>
+                  No letters yet.
+                </Text>
+                <Text style={{ fontSize: 14, color: "#8C7B65", textAlign: "center", paddingHorizontal: 32 }}>
+                  Write something for someone you love — they'll receive it when the time is right.
+                </Text>
+                <Pressable
+                  onPress={() => router.push("/record")}
+                  style={({ pressed }) => ({
+                    marginTop: 8,
+                    backgroundColor: "#D27F14",
+                    borderRadius: 14,
+                    paddingVertical: 13,
+                    paddingHorizontal: 28,
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                >
+                  <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "600" }}>Write your first letter →</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Letter cards */}
+            {!isLoading && mappedLetters.map((letter) => (
               <Animated.View
                 key={letter.id}
-                style={{ opacity, transform: [{ translateY: translateY }] }}
+                style={{ opacity, transform: [{ translateY }] }}
               >
                 <Pressable
                   style={({ pressed }) => ({
@@ -164,7 +171,6 @@ export default function LegacyScreen() {
                       <Feather name={letter.status === "delivered" ? "check-circle" : "clock"} size={13} color={letter.status === "delivered" ? "#8BAE72" : "#D4A853"} />
                       <Text style={{ fontSize: 12, color: "#8C7B65" }}>{letter.deliverLabel}</Text>
                     </View>
-                    <Text style={{ fontSize: 12, color: "#8C7B65" }}>{letter.duration}</Text>
                   </View>
                 </Pressable>
               </Animated.View>
