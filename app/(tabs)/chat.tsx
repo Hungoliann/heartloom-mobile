@@ -12,22 +12,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { Colors } from "../../src/constants/colors";
 
 // ─── Brand tokens ────────────────────────────────────────────────────────────
-const BG = "#F5EDDF";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
 const CREAM_PAPER = "rgba(255,250,232,0.85)";
 const RULE = "rgba(184,132,60,0.22)";
 const WHITE = "#FFFFFF";
 
 // Avatar background colours matching prototype classes
-const AV_AMBER = AMBER;         // default
-const AV_SAGE = "#9CAF88";      // pt-msg__av--sage
-const AV_INK = INK;             // pt-msg__av--ink (Maya)
+const AV_AMBER = Colors.amber;      // default
+const AV_SAGE = "#9CAF88";          // pt-msg__av--sage
+const AV_INK = Colors.ink;          // pt-msg__av--ink (Maya)
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type MsgType = "in" | "out" | "system" | "scheduled";
@@ -136,7 +131,7 @@ function Avatar({ initial, color }: { initial: string; color: string }) {
         style={{
           fontSize: 9,
           fontWeight: "700",
-          color: isInk ? BG : WHITE,
+          color: isInk ? Colors.bg : WHITE,
           letterSpacing: 0.04 * 9,
         }}
       >
@@ -166,7 +161,7 @@ function AudioCard({ audio }: { audio: AudioAttach }) {
           width: 28,
           height: 28,
           borderRadius: 14,
-          backgroundColor: AMBER,
+          backgroundColor: Colors.amber,
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
@@ -182,7 +177,7 @@ function AudioCard({ audio }: { audio: AudioAttach }) {
             fontFamily: "Georgia",
             fontStyle: "italic",
             fontSize: 13,
-            color: INK,
+            color: Colors.ink,
             lineHeight: 18,
           }}
         >
@@ -192,7 +187,7 @@ function AudioCard({ audio }: { audio: AudioAttach }) {
           style={{
             fontFamily: "System",
             fontSize: 10,
-            color: INK_MUTED,
+            color: Colors.inkMuted,
             marginTop: 2,
             letterSpacing: 0.3,
             textTransform: "uppercase",
@@ -254,7 +249,7 @@ function ScheduledMsg({ msg }: { msg: Msg }) {
         style={{
           fontSize: 9.5,
           fontWeight: "700",
-          color: AMBER_DEEP,
+          color: Colors.amberDeep,
           letterSpacing: 0.8,
           marginBottom: 4,
         }}
@@ -266,7 +261,7 @@ function ScheduledMsg({ msg }: { msg: Msg }) {
           fontFamily: "Georgia",
           fontStyle: "italic",
           fontSize: 12.5,
-          color: INK_SOFT,
+          color: Colors.inkSoft,
           lineHeight: 18,
         }}
       >
@@ -299,7 +294,7 @@ function InMsg({ msg }: { msg: Msg }) {
             style={{
               fontSize: 9.5,
               fontWeight: "700",
-              color: AMBER_DEEP,
+              color: Colors.amberDeep,
               marginBottom: 3,
               letterSpacing: 0.3,
             }}
@@ -322,7 +317,7 @@ function InMsg({ msg }: { msg: Msg }) {
             <Text
               style={{
                 fontSize: 13.5,
-                color: INK,
+                color: Colors.ink,
                 lineHeight: 19,
               }}
             >
@@ -334,7 +329,7 @@ function InMsg({ msg }: { msg: Msg }) {
             <Text
               style={{
                 fontSize: 10,
-                color: INK_MUTED,
+                color: Colors.inkMuted,
                 marginTop: 4,
                 letterSpacing: 0.3,
               }}
@@ -354,7 +349,7 @@ function OutMsg({ msg }: { msg: Msg }) {
       <View
         style={{
           maxWidth: "78%",
-          backgroundColor: INK,
+          backgroundColor: Colors.ink,
           borderRadius: 16,
           borderBottomRightRadius: 4,
           paddingHorizontal: 12,
@@ -365,7 +360,7 @@ function OutMsg({ msg }: { msg: Msg }) {
           <Text
             style={{
               fontSize: 13.5,
-              color: BG,
+              color: Colors.bg,
               lineHeight: 19,
             }}
           >
@@ -446,7 +441,7 @@ export default function ChatScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -462,7 +457,7 @@ export default function ChatScreen() {
               paddingHorizontal: 14,
               paddingTop: 8,
               paddingBottom: 12,
-              backgroundColor: BG,
+              backgroundColor: Colors.bg,
               borderBottomWidth: 1,
               borderBottomColor: "rgba(74,47,24,0.14)",
             }}
@@ -481,7 +476,7 @@ export default function ChatScreen() {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={{ fontSize: 22, color: INK_SOFT, lineHeight: 26 }}>
+              <Text style={{ fontSize: 22, color: Colors.inkSoft, lineHeight: 26 }}>
                 ‹
               </Text>
             </Pressable>
@@ -502,7 +497,7 @@ export default function ChatScreen() {
                   width: 30,
                   height: 30,
                   borderRadius: 15,
-                  backgroundColor: AMBER,
+                  backgroundColor: Colors.amber,
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
@@ -525,7 +520,7 @@ export default function ChatScreen() {
                   style={{
                     fontFamily: "Georgia",
                     fontSize: 14.5,
-                    color: INK,
+                    color: Colors.ink,
                     lineHeight: 18,
                   }}
                   numberOfLines={1}
@@ -535,7 +530,7 @@ export default function ChatScreen() {
                 <Text
                   style={{
                     fontSize: 10,
-                    color: INK_MUTED,
+                    color: Colors.inkMuted,
                     marginTop: 1,
                   }}
                   numberOfLines={1}
@@ -556,7 +551,7 @@ export default function ChatScreen() {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={{ fontSize: 20, color: INK_SOFT, letterSpacing: 1 }}>
+              <Text style={{ fontSize: 20, color: Colors.inkSoft, letterSpacing: 1 }}>
                 ⋯
               </Text>
             </Pressable>
@@ -583,7 +578,7 @@ export default function ChatScreen() {
                 <Text
                   style={{
                     fontSize: 10,
-                    color: INK_MUTED,
+                    color: Colors.inkMuted,
                     letterSpacing: 0.8,
                     textTransform: "uppercase",
                   }}
@@ -602,7 +597,7 @@ export default function ChatScreen() {
               paddingHorizontal: 14,
               paddingVertical: 10,
               // light cream background with amber-tinted border, matching pt-chat__compose
-              backgroundColor: BG,
+              backgroundColor: Colors.bg,
               borderTopWidth: 0,
             }}
           >
@@ -617,7 +612,7 @@ export default function ChatScreen() {
                 borderColor: "rgba(184,132,60,0.30)",
                 paddingHorizontal: 14,
                 paddingVertical: 6,
-                shadowColor: INK,
+                shadowColor: Colors.ink,
                 shadowOffset: { width: 0, height: -4 },
                 shadowOpacity: 0.07,
                 shadowRadius: 9,
@@ -628,11 +623,11 @@ export default function ChatScreen() {
                 value={draft}
                 onChangeText={setDraft}
                 placeholder="Write to the family…"
-                placeholderTextColor={INK_MUTED}
+                placeholderTextColor={Colors.inkMuted}
                 style={{
                   flex: 1,
                   fontSize: 13.5,
-                  color: INK,
+                  color: Colors.ink,
                   paddingVertical: 4,
                   maxHeight: 80,
                 }}
@@ -649,7 +644,7 @@ export default function ChatScreen() {
                   width: 36,
                   height: 36,
                   borderRadius: 18,
-                  backgroundColor: draft.trim() ? AMBER : "rgba(210,127,20,0.18)",
+                  backgroundColor: draft.trim() ? Colors.amber : "rgba(210,127,20,0.18)",
                   alignItems: "center",
                   justifyContent: "center",
                   opacity: pressed ? 0.8 : 1,
@@ -668,7 +663,7 @@ export default function ChatScreen() {
                     ↑
                   </Text>
                 ) : (
-                  <Feather name="mic" size={16} color={AMBER_DEEP} />
+                  <Feather name="mic" size={16} color={Colors.amberDeep} />
                 )}
               </Pressable>
             </View>
