@@ -5,16 +5,9 @@ import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useAuthStore } from "../../src/store/auth.store";
 import { usePinnedLetter } from "../../src/hooks/useLetters";
+import { Colors } from "../../src/constants/colors";
 
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const CREAM = "#FAF3E2";
 const PAPER = "#FBF4DC";
-const SAGE_DEEP = "#6F8564";
-const RULE = "rgba(74,47,24,0.14)";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -84,7 +77,7 @@ function SuggestRow({
   onPress: () => void;
   variant: "utility" | "soft";
 }) {
-  const iconColor = variant === "utility" ? AMBER_DEEP : SAGE_DEEP;
+  const iconColor = variant === "utility" ? Colors.amberDeep : Colors.sageDeep;
   return (
     <Pressable
       onPress={onPress}
@@ -95,7 +88,7 @@ function SuggestRow({
         padding: 10,
         paddingHorizontal: 12,
         borderWidth: 1,
-        borderColor: RULE,
+        borderColor: Colors.rule,
         borderRadius: 12,
         backgroundColor: PAPER,
         opacity: pressed ? 0.88 : 1,
@@ -108,9 +101,9 @@ function SuggestRow({
           width: 32,
           height: 32,
           borderRadius: 16,
-          backgroundColor: CREAM,
+          backgroundColor: Colors.cream,
           borderWidth: 1,
-          borderColor: RULE,
+          borderColor: Colors.rule,
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
@@ -125,17 +118,17 @@ function SuggestRow({
           style={{
             fontSize: 14,
             fontFamily: "Georgia",
-            color: INK,
+            color: Colors.ink,
             marginBottom: 2,
           }}
         >
           {title}
         </Text>
-        <Text style={{ fontSize: 11.5, color: INK_MUTED }}>{sub}</Text>
+        <Text style={{ fontSize: 11.5, color: Colors.inkMuted }}>{sub}</Text>
       </View>
 
       {/* Arrow */}
-      <Text style={{ fontSize: 18, color: INK_MUTED, lineHeight: 22, paddingRight: 2 }}>›</Text>
+      <Text style={{ fontSize: 18, color: Colors.inkMuted, lineHeight: 22, paddingRight: 2 }}>›</Text>
     </Pressable>
   );
 }
@@ -173,7 +166,7 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: CREAM }}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -189,9 +182,9 @@ export default function HomeScreen() {
                 paddingBottom: 12,
                 flexDirection: "row",
                 alignItems: "center",
-                backgroundColor: CREAM,
+                backgroundColor: Colors.cream,
                 borderBottomWidth: 1,
-                borderBottomColor: RULE,
+                borderBottomColor: Colors.rule,
               }}
             >
               {/* Menu button */}
@@ -201,13 +194,13 @@ export default function HomeScreen() {
                   height: 34,
                   borderRadius: 17,
                   borderWidth: 1,
-                  borderColor: RULE,
+                  borderColor: Colors.rule,
                   alignItems: "center",
                   justifyContent: "center",
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <Text style={{ fontSize: 16, color: INK_SOFT }}>☰</Text>
+                <Text style={{ fontSize: 16, color: Colors.inkSoft }}>☰</Text>
               </Pressable>
 
               {/* Wordmark */}
@@ -218,7 +211,7 @@ export default function HomeScreen() {
                   letterSpacing: 4.5,
                   textAlign: "center",
                   fontFamily: "Georgia",
-                  color: INK,
+                  color: Colors.ink,
                 }}
               >
                 HEARTLOOM
@@ -234,7 +227,7 @@ export default function HomeScreen() {
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <Text style={{ fontSize: 18, color: INK_SOFT }}>♡</Text>
+                <Text style={{ fontSize: 18, color: Colors.inkSoft }}>♡</Text>
               </Pressable>
             </View>
 
@@ -245,7 +238,7 @@ export default function HomeScreen() {
                   fontFamily: "Georgia",
                   fontStyle: "italic",
                   fontSize: 15,
-                  color: INK_SOFT,
+                  color: Colors.inkSoft,
                 }}
               >
                 {getGreeting()}, {firstName}.
@@ -255,13 +248,13 @@ export default function HomeScreen() {
                   fontFamily: "Georgia",
                   fontSize: 30,
                   fontWeight: "500",
-                  color: INK,
+                  color: Colors.ink,
                   letterSpacing: -0.3,
                   marginBottom: 12,
                 }}
               >
                 Your{" "}
-                <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>Heartloom.</Text>
+                <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>Heartloom.</Text>
               </Text>
             </View>
 
@@ -273,7 +266,7 @@ export default function HomeScreen() {
                   marginHorizontal: 22,
                   marginBottom: 14,
                   borderRadius: 16,
-                  backgroundColor: INK,
+                  backgroundColor: Colors.ink,
                   padding: 14,
                   gap: 8,
                   opacity: pressed ? 0.92 : 1,
@@ -302,14 +295,14 @@ export default function HomeScreen() {
                       Sealed{pinnedLetter.deliver_at ? ` · opens ${new Date(pinnedLetter.deliver_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` : ""}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 14, color: AMBER }}>★</Text>
+                  <Text style={{ fontSize: 14, color: Colors.amber }}>★</Text>
                 </View>
                 {pinnedLetter.body ? (
                   <Text
                     style={{
                       fontFamily: "Georgia", fontStyle: "italic", fontSize: 13,
                       color: "rgba(250,243,226,0.85)", borderLeftWidth: 2,
-                      borderLeftColor: AMBER, paddingLeft: 10,
+                      borderLeftColor: Colors.amber, paddingLeft: 10,
                     }}
                     numberOfLines={2}
                   >
@@ -325,7 +318,7 @@ export default function HomeScreen() {
                   marginBottom: 14,
                   borderRadius: 16,
                   borderWidth: 1.5,
-                  borderColor: RULE,
+                  borderColor: Colors.rule,
                   borderStyle: "dashed",
                   padding: 16,
                   alignItems: "center",
@@ -333,11 +326,11 @@ export default function HomeScreen() {
                   opacity: pressed ? 0.8 : 1,
                 })}
               >
-                <Text style={{ fontSize: 20, color: INK_MUTED }}>✎</Text>
-                <Text style={{ fontFamily: "Georgia", fontSize: 14, color: INK_SOFT, textAlign: "center" }}>
+                <Text style={{ fontSize: 20, color: Colors.inkMuted }}>✎</Text>
+                <Text style={{ fontFamily: "Georgia", fontSize: 14, color: Colors.inkSoft, textAlign: "center" }}>
                   Create your first Future Letter
                 </Text>
-                <Text style={{ fontSize: 12, color: INK_MUTED }}>A message that opens when they need it most.</Text>
+                <Text style={{ fontSize: 12, color: Colors.inkMuted }}>A message that opens when they need it most.</Text>
               </Pressable>
             )}
 
@@ -365,7 +358,7 @@ export default function HomeScreen() {
                     width: 18,
                     height: 18,
                     borderRadius: 9,
-                    backgroundColor: SAGE_DEEP,
+                    backgroundColor: Colors.sageDeep,
                     transform: [{ scale: pulseScale }],
                     opacity: pulseOpacity,
                   }}
@@ -375,7 +368,7 @@ export default function HomeScreen() {
                     width: 9,
                     height: 9,
                     borderRadius: 4.5,
-                    backgroundColor: SAGE_DEEP,
+                    backgroundColor: Colors.sageDeep,
                   }}
                 />
               </View>
@@ -386,13 +379,13 @@ export default function HomeScreen() {
                   style={{
                     fontFamily: "Georgia",
                     fontSize: 13.5,
-                    color: INK,
+                    color: Colors.ink,
                     marginBottom: 1,
                   }}
                 >
                   Concierge available now
                 </Text>
-                <Text style={{ fontSize: 11, color: INK_MUTED, lineHeight: 16 }}>
+                <Text style={{ fontSize: 11, color: Colors.inkMuted, lineHeight: 16 }}>
                   Average wait: under 4 minutes · Mon–Sat, 7a–9p PT
                 </Text>
               </View>
@@ -401,7 +394,7 @@ export default function HomeScreen() {
               <Pressable
                 onPress={() => router.push("/(tabs)/concierge" as any)}
                 style={({ pressed }) => ({
-                  backgroundColor: SAGE_DEEP,
+                  backgroundColor: Colors.sageDeep,
                   borderRadius: 999,
                   paddingVertical: 6,
                   paddingHorizontal: 12,
@@ -432,7 +425,7 @@ export default function HomeScreen() {
                   fontSize: 10,
                   letterSpacing: 2.2,
                   fontWeight: "600",
-                  color: INK_MUTED,
+                  color: Colors.inkMuted,
                   marginBottom: 8,
                   marginTop: 8,
                 }}
@@ -461,7 +454,7 @@ export default function HomeScreen() {
                   fontSize: 10,
                   letterSpacing: 2.2,
                   fontWeight: "600",
-                  color: INK_MUTED,
+                  color: Colors.inkMuted,
                   marginBottom: 8,
                 }}
               >
