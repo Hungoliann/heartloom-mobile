@@ -8,17 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-// ── Colors ──────────────────────────────────────────────────────────────────
-const BG         = "#F5EDDF";
-const INK        = "#2D241A";
-const INK_SOFT   = "#4A3D2E";
-const INK_MUTED  = "#8A7A66";
-const AMBER      = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const SAGE       = "#4A6741";
-const WHITE      = "#FFFFFF";
-const PARCHMENT  = "#FBF2DD";
+import { Colors } from "../src/constants/colors";
 
 // ── Bar chart data ────────────────────────────────────────────────────────────
 const BARS = [
@@ -78,7 +68,7 @@ export default function Planner() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* ── Header ──────────────────────────────────────────────────── */}
         <View
@@ -88,8 +78,8 @@ export default function Planner() {
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(74,47,24,0.14)",
-            backgroundColor: BG,
+            borderBottomColor: Colors.rule,
+            backgroundColor: Colors.bg,
           }}
         >
           {/* Back button */}
@@ -100,14 +90,14 @@ export default function Planner() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: "rgba(74,47,24,0.14)",
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.65 : 1,
             })}
             accessibilityLabel="Back to Home"
           >
-            <Text style={{ fontSize: 20, color: INK_SOFT, lineHeight: 24, marginTop: -1 }}>‹</Text>
+            <Text style={{ fontSize: 20, color: Colors.inkSoft, lineHeight: 24, marginTop: -1 }}>‹</Text>
           </Pressable>
 
           {/* Title */}
@@ -118,7 +108,7 @@ export default function Planner() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Planner
@@ -129,7 +119,7 @@ export default function Planner() {
             style={{
               fontSize: 11,
               letterSpacing: 1.6,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               minWidth: 60,
               textAlign: "right",
             }}
@@ -150,7 +140,7 @@ export default function Planner() {
               fontSize: 10,
               fontWeight: "700",
               letterSpacing: 1.8,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               marginBottom: 8,
             }}
           >
@@ -163,14 +153,14 @@ export default function Planner() {
               fontFamily: "Georgia",
               fontSize: 24,
               fontWeight: "500",
-              color: INK,
+              color: Colors.ink,
               lineHeight: 30,
               letterSpacing: -0.3,
               marginBottom: 12,
             }}
           >
             to say{" "}
-            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>I love you,</Text>
+            <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>I love you,</Text>
             {"\n"}before life asks for it.
           </Text>
 
@@ -178,7 +168,7 @@ export default function Planner() {
           <Text
             style={{
               fontSize: 14,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               lineHeight: 21,
               marginBottom: 24,
             }}
@@ -189,11 +179,11 @@ export default function Planner() {
           {/* ── Chart Card ──────────────────────────────────────────── */}
           <View
             style={{
-              backgroundColor: WHITE,
+              backgroundColor: Colors.white,
               borderRadius: 16,
               padding: 16,
               marginBottom: 28,
-              shadowColor: INK,
+              shadowColor: Colors.ink,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
               shadowRadius: 12,
@@ -202,10 +192,10 @@ export default function Planner() {
           >
             {/* Chart head */}
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: INK, letterSpacing: 0.2 }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.ink, letterSpacing: 0.2 }}>
                 Letters sealed · last 8 weeks
               </Text>
-              <Text style={{ fontSize: 14, color: INK_MUTED }}>›</Text>
+              <Text style={{ fontSize: 14, color: Colors.inkMuted }}>›</Text>
             </View>
 
             {/* Bars */}
@@ -230,7 +220,7 @@ export default function Planner() {
                   <View
                     style={{
                       height: (bar.pct / 100) * BAR_H,
-                      backgroundColor: bar.accent ? AMBER : "rgba(210,127,20,0.3)",
+                      backgroundColor: bar.accent ? Colors.amber : "rgba(210,127,20,0.3)",
                       borderRadius: 3,
                     }}
                   />
@@ -240,9 +230,9 @@ export default function Planner() {
 
             {/* Axis */}
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10, paddingHorizontal: 2 }}>
-              <Text style={{ fontSize: 9, color: INK_MUTED, fontWeight: "600", letterSpacing: 0.5 }}>MAR</Text>
-              <Text style={{ fontSize: 9, color: INK_MUTED, fontWeight: "600", letterSpacing: 0.5 }}>APR</Text>
-              <Text style={{ fontSize: 9, color: INK_MUTED, fontWeight: "600", letterSpacing: 0.5 }}>MAY</Text>
+              <Text style={{ fontSize: 9, color: Colors.inkMuted, fontWeight: "600", letterSpacing: 0.5 }}>MAR</Text>
+              <Text style={{ fontSize: 9, color: Colors.inkMuted, fontWeight: "600", letterSpacing: 0.5 }}>APR</Text>
+              <Text style={{ fontSize: 9, color: Colors.inkMuted, fontWeight: "600", letterSpacing: 0.5 }}>MAY</Text>
             </View>
 
             {/* Delta pill + text */}
@@ -255,9 +245,9 @@ export default function Planner() {
                   paddingVertical: 3,
                 }}
               >
-                <Text style={{ fontSize: 11, fontWeight: "700", color: SAGE }}>↑ 3× this month</Text>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.sageDark }}>↑ 3× this month</Text>
               </View>
-              <Text style={{ fontSize: 12, color: INK_SOFT }}>Mom's birthday is coming up.</Text>
+              <Text style={{ fontSize: 12, color: Colors.inkSoft }}>Mom's birthday is coming up.</Text>
             </View>
           </View>
 
@@ -267,7 +257,7 @@ export default function Planner() {
               fontSize: 13,
               fontWeight: "700",
               letterSpacing: 0.3,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               textTransform: "uppercase",
               marginBottom: 14,
             }}
@@ -282,12 +272,12 @@ export default function Planner() {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                backgroundColor: WHITE,
+                backgroundColor: Colors.white,
                 borderRadius: 14,
                 padding: 14,
                 marginBottom: 10,
                 opacity: item.soft ? 0.6 : 1,
-                shadowColor: INK,
+                shadowColor: Colors.ink,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: item.soft ? 0.04 : 0.07,
                 shadowRadius: 6,
@@ -309,7 +299,7 @@ export default function Planner() {
                   style={{
                     fontSize: 9,
                     fontWeight: "700",
-                    color: item.soft ? INK_MUTED : AMBER_DEEP,
+                    color: item.soft ? Colors.inkMuted : Colors.amberDeep,
                     letterSpacing: 0.8,
                     lineHeight: 13,
                   }}
@@ -320,7 +310,7 @@ export default function Planner() {
                   style={{
                     fontSize: item.day === "—" ? 16 : 18,
                     fontWeight: "700",
-                    color: item.soft ? INK_MUTED : INK,
+                    color: item.soft ? Colors.inkMuted : Colors.ink,
                     lineHeight: 22,
                   }}
                 >
@@ -334,7 +324,7 @@ export default function Planner() {
                   style={{
                     fontSize: 14,
                     fontWeight: "600",
-                    color: item.soft ? INK_MUTED : INK,
+                    color: item.soft ? Colors.inkMuted : Colors.ink,
                     marginBottom: 3,
                     lineHeight: 19,
                   }}
@@ -344,7 +334,7 @@ export default function Planner() {
                 <Text
                   style={{
                     fontSize: 12,
-                    color: INK_MUTED,
+                    color: Colors.inkMuted,
                     lineHeight: 17,
                   }}
                 >
@@ -357,7 +347,7 @@ export default function Planner() {
                 <Pressable
                   onPress={() => router.push("/record")}
                   style={({ pressed }) => ({
-                    backgroundColor: INK,
+                    backgroundColor: Colors.ink,
                     borderRadius: 20,
                     paddingHorizontal: 14,
                     paddingVertical: 8,
@@ -365,7 +355,7 @@ export default function Planner() {
                     opacity: pressed ? 0.75 : 1,
                   })}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: PARCHMENT, letterSpacing: 0.2 }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.parchment, letterSpacing: 0.2 }}>
                     Begin
                   </Text>
                 </Pressable>

@@ -5,8 +5,6 @@ import { useRouter } from "expo-router";
 import { useLetters } from "../../src/hooks/useLetters";
 import { Colors } from "../../src/constants/colors";
 
-const PAPER = "#FBF4DC";
-
 type EntryTag = "SEALED" | "SUGGESTED" | "AUDIO";
 
 type TimelineEntry = {
@@ -18,6 +16,7 @@ type TimelineEntry = {
   tag?: EntryTag;
   isToday?: boolean;
   isAudio?: boolean;
+  isFuture?: boolean;
 };
 
 type TimelineSection = {
@@ -153,7 +152,7 @@ function EntryCard({
     <View
       style={{
         flex: 1,
-        backgroundColor: entry.isToday ? PAPER : "#FFFFFF",
+        backgroundColor: entry.isToday ? Colors.paper : Colors.white,
         borderRadius: 14,
         padding: 14,
         borderWidth: entry.isToday ? 1.5 : 1,
@@ -241,37 +240,44 @@ export default function TimelineScreen() {
   const slideY = useRef(new Animated.Value(20)).current;
   const [activeTab, setActiveTab] = useState<Tab>("forward");
 
-  // Merge real letters into timeline sections alongside static suggestions
   const timelineData = useMemo<TimelineSection[]>(() => {
-    const realEntries: TimelineEntry[] = letters.map((l) => {
+    const now = new Date();
+
+    const allEntries: TimelineEntry[] = letters.map((l) => {
       const dateObj = l.deliver_at ? new Date(l.deliver_at) : new Date(l.created_at!);
       const monthDay = dateObj.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase();
+      const isFuture = l.deliver_at ? new Date(l.deliver_at) > now : false;
       return {
         id: l.id,
         date: monthDay,
         dateSub: l.deliver_at ? `${dateObj.getFullYear()}` : "draft",
         title: l.title,
         sub: l.recipient_name ? `For ${l.recipient_name}` : (l.body?.slice(0, 60) ?? ""),
-        tag: l.deliver_at && !l.delivered_at ? ("SEALED" as const) : undefined,
+        tag: isFuture && !l.delivered_at ? ("SEALED" as const) : undefined,
         isAudio: l.media_type === "audio",
+        isFuture,
       };
     });
 
-    // Group real entries by year
+    const filtered = allEntries.filter((e) => {
+      if (activeTab === "forward") return e.isFuture;
+      if (activeTab === "backward") return !e.isFuture;
+      return true;
+    });
+
+    if (filtered.length === 0) return TIMELINE_DATA;
+
     const byYear = new Map<string, TimelineEntry[]>();
-    for (const e of realEntries) {
-      const year = e.dateSub.length === 4 ? e.dateSub : new Date().getFullYear().toString();
+    for (const e of filtered) {
+      const year = e.dateSub.length === 4 ? e.dateSub : now.getFullYear().toString();
       if (!byYear.has(year)) byYear.set(year, []);
       byYear.get(year)!.push(e);
     }
 
-    // If no real letters yet, fall back to static demo data
-    if (realEntries.length === 0) return TIMELINE_DATA;
-
     return Array.from(byYear.entries())
       .sort(([a], [b]) => Number(b) - Number(a))
       .map(([year, entries]) => ({ year, entries }));
-  }, [letters]);
+  }, [letters, activeTab]);
 
   useEffect(() => {
     Animated.parallel([

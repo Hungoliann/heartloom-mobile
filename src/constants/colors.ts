@@ -7,7 +7,11 @@ export const Colors = {
   cream:     "#FAF3E2",
   sageDeep:  "#6F8564",
   sage:      "#9CAF88",
+  sageDark:  "#4A6741",
   bg:        "#F5EDDF",
   terra:     "#B86241",
+  white:     "#FFFFFF",
+  parchment: "#FBF2DD",
+  paper:     "#FBF4DC",
   rule:      "rgba(74,47,24,0.14)",
 } as const;

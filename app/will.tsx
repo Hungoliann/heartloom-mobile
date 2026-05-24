@@ -8,17 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-// ── Colors ──────────────────────────────────────────────────────────────────
-const BG         = "#F5EDDF";
-const INK        = "#2D241A";
-const INK_SOFT   = "#4A3D2E";
-const INK_MUTED  = "#8A7A66";
-const AMBER      = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const SAGE       = "#4A6741";
-const WHITE      = "#FFFFFF";
-const PARCHMENT  = "#FBF2DD";
+import { Colors } from "../src/constants/colors";
 
 // ── Section data from prototype ──────────────────────────────────────────────
 type SectionStatus = "done" | "in-progress" | "todo";
@@ -77,21 +67,21 @@ const SECTIONS: WillSection[] = [
 
 // ── Icon color helper ─────────────────────────────────────────────────────────
 function iconColor(status: SectionStatus): string {
-  if (status === "done")        return SAGE;
-  if (status === "in-progress") return AMBER;
-  return INK_MUTED;
+  if (status === "done")        return Colors.sageDark;
+  if (status === "in-progress") return Colors.amber;
+  return Colors.inkMuted;
 }
 
 function barColor(status: SectionStatus): string {
-  if (status === "done")        return SAGE;
-  if (status === "in-progress") return AMBER;
+  if (status === "done")        return Colors.sageDark;
+  if (status === "in-progress") return Colors.amber;
   return "rgba(138,122,102,0.3)";
 }
 
 function titleColor(status: SectionStatus): string {
-  if (status === "done")        return INK_SOFT;
-  if (status === "in-progress") return INK;
-  return INK_MUTED;
+  if (status === "done")        return Colors.inkSoft;
+  if (status === "in-progress") return Colors.ink;
+  return Colors.inkMuted;
 }
 
 export default function Will() {
@@ -107,7 +97,7 @@ export default function Will() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* ── Header ──────────────────────────────────────────────────── */}
         <View
@@ -117,8 +107,8 @@ export default function Will() {
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(74,47,24,0.14)",
-            backgroundColor: BG,
+            borderBottomColor: Colors.rule,
+            backgroundColor: Colors.bg,
           }}
         >
           {/* Back button */}
@@ -129,14 +119,14 @@ export default function Will() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: "rgba(74,47,24,0.14)",
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.65 : 1,
             })}
             accessibilityLabel="Back to Home"
           >
-            <Text style={{ fontSize: 20, color: INK_SOFT, lineHeight: 24, marginTop: -1 }}>‹</Text>
+            <Text style={{ fontSize: 20, color: Colors.inkSoft, lineHeight: 24, marginTop: -1 }}>‹</Text>
           </Pressable>
 
           {/* Title */}
@@ -147,7 +137,7 @@ export default function Will() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Digital Will
@@ -158,7 +148,7 @@ export default function Will() {
             style={{
               fontSize: 11,
               letterSpacing: 1.4,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               minWidth: 60,
               textAlign: "right",
             }}
@@ -179,7 +169,7 @@ export default function Will() {
               fontSize: 10,
               fontWeight: "700",
               letterSpacing: 1.8,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               marginBottom: 8,
             }}
           >
@@ -192,14 +182,14 @@ export default function Will() {
               fontFamily: "Georgia",
               fontSize: 24,
               fontWeight: "500",
-              color: INK,
+              color: Colors.ink,
               lineHeight: 30,
               letterSpacing: -0.3,
               marginBottom: 12,
             }}
           >
             A will{" "}
-            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>
+            <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>
               your family{"\n"}will actually open.
             </Text>
           </Text>
@@ -208,7 +198,7 @@ export default function Will() {
           <Text
             style={{
               fontSize: 14,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               lineHeight: 21,
               marginBottom: 26,
             }}
@@ -223,11 +213,11 @@ export default function Will() {
               style={{
                 flexDirection: "row",
                 alignItems: "flex-start",
-                backgroundColor: WHITE,
+                backgroundColor: Colors.white,
                 borderRadius: 14,
                 padding: 14,
                 marginBottom: 10,
-                shadowColor: INK,
+                shadowColor: Colors.ink,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.06,
                 shadowRadius: 6,
@@ -286,10 +276,10 @@ export default function Will() {
                       fontWeight: "700",
                       color:
                         section.status === "done"
-                          ? SAGE
+                          ? Colors.sageDark
                           : section.status === "in-progress"
-                          ? AMBER_DEEP
-                          : INK_MUTED,
+                          ? Colors.amberDeep
+                          : Colors.inkMuted,
                       marginLeft: 8,
                     }}
                   >
@@ -301,7 +291,7 @@ export default function Will() {
                 <Text
                   style={{
                     fontSize: 12,
-                    color: INK_MUTED,
+                    color: Colors.inkMuted,
                     lineHeight: 17,
                     marginBottom: 10,
                   }}
@@ -336,7 +326,7 @@ export default function Will() {
           {/* ── Parchment assurance block ─────────────────────────────── */}
           <View
             style={{
-              backgroundColor: PARCHMENT,
+              backgroundColor: Colors.parchment,
               borderRadius: 14,
               padding: 18,
               marginTop: 8,
@@ -350,7 +340,7 @@ export default function Will() {
                 fontFamily: "Georgia",
                 fontSize: 15,
                 fontWeight: "600",
-                color: INK_SOFT,
+                color: Colors.inkSoft,
                 marginBottom: 8,
               }}
             >
@@ -361,7 +351,7 @@ export default function Will() {
                 fontFamily: "Georgia",
                 fontStyle: "italic",
                 fontSize: 13,
-                color: INK_MUTED,
+                color: Colors.inkMuted,
                 lineHeight: 20,
               }}
             >
@@ -374,20 +364,20 @@ export default function Will() {
           <Pressable
             onPress={() => router.push("/record")}
             style={({ pressed }) => ({
-              backgroundColor: INK,
+              backgroundColor: Colors.ink,
               borderRadius: 26,
               paddingVertical: 15,
               alignItems: "center",
               marginBottom: 12,
               opacity: pressed ? 0.82 : 1,
-              shadowColor: INK,
+              shadowColor: Colors.ink,
               shadowOffset: { width: 0, height: 6 },
               shadowOpacity: 0.25,
               shadowRadius: 14,
               elevation: 4,
             })}
           >
-            <Text style={{ fontSize: 15, fontWeight: "500", color: PARCHMENT, letterSpacing: 0.2 }}>
+            <Text style={{ fontSize: 15, fontWeight: "500", color: Colors.parchment, letterSpacing: 0.2 }}>
               Continue Health Directive
             </Text>
           </Pressable>
@@ -403,7 +393,7 @@ export default function Will() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: 13, fontWeight: "500", color: INK_SOFT, letterSpacing: 0.2 }}>
+            <Text style={{ fontSize: 13, fontWeight: "500", color: Colors.inkSoft, letterSpacing: 0.2 }}>
               Talk to Naomi first
             </Text>
           </Pressable>

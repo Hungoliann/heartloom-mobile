@@ -8,25 +8,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-// ── Colors ──────────────────────────────────────────────────────────────────
-const BG         = "#F5EDDF";
-const INK        = "#2D241A";
-const INK_SOFT   = "#4A3D2E";
-const INK_MUTED  = "#8A7A66";
-const AMBER      = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const SAGE       = "#4A6741";
-const WHITE      = "#FFFFFF";
-const PARCHMENT  = "#FBF2DD";
+import { Colors } from "../src/constants/colors";
 
 // Thumbnail accent colors from prototype data-tone attributes
 const THUMB_COLORS = [
-  "#9CAF88", // sage
-  "#E8A851", // amber
-  "#F5EDDF", // cream
-  "#3A2D24", // ink
-  "#B86241", // terra
+  Colors.sage,   // sage
+  "#E8A851",     // amber (warm mid-tone not in token set)
+  Colors.bg,     // cream
+  "#3A2D24",     // near-ink (darker than Colors.ink)
+  Colors.terra,  // terra
 ];
 
 export default function Archive() {
@@ -42,7 +32,7 @@ export default function Archive() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* ── Header ──────────────────────────────────────────────────── */}
         <View
@@ -52,8 +42,8 @@ export default function Archive() {
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(74,47,24,0.14)",
-            backgroundColor: BG,
+            borderBottomColor: Colors.rule,
+            backgroundColor: Colors.bg,
           }}
         >
           {/* Back button */}
@@ -64,14 +54,14 @@ export default function Archive() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: "rgba(74,47,24,0.14)",
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.65 : 1,
             })}
             accessibilityLabel="Back to Home"
           >
-            <Text style={{ fontSize: 20, color: INK_SOFT, lineHeight: 24, marginTop: -1 }}>‹</Text>
+            <Text style={{ fontSize: 20, color: Colors.inkSoft, lineHeight: 24, marginTop: -1 }}>‹</Text>
           </Pressable>
 
           {/* Title */}
@@ -82,7 +72,7 @@ export default function Archive() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Story Archive
@@ -93,7 +83,7 @@ export default function Archive() {
             style={{
               fontSize: 11,
               letterSpacing: 1.6,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               minWidth: 60,
               textAlign: "right",
             }}
@@ -114,23 +104,23 @@ export default function Archive() {
               fontFamily: "Georgia",
               fontSize: 24,
               fontWeight: "500",
-              color: INK,
+              color: Colors.ink,
               lineHeight: 30,
               letterSpacing: -0.3,
               marginBottom: 22,
             }}
           >
             The family,{"\n"}
-            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>told in their own words.</Text>
+            <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>told in their own words.</Text>
           </Text>
 
           {/* ── Gallery header ─────────────────────────────────────── */}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: INK_MUTED, textTransform: "uppercase", letterSpacing: 0.8 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.inkMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>
               Gallery
             </Text>
             <Pressable>
-              <Text style={{ fontSize: 13, color: AMBER_DEEP, fontWeight: "600" }}>See all ›</Text>
+              <Text style={{ fontSize: 13, color: Colors.amberDeep, fontWeight: "600" }}>See all ›</Text>
             </Pressable>
           </View>
 
@@ -222,7 +212,7 @@ export default function Archive() {
                 width: 36,
                 height: 24,
                 borderRadius: 3,
-                backgroundColor: PARCHMENT,
+                backgroundColor: Colors.parchment,
                 transform: [{ rotate: "-6deg" }],
                 alignItems: "center",
                 justifyContent: "center",
@@ -245,7 +235,7 @@ export default function Archive() {
               <Text
                 style={{
                   fontSize: 12,
-                  color: WHITE,
+                  color: Colors.white,
                   fontWeight: "500",
                   backgroundColor: "rgba(45,36,26,0.45)",
                   alignSelf: "flex-start",
@@ -270,7 +260,7 @@ export default function Archive() {
                   aspectRatio: 1,
                   borderRadius: 8,
                   backgroundColor: color,
-                  borderWidth: color === "#F5EDDF" ? 1 : 0,
+                  borderWidth: color === Colors.bg ? 1 : 0,
                   borderColor: "rgba(74,47,24,0.15)",
                 }}
               />
@@ -283,7 +273,7 @@ export default function Archive() {
               fontSize: 13,
               fontWeight: "700",
               letterSpacing: 0.3,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               textTransform: "uppercase",
               marginBottom: 6,
             }}
@@ -293,7 +283,7 @@ export default function Archive() {
           <Text
             style={{
               fontSize: 13,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               lineHeight: 19,
               marginBottom: 18,
             }}
@@ -331,7 +321,7 @@ export default function Archive() {
                     fontFamily: "Georgia",
                     fontSize: 22,
                     fontWeight: "600",
-                    color: AMBER_DEEP,
+                    color: Colors.amberDeep,
                     lineHeight: 26,
                   }}
                 >
@@ -340,7 +330,7 @@ export default function Archive() {
                 <Text
                   style={{
                     fontSize: 10,
-                    color: INK_MUTED,
+                    color: Colors.inkMuted,
                     marginTop: 4,
                     lineHeight: 14,
                     textAlign: "center",
@@ -355,10 +345,10 @@ export default function Archive() {
           {/* ── Family Game card ───────────────────────────────────── */}
           <View
             style={{
-              backgroundColor: WHITE,
+              backgroundColor: Colors.white,
               borderRadius: 16,
               padding: 18,
-              shadowColor: INK,
+              shadowColor: Colors.ink,
               shadowOffset: { width: 0, height: 3 },
               shadowOpacity: 0.08,
               shadowRadius: 10,
@@ -370,7 +360,7 @@ export default function Archive() {
                 fontSize: 9,
                 fontWeight: "700",
                 letterSpacing: 1.6,
-                color: AMBER_DEEP,
+                color: Colors.amberDeep,
                 marginBottom: 8,
               }}
             >
@@ -381,7 +371,7 @@ export default function Archive() {
                 fontFamily: "Georgia",
                 fontStyle: "italic",
                 fontSize: 16,
-                color: INK,
+                color: Colors.ink,
                 lineHeight: 22,
                 marginBottom: 6,
               }}
@@ -391,7 +381,7 @@ export default function Archive() {
             <Text
               style={{
                 fontSize: 13,
-                color: INK_SOFT,
+                color: Colors.inkSoft,
                 lineHeight: 19,
                 marginBottom: 16,
               }}
@@ -400,14 +390,14 @@ export default function Archive() {
             </Text>
             <Pressable
               style={({ pressed }) => ({
-                backgroundColor: INK,
+                backgroundColor: Colors.ink,
                 borderRadius: 24,
                 paddingVertical: 12,
                 alignItems: "center",
                 opacity: pressed ? 0.8 : 1,
               })}
             >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: PARCHMENT, letterSpacing: 0.2 }}>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.parchment, letterSpacing: 0.2 }}>
                 Start the round
               </Text>
             </Pressable>
@@ -424,11 +414,11 @@ export default function Archive() {
             width: 56,
             height: 56,
             borderRadius: 28,
-            backgroundColor: AMBER,
+            backgroundColor: Colors.amber,
             alignItems: "center",
             justifyContent: "center",
             opacity: pressed ? 0.85 : 1,
-            shadowColor: AMBER_DEEP,
+            shadowColor: Colors.amberDeep,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.4,
             shadowRadius: 12,
@@ -436,7 +426,7 @@ export default function Archive() {
           })}
           accessibilityLabel="Add new story"
         >
-          <Text style={{ fontSize: 28, color: WHITE, lineHeight: 32, marginTop: -2 }}>+</Text>
+          <Text style={{ fontSize: 28, color: Colors.white, lineHeight: 32, marginTop: -2 }}>+</Text>
         </Pressable>
       </SafeAreaView>
     </View>
