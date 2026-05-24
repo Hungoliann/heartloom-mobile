@@ -244,7 +244,7 @@ export default function TimelineScreen() {
   // Merge real letters into timeline sections alongside static suggestions
   const timelineData = useMemo<TimelineSection[]>(() => {
     const realEntries: TimelineEntry[] = letters.map((l) => {
-      const dateObj = l.deliver_at ? new Date(l.deliver_at) : new Date(l.created_at);
+      const dateObj = l.deliver_at ? new Date(l.deliver_at) : new Date(l.created_at!);
       const monthDay = dateObj.toLocaleDateString("en-US", { month: "short", day: "2-digit" }).toUpperCase();
       return {
         id: l.id,
