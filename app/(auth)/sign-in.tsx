@@ -13,10 +13,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "../../src/lib/supabase";
+import { Colors } from "../../src/constants/colors";
 
 const BG = "#1A1108";
-const AMBER = "#D27F14";
-const CREAM = "#FAF3E2";
 const CREAM_DIM = "rgba(250,243,226,0.78)";
 const RULE = "rgba(74,47,24,0.35)";
 const INPUT_BG = "rgba(250,243,226,0.05)";
@@ -72,15 +71,15 @@ export default function SignInScreen() {
           >
             <Animated.View style={{ flex: 1, opacity, transform: [{ translateY: slideY }] }}>
               <View style={{ alignItems: "center", marginBottom: 44 }}>
-                <Text style={{ fontSize: 36, color: AMBER, marginBottom: 12 }}>♡</Text>
-                <Text style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 4, color: CREAM, textTransform: "uppercase" }}>
+                <Text style={{ fontSize: 36, color: Colors.amber, marginBottom: 12 }}>♡</Text>
+                <Text style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 4, color: Colors.cream, textTransform: "uppercase" }}>
                   HEARTLOOM
                 </Text>
               </View>
 
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 26, lineHeight: 34, color: CREAM, textAlign: "center", marginBottom: 8, fontWeight: "500" }}>
+              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 26, lineHeight: 34, color: Colors.cream, textAlign: "center", marginBottom: 8, fontWeight: "500" }}>
                 Welcome back.{"\n"}
-                <Text style={{ color: AMBER }}>Your letters are waiting.</Text>
+                <Text style={{ color: Colors.amber }}>Your letters are waiting.</Text>
               </Text>
               <Text style={{ fontSize: 13, color: CREAM_DIM, textAlign: "center", lineHeight: 19, marginBottom: 36 }}>
                 Your words are kept safe and private.
@@ -93,7 +92,7 @@ export default function SignInScreen() {
                   onChangeText={(t) => { setEmail(t); setError(""); }}
                   placeholder="Your email address"
                   placeholderTextColor="rgba(250,243,226,0.28)"
-                  style={{ fontSize: 14.5, color: CREAM, paddingVertical: 16 }}
+                  style={{ fontSize: 14.5, color: Colors.cream, paddingVertical: 16 }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -108,7 +107,7 @@ export default function SignInScreen() {
                   onChangeText={(t) => { setPassword(t); setError(""); }}
                   placeholder="Password"
                   placeholderTextColor="rgba(250,243,226,0.28)"
-                  style={{ fontSize: 14.5, color: CREAM, paddingVertical: 16 }}
+                  style={{ fontSize: 14.5, color: Colors.cream, paddingVertical: 16 }}
                   secureTextEntry
                   returnKeyType="go"
                   onSubmitEditing={handleSignIn}
@@ -123,13 +122,13 @@ export default function SignInScreen() {
                 onPress={handleSignIn}
                 disabled={!canContinue || isSubmitting}
                 style={({ pressed }) => ({
-                  backgroundColor: canContinue ? AMBER : "rgba(210,127,20,0.28)",
+                  backgroundColor: canContinue ? Colors.amber : "rgba(210,127,20,0.28)",
                   borderRadius: 14,
                   paddingVertical: 16,
                   alignItems: "center",
                   opacity: pressed ? 0.85 : 1,
                   marginBottom: 12,
-                  shadowColor: AMBER,
+                  shadowColor: Colors.amber,
                   shadowOffset: { width: 0, height: canContinue ? 8 : 0 },
                   shadowOpacity: canContinue ? 0.5 : 0,
                   shadowRadius: 16,
@@ -160,7 +159,7 @@ export default function SignInScreen() {
               >
                 <Text style={{ fontSize: 14, color: CREAM_DIM }}>
                   Don't have an account?{" "}
-                  <Text style={{ color: AMBER, fontWeight: "600" }}>Create one</Text>
+                  <Text style={{ color: Colors.amber, fontWeight: "600" }}>Create one</Text>
                 </Text>
               </Pressable>
 
