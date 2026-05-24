@@ -9,18 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-// ─── Brand tokens ─────────────────────────────────────────────────────────────
-const BG = "#F5EDDF";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const CREAM_PAPER = "#FAF3E2";
-const SAGE = "#9CAF88";
-const SAGE_DEEP = "#6F8564";
-const RULE = "rgba(74,47,24,0.14)";
+import { Colors } from "../../src/constants/colors";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 type TaskStatus = "done" | "prog" | "pending";
@@ -74,7 +63,7 @@ function TaskIco({ status }: { status: TaskStatus }) {
           width: 22,
           height: 22,
           borderRadius: 11,
-          backgroundColor: SAGE_DEEP,
+          backgroundColor: Colors.sageDeep,
           alignItems: "center",
           justifyContent: "center",
           marginTop: 2,
@@ -95,7 +84,7 @@ function TaskIco({ status }: { status: TaskStatus }) {
           width: 22,
           height: 22,
           borderRadius: 11,
-          backgroundColor: AMBER,
+          backgroundColor: Colors.amber,
           alignItems: "center",
           justifyContent: "center",
           marginTop: 2,
@@ -134,7 +123,7 @@ function TaskIco({ status }: { status: TaskStatus }) {
           width: 8,
           height: 8,
           borderRadius: 4,
-          backgroundColor: INK_MUTED,
+          backgroundColor: Colors.inkMuted,
           opacity: 0.35,
         }}
       />
@@ -172,7 +161,7 @@ function TaskRow({ task }: { task: Task }) {
           style={{
             fontFamily: "Georgia",
             fontSize: 14.5,
-            color: INK,
+            color: Colors.ink,
             lineHeight: 20,
           }}
         >
@@ -183,7 +172,7 @@ function TaskRow({ task }: { task: Task }) {
             fontFamily: "Georgia",
             fontStyle: "italic",
             fontSize: 12,
-            color: INK_SOFT,
+            color: Colors.inkSoft,
             lineHeight: 17,
             marginTop: 3,
           }}
@@ -206,7 +195,7 @@ function TaskRow({ task }: { task: Task }) {
               style={{
                 height: 3,
                 width: `${task.progress * 100}%`,
-                backgroundColor: AMBER,
+                backgroundColor: Colors.amber,
                 borderRadius: 999,
               }}
             />
@@ -239,7 +228,7 @@ export default function ConciergeScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 
         {/* ── Header ────────────────────────────────────────────────────── */}
@@ -250,9 +239,9 @@ export default function ConciergeScreen() {
             paddingHorizontal: 16,
             paddingTop: 8,
             paddingBottom: 12,
-            backgroundColor: BG,
+            backgroundColor: Colors.bg,
             borderBottomWidth: 1,
-            borderBottomColor: RULE,
+            borderBottomColor: Colors.rule,
           }}
         >
           {/* Back button */}
@@ -263,13 +252,13 @@ export default function ConciergeScreen() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: RULE,
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.6 : 1,
             })}
           >
-            <Text style={{ fontSize: 22, color: INK_SOFT, lineHeight: 26 }}>
+            <Text style={{ fontSize: 22, color: Colors.inkSoft, lineHeight: 26 }}>
               ‹
             </Text>
           </Pressable>
@@ -282,7 +271,7 @@ export default function ConciergeScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Concierge
@@ -294,7 +283,7 @@ export default function ConciergeScreen() {
               style={{
                 fontSize: 11,
                 letterSpacing: 0.16 * 11,
-                color: INK_MUTED,
+                color: Colors.inkMuted,
               }}
             >
               Available
@@ -340,7 +329,7 @@ export default function ConciergeScreen() {
                       width: 56,
                       height: 56,
                       borderRadius: 28,
-                      backgroundColor: SAGE_DEEP,
+                      backgroundColor: Colors.sageDeep,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -366,9 +355,9 @@ export default function ConciergeScreen() {
                       width: 12,
                       height: 12,
                       borderRadius: 6,
-                      backgroundColor: SAGE_DEEP,
+                      backgroundColor: Colors.sageDeep,
                       borderWidth: 2,
-                      borderColor: BG,
+                      borderColor: Colors.bg,
                     }}
                   />
                 </View>
@@ -379,7 +368,7 @@ export default function ConciergeScreen() {
                     style={{
                       fontFamily: "Georgia",
                       fontSize: 16,
-                      color: INK,
+                      color: Colors.ink,
                       lineHeight: 21,
                     }}
                   >
@@ -390,7 +379,7 @@ export default function ConciergeScreen() {
                       fontFamily: "Georgia",
                       fontStyle: "italic",
                       fontSize: 12,
-                      color: INK_MUTED,
+                      color: Colors.inkMuted,
                       marginTop: 2,
                       marginBottom: 6,
                       lineHeight: 17,
@@ -412,8 +401,8 @@ export default function ConciergeScreen() {
                         key={chip}
                         style={{
                           borderWidth: 1,
-                          borderColor: RULE,
-                          backgroundColor: CREAM_PAPER,
+                          borderColor: Colors.rule,
+                          backgroundColor: Colors.cream,
                           paddingHorizontal: 8,
                           paddingVertical: 3,
                           borderRadius: 24,
@@ -423,7 +412,7 @@ export default function ConciergeScreen() {
                           style={{
                             fontSize: 10,
                             letterSpacing: 0.12 * 10,
-                            color: INK,
+                            color: Colors.ink,
                             fontWeight: "600",
                             textTransform: "uppercase",
                           }}
@@ -444,7 +433,7 @@ export default function ConciergeScreen() {
                   style={({ pressed }) => ({
                     flex: 1,
                     minHeight: 44,
-                    backgroundColor: INK,
+                    backgroundColor: Colors.ink,
                     borderRadius: 26,
                     paddingVertical: 10,
                     paddingHorizontal: 18,
@@ -457,7 +446,7 @@ export default function ConciergeScreen() {
                     style={{
                       fontSize: 13.5,
                       fontWeight: "500",
-                      color: BG,
+                      color: Colors.bg,
                     }}
                   >
                     Message Naomi
@@ -477,7 +466,7 @@ export default function ConciergeScreen() {
                     minHeight: 44,
                     backgroundColor: "transparent",
                     borderWidth: 1,
-                    borderColor: RULE,
+                    borderColor: Colors.rule,
                     borderRadius: 26,
                     paddingVertical: 10,
                     paddingHorizontal: 18,
@@ -490,7 +479,7 @@ export default function ConciergeScreen() {
                     style={{
                       fontSize: 13.5,
                       fontWeight: "500",
-                      color: INK,
+                      color: Colors.ink,
                     }}
                   >
                     Schedule a call
@@ -509,7 +498,7 @@ export default function ConciergeScreen() {
                 fontSize: 10,
                 letterSpacing: 0.32 * 10,
                 textTransform: "uppercase",
-                color: INK_MUTED,
+                color: Colors.inkMuted,
               }}
             >
               In motion for you
@@ -574,7 +563,7 @@ export default function ConciergeScreen() {
                   fontStyle: "italic",
                   fontSize: 18,
                   lineHeight: 24,
-                  color: BG,
+                  color: Colors.bg,
                   marginTop: 10,
                   marginBottom: 8,
                 }}
