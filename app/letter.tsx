@@ -3,12 +3,7 @@ import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-
-const AMBER = "#D27F14";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const PARCHMENT = "#FBF2DD";
+import { Colors } from "../src/constants/colors";
 
 export default function LetterScreen() {
   const router = useRouter();
@@ -35,11 +30,11 @@ export default function LetterScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginRight: 12, padding: 4 })}
           >
-            <Feather name="x" size={20} color={INK_SOFT} />
+            <Feather name="x" size={20} color={Colors.inkSoft} />
           </Pressable>
-          <Text style={{ flex: 1, fontSize: 15, fontFamily: "Georgia", fontWeight: "600", color: INK }}>Future Letter</Text>
+          <Text style={{ flex: 1, fontSize: 15, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>Future Letter</Text>
           <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4 })}>
-            <Feather name="share-2" size={18} color={INK_SOFT} />
+            <Feather name="share-2" size={18} color={Colors.inkSoft} />
           </Pressable>
         </View>
 
@@ -50,17 +45,17 @@ export default function LetterScreen() {
         >
           {/* Delivery status pill */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16, backgroundColor: "rgba(210,127,20,0.1)", borderRadius: 12, padding: 12 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: AMBER }} />
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.amber }} />
             <Text style={{ fontSize: 12, color: "#7A4820", fontWeight: "500", flex: 1 }}>Sealed · Opens June 14, 2034</Text>
             <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-              <Text style={{ fontSize: 11, color: AMBER, fontWeight: "600" }}>Edit →</Text>
+              <Text style={{ fontSize: 11, color: Colors.amber, fontWeight: "600" }}>Edit →</Text>
             </Pressable>
           </View>
 
           {/* Parchment document */}
           <View
             style={{
-              backgroundColor: PARCHMENT,
+              backgroundColor: Colors.parchment,
               borderRadius: 6,
               padding: 24,
               paddingLeft: 32,
@@ -144,7 +139,7 @@ export default function LetterScreen() {
           </View>
 
           {/* Metadata rows */}
-          <View style={{ marginTop: 18, backgroundColor: "#FFFFFF", borderRadius: 14, overflow: "hidden", shadowColor: INK, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
+          <View style={{ marginTop: 18, backgroundColor: Colors.white, borderRadius: 14, overflow: "hidden", shadowColor: Colors.ink, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
             {[
               ["Recipient", "Maya"],
               ["Opens when", "June 14, 2034"],
@@ -163,8 +158,8 @@ export default function LetterScreen() {
                   borderBottomColor: "rgba(45,36,26,0.06)",
                 }}
               >
-                <Text style={{ fontSize: 12.5, color: INK_MUTED }}>{label}</Text>
-                <Text style={{ fontSize: 12.5, fontWeight: "500", color: INK_SOFT, maxWidth: "60%", textAlign: "right" }}>{value}</Text>
+                <Text style={{ fontSize: 12.5, color: Colors.inkMuted }}>{label}</Text>
+                <Text style={{ fontSize: 12.5, fontWeight: "500", color: Colors.inkSoft, maxWidth: "60%", textAlign: "right" }}>{value}</Text>
               </View>
             ))}
           </View>
@@ -200,8 +195,8 @@ export default function LetterScreen() {
                 gap: 7,
               })}
             >
-              <Feather name="download" size={14} color={INK_SOFT} />
-              <Text style={{ fontSize: 14, color: INK_SOFT }}>Download PDF</Text>
+              <Feather name="download" size={14} color={Colors.inkSoft} />
+              <Text style={{ fontSize: 14, color: Colors.inkSoft }}>Download PDF</Text>
             </Pressable>
           </View>
         </Animated.ScrollView>

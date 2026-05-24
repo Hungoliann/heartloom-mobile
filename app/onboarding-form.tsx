@@ -2,10 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, Animated, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Colors } from "../src/constants/colors";
 
 const BG = "#1A1108";
-const AMBER = "#D27F14";
-const CREAM = "#FAF3E2";
 const CREAM_DIM = "rgba(250,243,226,0.78)";
 const RULE = "rgba(74,47,24,0.35)";
 const INPUT_BG = "rgba(250,243,226,0.05)";
@@ -53,15 +52,15 @@ export default function OnboardingFormScreen() {
             <Animated.View style={{ flex: 1, opacity, transform: [{ translateY: slideY }] }}>
               {/* Logo */}
               <View style={{ alignItems: "center", marginBottom: 44 }}>
-                <Text style={{ fontSize: 36, color: AMBER, marginBottom: 12 }}>♡</Text>
-                <Text style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 4, color: CREAM, textTransform: "uppercase" }}>
+                <Text style={{ fontSize: 36, color: Colors.amber, marginBottom: 12 }}>♡</Text>
+                <Text style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 4, color: Colors.cream, textTransform: "uppercase" }}>
                   HEARTLOOM
                 </Text>
               </View>
 
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 27, lineHeight: 36, color: CREAM, textAlign: "center", marginBottom: 10, fontWeight: "500" }}>
+              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 27, lineHeight: 36, color: Colors.cream, textAlign: "center", marginBottom: 10, fontWeight: "500" }}>
                 What is one thing{"\n"}you want them{"\n"}to{" "}
-                <Text style={{ color: AMBER, fontStyle: "italic" }}>know forever?</Text>
+                <Text style={{ color: Colors.amber, fontStyle: "italic" }}>know forever?</Text>
               </Text>
               <Text style={{ fontSize: 13.5, color: CREAM_DIM, textAlign: "center", lineHeight: 20, marginBottom: 34, fontFamily: "Georgia" }}>
                 A sentence is enough. We'll thread it into something that lasts.
@@ -74,7 +73,7 @@ export default function OnboardingFormScreen() {
                   onChangeText={setFirstLine}
                   placeholder="Be brave enough to be soft…"
                   placeholderTextColor="rgba(250,243,226,0.25)"
-                  style={{ fontSize: 15, color: CREAM, lineHeight: 22, minHeight: 72 }}
+                  style={{ fontSize: 15, color: Colors.cream, lineHeight: 22, minHeight: 72 }}
                   multiline
                   maxLength={240}
                 />
@@ -87,7 +86,7 @@ export default function OnboardingFormScreen() {
               <Pressable
                 onPress={handleDraft}
                 style={({ pressed }) => ({
-                  backgroundColor: canContinue ? AMBER : "rgba(210,127,20,0.28)",
+                  backgroundColor: canContinue ? Colors.amber : "rgba(210,127,20,0.28)",
                   borderRadius: 14,
                   paddingVertical: 16,
                   flexDirection: "row",
@@ -96,7 +95,7 @@ export default function OnboardingFormScreen() {
                   gap: 8,
                   opacity: pressed ? 0.85 : 1,
                   marginBottom: 12,
-                  shadowColor: AMBER,
+                  shadowColor: Colors.amber,
                   shadowOffset: { width: 0, height: canContinue ? 8 : 0 },
                   shadowOpacity: canContinue ? 0.5 : 0,
                   shadowRadius: 16,
@@ -125,7 +124,7 @@ export default function OnboardingFormScreen() {
                   marginBottom: 24,
                 })}
               >
-                <View style={{ width: 17, height: 17, borderRadius: 8.5, backgroundColor: AMBER, alignItems: "center", justifyContent: "center" }}>
+                <View style={{ width: 17, height: 17, borderRadius: 8.5, backgroundColor: Colors.amber, alignItems: "center", justifyContent: "center" }}>
                   <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#FFFFFF" }} />
                 </View>
                 <Text style={{ fontSize: 14, color: CREAM_DIM }}>Record 60 seconds instead</Text>

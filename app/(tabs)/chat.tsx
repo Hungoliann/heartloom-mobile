@@ -19,7 +19,6 @@ import { useAuthStore } from "../../src/store/auth.store";
 // ─── Brand tokens ────────────────────────────────────────────────────────────
 const CREAM_PAPER = "rgba(255,250,232,0.85)";
 const RULE = "rgba(184,132,60,0.22)";
-const WHITE = "#FFFFFF";
 
 // Avatar background colours matching prototype classes
 const AV_AMBER = Colors.amber;      // default
@@ -66,7 +65,7 @@ function Avatar({ initial, color }: { initial: string; color: string }) {
         justifyContent: "center",
         flexShrink: 0,
         // subtle inner glow matching prototype
-        shadowColor: WHITE,
+        shadowColor: Colors.white,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: isInk ? 0 : 0.35,
         shadowRadius: 0,
@@ -76,7 +75,7 @@ function Avatar({ initial, color }: { initial: string; color: string }) {
         style={{
           fontSize: 9,
           fontWeight: "700",
-          color: isInk ? Colors.bg : WHITE,
+          color: isInk ? Colors.bg : Colors.white,
           letterSpacing: 0.04 * 9,
         }}
       >
@@ -112,7 +111,7 @@ function AudioCard({ audio }: { audio: AudioAttach }) {
           flexShrink: 0,
         }}
       >
-        <Text style={{ color: WHITE, fontSize: 9, marginLeft: 2 }}>▶</Text>
+        <Text style={{ color: Colors.white, fontSize: 9, marginLeft: 2 }}>▶</Text>
       </View>
 
       {/* Track info */}
@@ -486,7 +485,7 @@ export default function ChatScreen() {
                   style={{
                     fontFamily: "Georgia",
                     fontSize: 14,
-                    color: WHITE,
+                    color: Colors.white,
                     fontWeight: "600",
                   }}
                 >
@@ -639,7 +638,7 @@ export default function ChatScreen() {
                 {draft.trim() ? (
                   <Text
                     style={{
-                      color: WHITE,
+                      color: Colors.white,
                       fontSize: 14,
                       lineHeight: 18,
                       marginBottom: 1,

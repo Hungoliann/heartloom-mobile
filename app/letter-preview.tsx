@@ -3,12 +3,8 @@ import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { Colors } from "../src/constants/colors";
 
-const AMBER = "#D27F14";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const PARCHMENT = "#FBF2DD";
 const BG = "#F5E9D6";
 
 export default function LetterPreviewScreen() {
@@ -41,9 +37,9 @@ export default function LetterPreviewScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginRight: 12, padding: 4 })}
           >
-            <Feather name="arrow-left" size={20} color={INK_SOFT} />
+            <Feather name="arrow-left" size={20} color={Colors.inkSoft} />
           </Pressable>
-          <Text style={{ flex: 1, fontSize: 15, fontFamily: "Georgia", fontWeight: "600", color: INK }}>Your Future Letter</Text>
+          <Text style={{ flex: 1, fontSize: 15, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>Your Future Letter</Text>
           <View style={{ width: 28 }} />
         </View>
 
@@ -64,7 +60,7 @@ export default function LetterPreviewScreen() {
             {/* Parchment document */}
             <View
               style={{
-                backgroundColor: PARCHMENT,
+                backgroundColor: Colors.parchment,
                 borderRadius: 6,
                 padding: 24,
                 paddingLeft: 32,
@@ -146,10 +142,10 @@ export default function LetterPreviewScreen() {
 
             {/* Pitch text */}
             <View style={{ marginTop: 24, alignItems: "center", paddingHorizontal: 8 }}>
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 17, color: INK, textAlign: "center", lineHeight: 25, marginBottom: 6 }}>
+              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 17, color: Colors.ink, textAlign: "center", lineHeight: 25, marginBottom: 6 }}>
                 This is what you're building.
               </Text>
-              <Text style={{ fontSize: 13, color: INK_MUTED, textAlign: "center", lineHeight: 20 }}>
+              <Text style={{ fontSize: 13, color: Colors.inkMuted, textAlign: "center", lineHeight: 20 }}>
                 Create an account to seal it, address it, and choose the day it opens.
               </Text>
             </View>
@@ -159,19 +155,19 @@ export default function LetterPreviewScreen() {
               <Pressable
                 onPress={() => router.push("/(auth)/sign-up")}
                 style={({ pressed }) => ({
-                  backgroundColor: AMBER,
+                  backgroundColor: Colors.amber,
                   borderRadius: 14,
                   paddingVertical: 16,
                   alignItems: "center",
                   opacity: pressed ? 0.88 : 1,
-                  shadowColor: AMBER,
+                  shadowColor: Colors.amber,
                   shadowOffset: { width: 0, height: 8 },
                   shadowOpacity: 0.45,
                   shadowRadius: 16,
                   elevation: 6,
                 })}
               >
-                <Text style={{ fontSize: 15, fontWeight: "600", color: "#FFFFFF" }}>Create my account</Text>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: Colors.white }}>Create my account</Text>
               </Pressable>
 
               <Pressable
@@ -186,11 +182,11 @@ export default function LetterPreviewScreen() {
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Text style={{ fontSize: 15, color: INK_SOFT, fontWeight: "500" }}>I already have an account</Text>
+                <Text style={{ fontSize: 15, color: Colors.inkSoft, fontWeight: "500" }}>I already have an account</Text>
               </Pressable>
             </View>
 
-            <Text style={{ fontSize: 11, color: INK_MUTED, textAlign: "center", marginTop: 16, lineHeight: 17 }}>
+            <Text style={{ fontSize: 11, color: Colors.inkMuted, textAlign: "center", marginTop: 16, lineHeight: 17 }}>
               Free to start. We only ask for more when life does.
             </Text>
           </Animated.View>
