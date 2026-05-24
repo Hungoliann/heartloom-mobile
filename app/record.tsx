@@ -17,6 +17,7 @@ import AnimatedPressable from "../src/components/ui/AnimatedPressable";
 import useStepTransition from "../src/components/ui/useStepTransition";
 import { useAudioRecorder } from "../src/hooks/useAudioRecorder";
 import { useAudioPlayer } from "../src/hooks/useAudioPlayer";
+import { Colors } from "../src/constants/colors";
 import {
   useAudioRecorder as useExpoAudioRecorder,
   useAudioRecorderState,
@@ -26,16 +27,9 @@ import {
 } from "expo-audio";
 
 // ─── Design tokens (light / parchment theme matching prototype) ───────────────
-const BG = "#F5EDDF";
-const CREAM = "#FAF3E2";
-const TEXT = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const MUTED = "#8A7A66";
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
 const RULE = "rgba(74,61,46,0.18)";
 const CHIP_ON_BG = "rgba(210,127,20,0.12)";
-const CHIP_ON_BORDER = AMBER;
+const CHIP_ON_BORDER = Colors.amber;
 const CHIP_OFF_BG = "rgba(45,36,26,0.05)";
 const CHIP_OFF_BORDER = "rgba(74,61,46,0.22)";
 const CARD_BG = "#FFFFFF";
@@ -185,11 +179,11 @@ function PrimaryBtn({
       onPress={onPress}
       disabled={disabled}
       style={{
-        backgroundColor: terra ? TERRA_BTN : disabled ? "rgba(210,127,20,0.3)" : AMBER,
+        backgroundColor: terra ? TERRA_BTN : disabled ? "rgba(210,127,20,0.3)" : Colors.amber,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: "center",
-        shadowColor: terra ? TERRA_BTN : AMBER,
+        shadowColor: terra ? TERRA_BTN : Colors.amber,
         shadowOffset: { width: 0, height: disabled ? 0 : 6 },
         shadowOpacity: disabled ? 0 : 0.35,
         shadowRadius: 12,
@@ -226,7 +220,7 @@ function GhostBtn({ label, onPress }: { label: string; onPress?: () => void }) {
         backgroundColor: "transparent",
       }}
     >
-      <Text style={{ fontSize: 13.5, color: INK_SOFT }}>{label}</Text>
+      <Text style={{ fontSize: 13.5, color: Colors.inkSoft }}>{label}</Text>
     </AnimatedPressable>
   );
 }
@@ -394,7 +388,7 @@ export default function RecordScreen() {
   const header = STEP_HEADERS[Math.min(step, STEP_HEADERS.length - 1)];
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }}>
         {/* ── Header ── */}
         <View
@@ -420,7 +414,7 @@ export default function RecordScreen() {
             <Text
               style={{
                 fontSize: 24,
-                color: TEXT,
+                color: Colors.ink,
                 lineHeight: 28,
                 fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
               }}
@@ -433,7 +427,7 @@ export default function RecordScreen() {
             style={{
               fontSize: 13,
               fontWeight: "500",
-              color: INK_SOFT,
+              color: Colors.inkSoft,
               flex: 1,
               textAlign: "center",
               paddingHorizontal: 8,
@@ -446,7 +440,7 @@ export default function RecordScreen() {
           <Text
             style={{
               fontSize: 12,
-              color: MUTED,
+              color: Colors.inkMuted,
               minWidth: 32,
               textAlign: "right",
               fontVariant: ["tabular-nums"],
@@ -603,7 +597,7 @@ function StepRecipient({
         style={{
           fontFamily: "Georgia",
           fontSize: 30,
-          color: TEXT,
+          color: Colors.ink,
           lineHeight: 40,
           marginBottom: 10,
           fontWeight: "400",
@@ -616,7 +610,7 @@ function StepRecipient({
       <Text
         style={{
           fontSize: 14,
-          color: MUTED,
+          color: Colors.inkMuted,
           lineHeight: 21,
           marginBottom: 28,
         }}
@@ -630,7 +624,7 @@ function StepRecipient({
             fontSize: 10,
             fontWeight: "600",
             letterSpacing: 1.4,
-            color: MUTED,
+            color: Colors.inkMuted,
             textTransform: "uppercase",
             marginBottom: 8,
           }}
@@ -645,7 +639,7 @@ function StepRecipient({
           style={{
             fontFamily: "Georgia",
             fontSize: 20,
-            color: TEXT,
+            color: Colors.ink,
             borderBottomWidth: 1.5,
             borderBottomColor: "rgba(74,61,46,0.2)",
             paddingBottom: 10,
@@ -657,7 +651,7 @@ function StepRecipient({
       <Text
         style={{
           fontSize: 12,
-          color: MUTED,
+          color: Colors.inkMuted,
           marginBottom: 28,
         }}
       >
@@ -669,7 +663,7 @@ function StepRecipient({
           fontSize: 10,
           fontWeight: "600",
           letterSpacing: 1.4,
-          color: MUTED,
+          color: Colors.inkMuted,
           textTransform: "uppercase",
           marginBottom: 12,
         }}
@@ -697,7 +691,7 @@ function StepRecipient({
               <Text
                 style={{
                   fontSize: 13.5,
-                  color: on ? AMBER_DEEP : INK_SOFT,
+                  color: on ? Colors.amberDeep : Colors.inkSoft,
                   fontWeight: on ? "600" : "400",
                 }}
               >
@@ -734,7 +728,7 @@ function StepSeed({
         style={{
           fontFamily: "Georgia",
           fontSize: 28,
-          color: TEXT,
+          color: Colors.ink,
           lineHeight: 36,
           marginBottom: 24,
         }}
@@ -762,7 +756,7 @@ function StepSeed({
           style={{
             fontFamily: "Georgia",
             fontSize: 15,
-            color: MUTED,
+            color: Colors.inkMuted,
             lineHeight: 22,
             textAlign: "center",
             marginBottom: 2,
@@ -775,7 +769,7 @@ function StepSeed({
             fontFamily: "Georgia",
             fontSize: 22,
             fontWeight: "600",
-            color: TEXT,
+            color: Colors.ink,
             lineHeight: 30,
             textAlign: "center",
             marginBottom: 2,
@@ -787,7 +781,7 @@ function StepSeed({
           style={{
             fontFamily: "Georgia",
             fontSize: 15,
-            color: MUTED,
+            color: Colors.inkMuted,
             lineHeight: 22,
             textAlign: "center",
           }}
@@ -799,7 +793,7 @@ function StepSeed({
       <Text
         style={{
           fontSize: 14,
-          color: INK_SOFT,
+          color: Colors.inkSoft,
           textAlign: "center",
           lineHeight: 21,
           marginBottom: 20,
@@ -886,7 +880,7 @@ function StepMicCheck({
         style={{
           fontFamily: "Georgia",
           fontSize: 26,
-          color: TEXT,
+          color: Colors.ink,
           lineHeight: 36,
           textAlign: "center",
           marginBottom: 32,
@@ -928,10 +922,10 @@ function StepMicCheck({
                 width: 84,
                 height: 84,
                 borderRadius: 42,
-                backgroundColor: testing ? "#B04020" : AMBER,
+                backgroundColor: testing ? "#B04020" : Colors.amber,
                 alignItems: "center",
                 justifyContent: "center",
-                shadowColor: AMBER,
+                shadowColor: Colors.amber,
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.45,
                 shadowRadius: 16,
@@ -966,7 +960,7 @@ function StepMicCheck({
             fontSize: 9,
             fontWeight: "700",
             letterSpacing: 1.8,
-            color: MUTED,
+            color: Colors.inkMuted,
             textTransform: "uppercase",
             marginBottom: 8,
           }}
@@ -979,7 +973,7 @@ function StepMicCheck({
           <Text
             style={{
               fontSize: 14,
-              color: MUTED,
+              color: Colors.inkMuted,
               fontStyle: "italic",
               lineHeight: 20,
             }}
@@ -1001,11 +995,11 @@ function StepMicCheck({
                 width: 4,
                 height: 4,
                 borderRadius: 2,
-                backgroundColor: AMBER,
+                backgroundColor: Colors.amber,
                 marginTop: 7,
               }}
             />
-            <Text style={{ fontSize: 13.5, color: INK_SOFT, flex: 1, lineHeight: 20 }}>
+            <Text style={{ fontSize: 13.5, color: Colors.inkSoft, flex: 1, lineHeight: 20 }}>
               {tip}
             </Text>
           </View>
@@ -1069,7 +1063,7 @@ function StepRecording({
           padding: 14,
           marginBottom: 20,
           borderLeftWidth: 2.5,
-          borderLeftColor: AMBER,
+          borderLeftColor: Colors.amber,
           borderWidth: 1,
           borderColor: RULE,
         }}
@@ -1079,14 +1073,14 @@ function StepRecording({
             fontSize: 9,
             fontWeight: "700",
             letterSpacing: 1.8,
-            color: MUTED,
+            color: Colors.inkMuted,
             textTransform: "uppercase",
             marginBottom: 6,
           }}
         >
           PROMPT
         </Text>
-        <Text style={{ fontSize: 14, color: INK_SOFT, lineHeight: 21 }}>
+        <Text style={{ fontSize: 14, color: Colors.inkSoft, lineHeight: 21 }}>
           {prompt.line1} {prompt.line2} {line3}
         </Text>
       </View>
@@ -1114,7 +1108,7 @@ function StepRecording({
           style={{
             fontFamily: "Georgia",
             fontSize: 44,
-            color: isRecording ? AMBER : MUTED,
+            color: isRecording ? Colors.amber : Colors.inkMuted,
             fontWeight: "300",
             marginTop: 12,
             letterSpacing: 3,
@@ -1122,7 +1116,7 @@ function StepRecording({
         >
           {formatTime(seconds)}
         </Text>
-        <Text style={{ fontSize: 12, color: permissionDenied ? "#B04020" : MUTED, marginTop: 4 }}>
+        <Text style={{ fontSize: 12, color: permissionDenied ? "#B04020" : Colors.inkMuted, marginTop: 4 }}>
           {permissionDenied
             ? "Microphone permission denied — check Settings"
             : !isRecording
@@ -1132,7 +1126,7 @@ function StepRecording({
             : "Recording…"}
         </Text>
         {/* DEBUG: shows live metering values so you can see what the mic is feeding the waveform */}
-        <Text style={{ fontSize: 10, color: MUTED, marginTop: 4, fontVariant: ["tabular-nums"] }}>
+        <Text style={{ fontSize: 10, color: Colors.inkMuted, marginTop: 4, fontVariant: ["tabular-nums"] }}>
           {isRecording
             ? `dB: ${meteringDb === null ? "—" : meteringDb.toFixed(1)}   level: ${meteringLevel.toFixed(2)}`
             : lastError
@@ -1158,7 +1152,7 @@ function StepRecording({
             fontFamily: "Georgia",
             fontStyle: "italic",
             fontSize: 14,
-            color: MUTED,
+            color: Colors.inkMuted,
             lineHeight: 21,
             textAlign: "center",
           }}
@@ -1191,13 +1185,13 @@ function StepRecording({
             opacity: isRecording ? (pressed ? 0.7 : 1) : 0.3,
           })}
         >
-          <Svg viewBox="0 0 24 24" width={20} height={20} fill={TEXT}>
+          <Svg viewBox="0 0 24 24" width={20} height={20} fill={Colors.ink}>
             {isPaused ? (
-              <Path d="M8 5l11 7-11 7V5z" fill={TEXT} />
+              <Path d="M8 5l11 7-11 7V5z" fill={Colors.ink} />
             ) : (
               <>
-                <Rect x={6} y={5} width={4} height={14} rx={1} fill={TEXT} />
-                <Rect x={14} y={5} width={4} height={14} rx={1} fill={TEXT} />
+                <Rect x={6} y={5} width={4} height={14} rx={1} fill={Colors.ink} />
+                <Rect x={14} y={5} width={4} height={14} rx={1} fill={Colors.ink} />
               </>
             )}
           </Svg>
@@ -1216,7 +1210,7 @@ function StepRecording({
             width: 78,
             height: 78,
             borderRadius: 39,
-            backgroundColor: isRecording ? "#B04020" : AMBER,
+            backgroundColor: isRecording ? "#B04020" : Colors.amber,
             alignItems: "center",
             justifyContent: "center",
             opacity: pressed ? 0.88 : 1,
@@ -1224,7 +1218,7 @@ function StepRecording({
             borderColor: isRecording
               ? "rgba(176,64,32,0.28)"
               : "rgba(210,127,20,0.25)",
-            shadowColor: isRecording ? "#B04020" : AMBER,
+            shadowColor: isRecording ? "#B04020" : Colors.amber,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.45,
             shadowRadius: 14,
@@ -1255,7 +1249,7 @@ function StepRecording({
             opacity: isRecording || seconds > 0 ? (pressed ? 0.7 : 1) : 0.3,
           })}
         >
-          <Svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke={TEXT} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <Svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke={Colors.ink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <Path d="M4 12a8 8 0 1 0 3-6.2" />
             <Path d="M4 4v5h5" />
           </Svg>
@@ -1265,7 +1259,7 @@ function StepRecording({
       <Text
         style={{
           fontSize: 12,
-          color: MUTED,
+          color: Colors.inkMuted,
           textAlign: "center",
           marginBottom: 20,
           fontStyle: "italic",
@@ -1313,7 +1307,7 @@ function StepReview({
         style={{
           fontFamily: "Georgia",
           fontSize: 28,
-          color: TEXT,
+          color: Colors.ink,
           lineHeight: 38,
           marginBottom: 24,
         }}
@@ -1351,7 +1345,7 @@ function StepReview({
               fontFamily: "Georgia",
               fontSize: 28,
               fontWeight: "300",
-              color: TEXT,
+              color: Colors.ink,
               letterSpacing: 1,
             }}
           >
@@ -1370,7 +1364,7 @@ function StepReview({
                 fontSize: 9,
                 fontWeight: "700",
                 letterSpacing: 1.5,
-                color: INK_SOFT,
+                color: Colors.inkSoft,
                 textTransform: "uppercase",
               }}
             >
@@ -1395,10 +1389,10 @@ function StepReview({
               width: 44,
               height: 44,
               borderRadius: 22,
-              backgroundColor: AMBER,
+              backgroundColor: Colors.amber,
               alignItems: "center",
               justifyContent: "center",
-              shadowColor: AMBER,
+              shadowColor: Colors.amber,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.38,
               shadowRadius: 8,
@@ -1409,7 +1403,7 @@ function StepReview({
               {isPlaying ? "⏸" : "▶"}
             </Text>
           </View>
-          <Text style={{ fontSize: 14, fontWeight: "600", color: INK_SOFT }}>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.inkSoft }}>
             {isPlaying ? "Pause" : "Play"}
           </Text>
         </Pressable>
@@ -1427,7 +1421,7 @@ function StepReview({
             style={{
               height: 4,
               borderRadius: 2,
-              backgroundColor: AMBER,
+              backgroundColor: Colors.amber,
               width: playProgress.interpolate({
                 inputRange: [0, 1],
                 outputRange: ["0%", "100%"],
@@ -1442,7 +1436,7 @@ function StepReview({
             fontFamily: "Georgia",
             fontStyle: "italic",
             fontSize: 13.5,
-            color: INK_SOFT,
+            color: Colors.inkSoft,
             lineHeight: 21,
             marginBottom: 12,
           }}
@@ -1456,7 +1450,7 @@ function StepReview({
           <Text
             style={{
               fontSize: 12.5,
-              color: AMBER_DEEP,
+              color: Colors.amberDeep,
               fontWeight: "600",
               textDecorationLine: "underline",
             }}
@@ -1503,7 +1497,7 @@ function StepSeal({
         style={{
           fontFamily: "Georgia",
           fontSize: 28,
-          color: TEXT,
+          color: Colors.ink,
           lineHeight: 38,
           marginBottom: 24,
         }}
@@ -1533,7 +1527,7 @@ function StepSeal({
             fontSize: 9,
             fontWeight: "700",
             letterSpacing: 2,
-            color: MUTED,
+            color: Colors.inkMuted,
             textTransform: "uppercase",
             marginBottom: 14,
           }}
@@ -1549,7 +1543,7 @@ function StepSeal({
           style={{
             fontFamily: "Georgia",
             fontSize: 22,
-            color: TEXT,
+            color: Colors.ink,
             borderBottomWidth: 1.5,
             borderBottomColor: "rgba(74,61,46,0.18)",
             width: "100%",
@@ -1559,7 +1553,7 @@ function StepSeal({
           }}
         />
 
-        <Text style={{ fontSize: 12, color: MUTED, marginBottom: 18 }}>
+        <Text style={{ fontSize: 12, color: Colors.inkMuted, marginBottom: 18 }}>
           {sealDate}
         </Text>
 
@@ -1573,7 +1567,7 @@ function StepSeal({
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 12,
-              color: MUTED,
+              color: Colors.inkMuted,
               textAlign: "center",
             }}
           >
@@ -1634,7 +1628,7 @@ function StepSeal({
       <Text
         style={{
           fontSize: 12,
-          color: MUTED,
+          color: Colors.inkMuted,
           textAlign: "center",
           lineHeight: 18,
         }}
@@ -1663,7 +1657,7 @@ function StepDeliver({
         style={{
           fontFamily: "Georgia",
           fontSize: 28,
-          color: TEXT,
+          color: Colors.ink,
           lineHeight: 38,
           marginBottom: 28,
         }}
@@ -1700,14 +1694,14 @@ function StepDeliver({
                 style={{
                   fontSize: 14.5,
                   fontWeight: "600",
-                  color: on ? AMBER_DEEP : TEXT,
+                  color: on ? Colors.amberDeep : Colors.ink,
                   marginBottom: 4,
                 }}
               >
                 {title}
               </Text>
               {sub ? (
-                <Text style={{ fontSize: 13, color: MUTED, lineHeight: 19 }}>
+                <Text style={{ fontSize: 13, color: Colors.inkMuted, lineHeight: 19 }}>
                   {sub}
                 </Text>
               ) : null}
@@ -1715,7 +1709,7 @@ function StepDeliver({
                 <Text
                   style={{
                     fontSize: 13,
-                    color: AMBER,
+                    color: Colors.amber,
                     marginTop: 8,
                     fontWeight: "500",
                   }}
@@ -1762,7 +1756,7 @@ function StepCertificate({
         style={{
           fontFamily: "Georgia",
           fontSize: 27,
-          color: TEXT,
+          color: Colors.ink,
           lineHeight: 36,
           marginBottom: 10,
         }}
@@ -1774,7 +1768,7 @@ function StepCertificate({
       <Text
         style={{
           fontSize: 14,
-          color: INK_SOFT,
+          color: Colors.inkSoft,
           lineHeight: 21,
           marginBottom: 28,
         }}
@@ -1794,7 +1788,7 @@ function StepCertificate({
       >
         <View
           style={{
-            backgroundColor: CREAM,
+            backgroundColor: Colors.cream,
             borderRadius: 4,
             padding: 24,
             borderWidth: 1,
@@ -1882,7 +1876,7 @@ function StepCertificate({
               fontFamily: "Georgia",
               fontSize: 20,
               fontWeight: "600",
-              color: TEXT,
+              color: Colors.ink,
               textAlign: "center",
               marginBottom: 8,
             }}
@@ -1904,7 +1898,7 @@ function StepCertificate({
               fontFamily: "Georgia",
               fontSize: 19,
               fontWeight: "600",
-              color: AMBER_DEEP,
+              color: Colors.amberDeep,
               textAlign: "center",
               marginBottom: 16,
             }}
@@ -1940,7 +1934,7 @@ function StepCertificate({
                   marginBottom: 4,
                 }}
               />
-              <Text style={{ fontSize: 10, color: MUTED }}>
+              <Text style={{ fontSize: 10, color: Colors.inkMuted }}>
                 Custodian, Heartloom Archive
               </Text>
             </View>
@@ -1967,8 +1961,8 @@ function StepCertificate({
           "Cryptographically vaulted. Legally admissible.",
         ].map((b) => (
           <View key={b} style={{ flexDirection: "row", gap: 10 }}>
-            <Text style={{ fontSize: 11, color: AMBER, marginTop: 1 }}>✦</Text>
-            <Text style={{ fontSize: 13.5, color: INK_SOFT, flex: 1, lineHeight: 20 }}>
+            <Text style={{ fontSize: 11, color: Colors.amber, marginTop: 1 }}>✦</Text>
+            <Text style={{ fontSize: 13.5, color: Colors.inkSoft, flex: 1, lineHeight: 20 }}>
               {b}
             </Text>
           </View>
@@ -1993,7 +1987,7 @@ function StepCertificate({
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Text style={{ fontSize: 14, color: INK_SOFT }}>
+          <Text style={{ fontSize: 14, color: Colors.inkSoft }}>
             I already have an account
           </Text>
         </Pressable>
@@ -2002,7 +1996,7 @@ function StepCertificate({
       <Text
         style={{
           fontSize: 11,
-          color: MUTED,
+          color: Colors.inkMuted,
           textAlign: "center",
           marginTop: 16,
           lineHeight: 17,
