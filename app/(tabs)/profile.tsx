@@ -4,16 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useAuthStore } from "../../src/store/auth.store";
+import { Colors } from "../../src/constants/colors";
 
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const CREAM = "#FAF3E2";
 const PAPER = "#FFFAF0";
 const PARCHMENT = "#FBF2DD";
-const TERRA = "#B86241";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -68,7 +62,7 @@ export default function ProfileScreen() {
             >
               {/* Ambient glow */}
               <View style={{ position: "absolute", top: -10, left: -16, right: -16, bottom: -22, borderRadius: 20 }}>
-                <View style={{ flex: 1, opacity: 0.18, backgroundColor: AMBER, borderRadius: 20 }} />
+                <View style={{ flex: 1, opacity: 0.18, backgroundColor: Colors.amber, borderRadius: 20 }} />
               </View>
 
               <View
@@ -161,7 +155,7 @@ export default function ProfileScreen() {
             {/* Progress bar */}
             <View style={{ paddingHorizontal: 18, marginBottom: 10 }}>
               <View style={{ height: 5, backgroundColor: "rgba(169,95,10,0.14)", borderRadius: 999, overflow: "hidden" }}>
-                <View style={{ height: 5, width: "62%", backgroundColor: AMBER, borderRadius: 999 }} />
+                <View style={{ height: 5, width: "62%", backgroundColor: Colors.amber, borderRadius: 999 }} />
               </View>
               <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginTop: 5 }}>
                 <Text style={{ fontFamily: "Georgia", fontSize: 9.5, fontWeight: "700", letterSpacing: 0.8, color: "#4A2F18", textTransform: "uppercase" }}>Step 3 of 5</Text>
@@ -191,7 +185,7 @@ export default function ProfileScreen() {
                 })}
               >
                 <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 13, color: "#FBF2DD", letterSpacing: 0.2 }}>Continue where I left off</Text>
-                <Text style={{ fontSize: 13, color: AMBER }}>→</Text>
+                <Text style={{ fontSize: 13, color: Colors.amber }}>→</Text>
               </Pressable>
             </View>
 
@@ -208,7 +202,7 @@ export default function ProfileScreen() {
 
             {/* My content links */}
             <View style={{ paddingHorizontal: 20, gap: 2, marginBottom: 24 }}>
-              <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: INK_MUTED, marginBottom: 8 }}>My Content</Text>
+              <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: Colors.inkMuted, marginBottom: 8 }}>My Content</Text>
               {[
                 { icon: "mail", label: "Future Letters", route: "/(tabs)/legacy" },
                 { icon: "users", label: "Family", route: "/(tabs)/family" },
@@ -228,16 +222,16 @@ export default function ProfileScreen() {
                     opacity: pressed ? 0.7 : 1,
                   })}
                 >
-                  <Feather name={row.icon as any} size={16} color={AMBER} />
-                  <Text style={{ flex: 1, fontSize: 13.5, color: INK_SOFT }}>{row.label}</Text>
-                  <Feather name="chevron-right" size={15} color={INK_MUTED} />
+                  <Feather name={row.icon as any} size={16} color={Colors.amber} />
+                  <Text style={{ flex: 1, fontSize: 13.5, color: Colors.inkSoft }}>{row.label}</Text>
+                  <Feather name="chevron-right" size={15} color={Colors.inkMuted} />
                 </Pressable>
               ))}
             </View>
 
             {/* Profile rows */}
             <View style={{ paddingHorizontal: 20, gap: 2, marginBottom: 20 }}>
-              <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: INK_MUTED, marginBottom: 8 }}>Account</Text>
+              <Text style={{ fontSize: 10, fontWeight: "700", letterSpacing: 1.4, textTransform: "uppercase", color: Colors.inkMuted, marginBottom: 8 }}>Account</Text>
               {[
                 { icon: "user", label: "Profile settings" },
                 { icon: "shield", label: "Privacy & security" },
@@ -258,9 +252,9 @@ export default function ProfileScreen() {
                     opacity: pressed ? 0.7 : 1,
                   })}
                 >
-                  <Feather name={row.icon as any} size={16} color={INK_MUTED} />
-                  <Text style={{ flex: 1, fontSize: 13.5, color: INK_SOFT }}>{row.label}</Text>
-                  <Feather name="chevron-right" size={15} color={INK_MUTED} />
+                  <Feather name={row.icon as any} size={16} color={Colors.inkMuted} />
+                  <Text style={{ flex: 1, fontSize: 13.5, color: Colors.inkSoft }}>{row.label}</Text>
+                  <Feather name="chevron-right" size={15} color={Colors.inkMuted} />
                 </Pressable>
               ))}
 
@@ -280,8 +274,8 @@ export default function ProfileScreen() {
                   backgroundColor: "rgba(184,98,65,0.06)",
                 })}
               >
-                <Feather name="log-out" size={16} color={TERRA} />
-                <Text style={{ fontSize: 13.5, color: TERRA }}>Sign out</Text>
+                <Feather name="log-out" size={16} color={Colors.terra} />
+                <Text style={{ fontSize: 13.5, color: Colors.terra }}>Sign out</Text>
               </Pressable>
             </View>
           </Animated.View>
