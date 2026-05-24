@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Colors } from "../../src/constants/colors";
+import { useConciergeTasks } from "../../src/hooks/useConciergeTasks";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 type TaskStatus = "done" | "prog" | "pending";
@@ -18,38 +19,9 @@ interface Task {
   id: string;
   status: TaskStatus;
   title: string;
-  sub: string;
-  progress?: number; // 0–1, only for "prog"
+  sub: string | null;
+  progress?: number | null; // 0–1, only for "prog"
 }
-
-const TASKS: Task[] = [
-  {
-    id: "1",
-    status: "done",
-    title: "Medicare Part B — coordination of benefits",
-    sub: "Confirmed · we flagged 2 unused preventive benefits · brief sent to your email",
-  },
-  {
-    id: "2",
-    status: "prog",
-    title: "Hospice eligibility review · Lila",
-    sub: "Step 2 of 4 · waiting on PCP form · Naomi will follow up Thursday",
-    progress: 0.55,
-  },
-  {
-    id: "3",
-    status: "prog",
-    title: "Executor draft · for Maya",
-    sub: "Draft ready for your review · 4 minutes · sealed when you say so",
-    progress: 0.8,
-  },
-  {
-    id: "4",
-    status: "pending",
-    title: "Annual benefits sweep · September",
-    sub: "We'll re-check Parts A–D · no action needed from you",
-  },
-];
 
 const CHIPS = ["Medicare", "Hospice", "Estate logistics"];
 
@@ -194,7 +166,7 @@ function TaskRow({ task }: { task: Task }) {
             <View
               style={{
                 height: 3,
-                width: `${task.progress * 100}%`,
+                width: `${(task.progress ?? 0) * 100}%`,
                 backgroundColor: Colors.amber,
                 borderRadius: 999,
               }}
@@ -211,6 +183,7 @@ export default function ConciergeScreen() {
   const router = useRouter();
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(16)).current;
+  const { data: tasks, isLoading } = useConciergeTasks();
 
   useEffect(() => {
     Animated.parallel([
@@ -505,16 +478,37 @@ export default function ConciergeScreen() {
             </Text>
 
             {/* ── Task list ───────────────────────────────────────────── */}
-            <View
-              style={{
-                marginHorizontal: 22,
-                gap: 8,
-              }}
-            >
-              {TASKS.map((task) => (
-                <TaskRow key={task.id} task={task} />
-              ))}
-            </View>
+            {isLoading ? (
+              <View style={{ paddingHorizontal: 22, gap: 8 }}>
+                {[1, 2, 3].map((i) => (
+                  <View
+                    key={i}
+                    style={{
+                      height: 72,
+                      borderRadius: 12,
+                      backgroundColor: "rgba(45,36,26,0.06)",
+                    }}
+                  />
+                ))}
+              </View>
+            ) : tasks && tasks.length > 0 ? (
+              <View style={{ marginHorizontal: 22, gap: 8 }}>
+                {tasks.map((task) => (
+                  <TaskRow key={task.id} task={task as Task} />
+                ))}
+              </View>
+            ) : (
+              <Text
+                style={{
+                  marginHorizontal: 22,
+                  fontSize: 13,
+                  color: Colors.inkMuted,
+                  fontStyle: "italic",
+                }}
+              >
+                No active tasks right now.
+              </Text>
+            )}
 
             {/* ── Promise card ────────────────────────────────────────── */}
             <View
