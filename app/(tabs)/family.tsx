@@ -2,23 +2,86 @@ import { useRef, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { useFamily } from "../../src/hooks/useFamily";
 
-const FAMILY = [
-  { id: "1", name: "Sarah Mitchell", role: "You (Owner)", initials: "SM", color: "#D4A853", bg: "#FBF0D9" },
-  { id: "2", name: "James Mitchell", role: "Partner", initials: "JM", color: "#8BAE72", bg: "#EEF5E8" },
-  { id: "3", name: "Maya Mitchell", role: "Daughter", initials: "MM", color: "#B86241", bg: "#F5E5DA" },
-  { id: "4", name: "Tom Mitchell", role: "Son", initials: "TM", color: "#2B4D61", bg: "#D8E8F0" },
-];
+const AVATAR_COLORS = ["#D27F14", "#6F8564", "#B86241", "#4A3D2E", "#8A7A66"];
+const AVATAR_BGS    = ["#FBF0D9", "#EEF5E8", "#F5E5DA", "#E8E2D8", "#F0EBE3"];
 
-const ACTIVITY = [
-  { id: "1", name: "James", action: "listened to", item: "Sunday morning story", time: "2 days ago", emoji: "🎙️" },
-  { id: "2", name: "Maya", action: "viewed your letter", item: "On your 18th birthday", time: "1 week ago", emoji: "✉️" },
-  { id: "3", name: "Tom", action: "joined the family", item: "", time: "3 weeks ago", emoji: "🌿" },
-];
+function getInitials(fullName: string | null): string {
+  if (!fullName) return "?";
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "?";
+  return ((parts[0][0] ?? "") + (parts[parts.length - 1][0] ?? "")).toUpperCase();
+}
+
+function SkeletonRow() {
+  return (
+    <View
+      style={{
+        backgroundColor: "#FFFFFF",
+        borderRadius: 16,
+        padding: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+        borderWidth: 1,
+        borderColor: "#EDE4D4",
+      }}
+    >
+      <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: "#EDE4D4" }} />
+      <View style={{ flex: 1, gap: 6 }}>
+        <View style={{ height: 14, borderRadius: 7, backgroundColor: "#EDE4D4", width: "55%" }} />
+        <View style={{ height: 12, borderRadius: 6, backgroundColor: "#F5EDD6", width: "35%" }} />
+      </View>
+    </View>
+  );
+}
+
+function InviteCard() {
+  return (
+    <View
+      style={{
+        marginHorizontal: 20,
+        marginTop: 8,
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderStyle: "dashed",
+        borderColor: "rgba(74,47,24,0.18)",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: "Georgia",
+          fontStyle: "italic",
+          fontSize: 14,
+          color: "#8C7B65",
+          textAlign: "center",
+        }}
+      >
+        Invite a loved one to share memories
+      </Text>
+      <Pressable
+        style={({ pressed }) => ({
+          backgroundColor: "#2D4530",
+          borderRadius: 12,
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          opacity: pressed ? 0.8 : 1,
+        })}
+      >
+        <Text style={{ color: "#FFFFFF", fontSize: 13, fontWeight: "600" }}>Send an invite →</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 export default function FamilyScreen() {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
+  const { data: members = [], isLoading } = useFamily();
 
   useEffect(() => {
     Animated.parallel([
@@ -38,10 +101,10 @@ export default function FamilyScreen() {
                 Your circle
               </Text>
               <Text style={{ fontFamily: "Georgia", fontSize: 28, color: "#2C1F0E", lineHeight: 34, marginBottom: 4 }}>
-                The Mitchells
+                The Family
               </Text>
               <Text style={{ fontSize: 14, color: "#8C7B65" }}>
-                {FAMILY.length} members · Private family
+                {isLoading ? "Loading…" : `${members.length} member${members.length !== 1 ? "s" : ""} · Private family`}
               </Text>
             </View>
 
@@ -62,33 +125,39 @@ export default function FamilyScreen() {
               >
                 {/* Avatar cluster */}
                 <View style={{ flexDirection: "row", marginBottom: 16 }}>
-                  {FAMILY.map((member, i) => (
-                    <View
-                      key={member.id}
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 26,
-                        backgroundColor: member.color,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginLeft: i === 0 ? 0 : -14,
-                        borderWidth: 2.5,
-                        borderColor: "#2D4530",
-                      }}
-                    >
-                      <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14 }}>
-                        {member.initials}
-                      </Text>
-                    </View>
-                  ))}
+                  {(isLoading ? Array.from({ length: 3 }) : members).map((member, i) => {
+                    const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+                    const initials = member
+                      ? getInitials((member as { full_name: string | null }).full_name)
+                      : "·";
+                    return (
+                      <View
+                        key={member ? (member as { id: string }).id : `skel-${i}`}
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 26,
+                          backgroundColor: member ? color : "rgba(255,255,255,0.15)",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginLeft: i === 0 ? 0 : -14,
+                          borderWidth: 2.5,
+                          borderColor: "#2D4530",
+                        }}
+                      >
+                        <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14 }}>
+                          {initials}
+                        </Text>
+                      </View>
+                    );
+                  })}
                 </View>
 
                 <Text style={{ fontFamily: "Georgia", fontSize: 20, color: "#FFFFFF", marginBottom: 4 }}>
-                  Mitchell Family
+                  The Family
                 </Text>
                 <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
-                  Sharing memories since 2024
+                  Sharing memories together
                 </Text>
 
                 <Pressable
@@ -115,89 +184,74 @@ export default function FamilyScreen() {
               <Text style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: "#8C7B65", marginBottom: 14 }}>
                 Members
               </Text>
-              <View style={{ gap: 10 }}>
-                {FAMILY.map((member) => (
-                  <Pressable
-                    key={member.id}
-                    style={({ pressed }) => ({
-                      backgroundColor: "#FFFFFF",
-                      borderRadius: 16,
-                      padding: 16,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 14,
-                      borderWidth: 1,
-                      borderColor: "#EDE4D4",
-                      opacity: pressed ? 0.85 : 1,
-                      shadowColor: "#2C1F0E",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 6,
-                      elevation: 2,
-                    })}
-                  >
-                    <View
-                      style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 23,
-                        backgroundColor: member.bg,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderWidth: 2,
-                        borderColor: member.color + "44",
-                      }}
-                    >
-                      <Text style={{ color: member.color, fontWeight: "700", fontSize: 15 }}>
-                        {member.initials}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 15, color: "#2C1F0E", fontWeight: "600", marginBottom: 2 }}>
-                        {member.name}
-                      </Text>
-                      <Text style={{ fontSize: 13, color: "#8C7B65" }}>{member.role}</Text>
-                    </View>
-                    <Feather name="chevron-right" size={16} color="#C4B8A6" />
-                  </Pressable>
-                ))}
-              </View>
+
+              {isLoading ? (
+                <View style={{ gap: 10 }}>
+                  <SkeletonRow />
+                  <SkeletonRow />
+                  <SkeletonRow />
+                </View>
+              ) : members.length === 0 ? (
+                <InviteCard />
+              ) : (
+                <View style={{ gap: 10 }}>
+                  {members.map((member, i) => {
+                    const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+                    const bg    = AVATAR_BGS[i % AVATAR_BGS.length];
+                    const name  = member.full_name ?? "Family Member";
+                    const initials = getInitials(member.full_name);
+                    return (
+                      <Pressable
+                        key={member.id}
+                        style={({ pressed }) => ({
+                          backgroundColor: "#FFFFFF",
+                          borderRadius: 16,
+                          padding: 16,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 14,
+                          borderWidth: 1,
+                          borderColor: "#EDE4D4",
+                          opacity: pressed ? 0.85 : 1,
+                          shadowColor: "#2C1F0E",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.05,
+                          shadowRadius: 6,
+                          elevation: 2,
+                        })}
+                      >
+                        <View
+                          style={{
+                            width: 46,
+                            height: 46,
+                            borderRadius: 23,
+                            backgroundColor: bg,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderWidth: 2,
+                            borderColor: color + "44",
+                          }}
+                        >
+                          <Text style={{ color, fontWeight: "700", fontSize: 15 }}>
+                            {initials}
+                          </Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 15, color: "#2C1F0E", fontWeight: "600", marginBottom: 2 }}>
+                            {name}
+                          </Text>
+                          <Text style={{ fontSize: 13, color: "#8C7B65" }}>Family member</Text>
+                        </View>
+                        <Feather name="chevron-right" size={16} color="#C4B8A6" />
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
             </View>
 
-            {/* Activity feed */}
-            <View style={{ paddingHorizontal: 24 }}>
-              <Text style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: "#8C7B65", marginBottom: 14 }}>
-                Recent Activity
-              </Text>
-              <View style={{ gap: 10 }}>
-                {ACTIVITY.map((item) => (
-                  <View
-                    key={item.id}
-                    style={{
-                      backgroundColor: "#FFFFFF",
-                      borderRadius: 14,
-                      padding: 16,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 12,
-                      borderWidth: 1,
-                      borderColor: "#EDE4D4",
-                    }}
-                  >
-                    <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: "#F5EDD6", alignItems: "center", justifyContent: "center" }}>
-                      <Text style={{ fontSize: 18 }}>{item.emoji}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, color: "#2C1F0E", lineHeight: 20 }}>
-                        <Text style={{ fontWeight: "600" }}>{item.name}</Text>
-                        {" "}{item.action}{item.item ? ` "${item.item}"` : ""}
-                      </Text>
-                      <Text style={{ fontSize: 12, color: "#8C7B65", marginTop: 2 }}>{item.time}</Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
+            {/* Invite card (shown below members when there are members) */}
+            {!isLoading && members.length > 0 && <InviteCard />}
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
