@@ -13,6 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { Colors } from "../../src/constants/colors";
+import { useMessages, useSendMessage } from "../../src/hooks/useMessages";
+import { useAuthStore } from "../../src/store/auth.store";
 
 // ─── Brand tokens ────────────────────────────────────────────────────────────
 const CREAM_PAPER = "rgba(255,250,232,0.85)";
@@ -48,63 +50,6 @@ interface Msg {
   schHead?: string;
   schBody?: string;
 }
-
-// ─── Static messages (matching prototype exactly) ────────────────────────────
-const STATIC_MSGS: Msg[] = [
-  {
-    id: "1",
-    type: "in",
-    who: "Lila (Mom)",
-    avInitial: "LM",
-    avColor: AV_AMBER,
-    text: "Did you all see what the kids made for Mother's Day? I'm a puddle.",
-    time: "9:14a",
-  },
-  {
-    id: "2",
-    type: "in",
-    who: "James (Dad)",
-    avInitial: "JH",
-    avColor: AV_SAGE,
-    text: "I added a recording from your grandmother's kitchen. Press play when you're alone.",
-    time: "9:31a",
-    audio: {
-      quote: "…always cinnamon last.",
-      duration: "2:18",
-      year: "1976",
-      label: "oral history",
-    },
-  },
-  {
-    id: "3",
-    type: "system",
-    text: "Eleanor sealed a Future Letter for ",
-    sysStrong: "Maya",
-    // rest of text appended in render
-  },
-  {
-    id: "4",
-    type: "out",
-    text: "I sealed one too. I'll let it sit for a bit before I read mine back.",
-    time: "9:48a",
-  },
-  {
-    id: "5",
-    type: "in",
-    who: "Maya",
-    avInitial: "MR",
-    avColor: AV_INK,
-    text: "I don't know what to say. Thank you. All of you. ♡",
-    time: "10:02a",
-  },
-  {
-    id: "6",
-    type: "scheduled",
-    schHead: "SCHEDULED · JUN 14, 2034",
-    schBody:
-      "Eleanor's letter to Maya will arrive in her inbox at 8:00a · with a printable Certificate of Legacy.",
-  },
-];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -410,8 +355,50 @@ export default function ChatScreen() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
-  const [messages, setMessages] = useState<Msg[]>(STATIC_MSGS);
   const [draft, setDraft] = useState("");
+
+  const user = useAuthStore((s) => s.user);
+  const { data: dbMessages, isLoading } = useMessages();
+  const sendMessage = useSendMessage();
+
+  const messages: Msg[] = (dbMessages ?? []).map((m) => ({
+    id: m.id,
+    type:
+      m.author_id === user?.id
+        ? "out"
+        : m.message_type === "system"
+        ? "system"
+        : m.message_type === "scheduled"
+        ? "scheduled"
+        : "in",
+    who:
+      m.message_type === "text" && m.author_id !== user?.id
+        ? ((m as any).profiles?.full_name ?? "Family")
+        : undefined,
+    avInitial:
+      m.message_type === "text" && m.author_id !== user?.id
+        ? ((m as any).profiles?.full_name ?? "?").slice(0, 2).toUpperCase()
+        : undefined,
+    avColor: AV_AMBER,
+    text: m.body ?? undefined,
+    time: m.created_at
+      ? new Date(m.created_at).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : undefined,
+    audio: m.audio_quote
+      ? {
+          quote: m.audio_quote,
+          duration: m.audio_duration ?? "",
+          year: m.audio_year ?? "",
+          label: m.audio_label ?? "",
+        }
+      : undefined,
+    schHead: m.scheduled_head ?? undefined,
+    schBody: m.scheduled_body ?? undefined,
+  }));
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -424,15 +411,7 @@ export default function ChatScreen() {
   function send() {
     const text = draft.trim();
     if (!text) return;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        type: "out",
-        text,
-        time: fmtTime(new Date()),
-      },
-    ]);
+    sendMessage.mutate({ body: text });
     setDraft("");
     setTimeout(
       () => scrollRef.current?.scrollToEnd({ animated: true }),
@@ -558,38 +537,44 @@ export default function ChatScreen() {
           </View>
 
           {/* ── Message list ────────────────────────────────────────────── */}
-          <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-            <ScrollView
-              ref={scrollRef}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingHorizontal: 14,
-                paddingTop: 10,
-                paddingBottom: 16,
-                gap: 10,
-              }}
-              keyboardShouldPersistTaps="handled"
-              onContentSizeChange={() =>
-                scrollRef.current?.scrollToEnd({ animated: false })
-              }
-            >
-              {/* Date divider */}
-              <View style={{ alignItems: "center", marginVertical: 8 }}>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    color: Colors.inkMuted,
-                    letterSpacing: 0.8,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Today
-                </Text>
-              </View>
+          {isLoading ? (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ color: Colors.inkMuted, fontSize: 13 }}>Loading messages…</Text>
+            </View>
+          ) : (
+            <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+              <ScrollView
+                ref={scrollRef}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingHorizontal: 14,
+                  paddingTop: 10,
+                  paddingBottom: 16,
+                  gap: 10,
+                }}
+                keyboardShouldPersistTaps="handled"
+                onContentSizeChange={() =>
+                  scrollRef.current?.scrollToEnd({ animated: false })
+                }
+              >
+                {/* Date divider */}
+                <View style={{ alignItems: "center", marginVertical: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      color: Colors.inkMuted,
+                      letterSpacing: 0.8,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Today
+                  </Text>
+                </View>
 
-              {messages.map(renderMsg)}
-            </ScrollView>
-          </Animated.View>
+                {messages.map(renderMsg)}
+              </ScrollView>
+            </Animated.View>
+          )}
 
           {/* ── Composer ────────────────────────────────────────────────── */}
           <View
