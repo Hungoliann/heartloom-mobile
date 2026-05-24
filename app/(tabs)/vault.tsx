@@ -2,48 +2,12 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
+import { Colors } from "../../src/constants/colors";
+import { useLetters } from "../../src/hooks/useLetters";
+import { useDocuments } from "../../src/hooks/useDocuments";
 
-// ── Brand tokens (matching prototype.css) ──────────────────────────────────
-const CREAM = "#FAF3E2";
+// ── Vault-only token (not in shared Colors) ──────────────────────────────────
 const PAPER = "#FBF4DC";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTE = "#8A7A66";
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const RULE = "rgba(74,47,24,0.14)";
-
-// ── Vault node data ─────────────────────────────────────────────────────────
-const NODES = [
-  {
-    id: "letter",
-    icon: "✉",
-    label: "Future Letter",
-    sub: "For Maya · sealed",
-    filled: true,
-  },
-  {
-    id: "will",
-    icon: "§",
-    label: "Digital Will",
-    sub: "Add when ready",
-    filled: false,
-  },
-  {
-    id: "directive",
-    icon: "✤",
-    label: "Advance Directive",
-    sub: "Hospice-ready",
-    filled: false,
-  },
-  {
-    id: "executor",
-    icon: "⚶",
-    label: "Executor Access",
-    sub: "Name a trusted person",
-    filled: false,
-  },
-];
 
 // ── Hallmark coin SVG ────────────────────────────────────────────────────────
 function HallmarkCoin() {
@@ -95,8 +59,53 @@ function HallmarkCoin() {
 export default function VaultScreen() {
   const router = useRouter();
 
+  // ── Live data ──────────────────────────────────────────────────────────────
+  const { data: letters = [] } = useLetters();
+  const { data: willDocs = [] } = useDocuments("will");
+  const { data: dnrDocs = [] } = useDocuments("dnr");
+  const { data: financialDocs = [] } = useDocuments("financial");
+
+  // ── Dynamic nodes ──────────────────────────────────────────────────────────
+  const nodes = [
+    {
+      id: "letter",
+      icon: "✉",
+      label: "Future Letters",
+      filled: letters.length > 0,
+      sub:
+        letters.length > 0
+          ? `${letters.length} letter${letters.length > 1 ? "s" : ""} · sealed`
+          : "Write your first",
+      route: "/record" as const,
+    },
+    {
+      id: "will",
+      icon: "§",
+      label: "Digital Will",
+      filled: willDocs.length > 0,
+      sub: willDocs.length > 0 ? "On file" : "Add when ready",
+      route: "/will" as const,
+    },
+    {
+      id: "directive",
+      icon: "✤",
+      label: "Advance Directive",
+      filled: dnrDocs.length > 0,
+      sub: dnrDocs.length > 0 ? "On file" : "Hospice-ready",
+      route: "/will" as const,
+    },
+    {
+      id: "executor",
+      icon: "⚶",
+      label: "Executor Access",
+      filled: financialDocs.length > 0,
+      sub: financialDocs.length > 0 ? "On file" : "Name a trusted person",
+      route: "/will" as const,
+    },
+  ];
+
   return (
-    <View style={{ flex: 1, backgroundColor: CREAM }}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 
         {/* ── Header ───────────────────────────────────────────────────── */}
@@ -108,7 +117,7 @@ export default function VaultScreen() {
             paddingTop: 8,
             paddingBottom: 12,
             borderBottomWidth: 1,
-            borderBottomColor: RULE,
+            borderBottomColor: Colors.rule,
           }}
         >
           <Pressable
@@ -118,14 +127,14 @@ export default function VaultScreen() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: RULE,
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: pressed ? "rgba(210,127,20,0.08)" : "transparent",
             })}
             accessibilityLabel="Back"
           >
-            <Text style={{ fontSize: 18, color: INK_SOFT, lineHeight: 22 }}>‹</Text>
+            <Text style={{ fontSize: 18, color: Colors.inkSoft, lineHeight: 22 }}>‹</Text>
           </Pressable>
 
           <Text
@@ -135,7 +144,7 @@ export default function VaultScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Your Vault
@@ -157,7 +166,7 @@ export default function VaultScreen() {
               fontSize: 10.5,
               fontWeight: "600",
               letterSpacing: 2.2,
-              color: AMBER_DEEP,
+              color: Colors.amberDeep,
               textTransform: "uppercase",
               marginBottom: -8,
             }}
@@ -173,11 +182,11 @@ export default function VaultScreen() {
               fontWeight: "500",
               lineHeight: 31,
               letterSpacing: -0.3,
-              color: INK,
+              color: Colors.ink,
             }}
           >
             Where your letter{" "}
-            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>
+            <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>
               actually lives.
             </Text>
           </Text>
@@ -186,7 +195,7 @@ export default function VaultScreen() {
           <View
             style={{
               borderWidth: 1,
-              borderColor: RULE,
+              borderColor: Colors.rule,
               borderRadius: 16,
               padding: 14,
               backgroundColor: PAPER,
@@ -199,52 +208,97 @@ export default function VaultScreen() {
                 gap: 10,
               }}
             >
-              {NODES.map((node) => (
-                <View
-                  key={node.id}
-                  style={{
-                    width: "47.5%",
-                    minHeight: 84,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderStyle: node.filled ? "solid" : "dashed",
-                    borderColor: node.filled ? INK : "rgba(74,47,24,0.25)",
-                    backgroundColor: node.filled ? INK : "rgba(255,251,243,0.45)",
-                    padding: 12,
-                    gap: 4,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      color: node.filled ? AMBER : AMBER_DEEP,
-                      lineHeight: 22,
-                    }}
+              {nodes.map((node) => {
+                const cardStyle = {
+                  width: "47.5%" as const,
+                  minHeight: 84,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderStyle: (node.filled ? "solid" : "dashed") as "solid" | "dashed",
+                  borderColor: node.filled ? Colors.ink : "rgba(74,47,24,0.25)",
+                  backgroundColor: node.filled ? Colors.ink : "rgba(255,251,243,0.45)",
+                  padding: 12,
+                  gap: 4,
+                };
+
+                if (node.filled) {
+                  return (
+                    <View key={node.id} style={cardStyle}>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          color: Colors.amber,
+                          lineHeight: 22,
+                        }}
+                      >
+                        {node.icon}
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "Georgia",
+                          fontSize: 13.5,
+                          fontWeight: "500",
+                          color: Colors.cream,
+                          lineHeight: 17,
+                        }}
+                      >
+                        {node.label}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: "rgba(250,243,226,0.70)",
+                          lineHeight: 15,
+                        }}
+                      >
+                        {node.sub}
+                      </Text>
+                    </View>
+                  );
+                }
+
+                return (
+                  <Pressable
+                    key={node.id}
+                    onPress={() => router.push(node.route as any)}
+                    style={({ pressed }) => ({
+                      ...cardStyle,
+                      opacity: pressed ? 0.75 : 1,
+                    })}
+                    accessibilityLabel={`Add ${node.label}`}
                   >
-                    {node.icon}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Georgia",
-                      fontSize: 13.5,
-                      fontWeight: "500",
-                      color: node.filled ? CREAM : INK,
-                      lineHeight: 17,
-                    }}
-                  >
-                    {node.label}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      color: node.filled ? "rgba(250,243,226,0.70)" : INK_MUTE,
-                      lineHeight: 15,
-                    }}
-                  >
-                    {node.sub}
-                  </Text>
-                </View>
-              ))}
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        color: Colors.amberDeep,
+                        lineHeight: 22,
+                      }}
+                    >
+                      {node.icon}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: "Georgia",
+                        fontSize: 13.5,
+                        fontWeight: "500",
+                        color: Colors.ink,
+                        lineHeight: 17,
+                      }}
+                    >
+                      {node.label}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: Colors.inkMuted,
+                        lineHeight: 15,
+                      }}
+                    >
+                      {node.sub}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
@@ -279,7 +333,7 @@ export default function VaultScreen() {
                 style={{
                   fontFamily: "Georgia",
                   fontSize: 13.5,
-                  color: INK,
+                  color: Colors.ink,
                   fontWeight: "500",
                   lineHeight: 17,
                 }}
@@ -289,7 +343,7 @@ export default function VaultScreen() {
               <Text
                 style={{
                   fontSize: 11.5,
-                  color: INK_MUTE,
+                  color: Colors.inkMuted,
                   lineHeight: 16,
                 }}
               >
@@ -305,41 +359,13 @@ export default function VaultScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 12,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
               marginTop: 6,
               marginBottom: 4,
             }}
           >
             Bank-grade encryption. Heirloom-grade tactility.
           </Text>
-
-          {/* ── Continue button ───────────────────────────────────────── */}
-          <Pressable
-            onPress={() => router.push("/done" as any)}
-            style={({ pressed }) => ({
-              width: "100%",
-              minHeight: 50,
-              borderRadius: 26,
-              backgroundColor: INK,
-              alignItems: "center",
-              justifyContent: "center",
-              paddingVertical: 13,
-              paddingHorizontal: 22,
-              opacity: pressed ? 0.88 : 1,
-              marginTop: 4,
-            })}
-          >
-            <Text
-              style={{
-                fontFamily: "System",
-                fontSize: 15,
-                fontWeight: "500",
-                color: CREAM,
-              }}
-            >
-              Continue
-            </Text>
-          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </View>
