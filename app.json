@@ -10,20 +10,21 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5EDD6"
+      "backgroundColor": "#FAF3E2"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.heartloom.app",
       "infoPlist": {
         "NSCameraUsageDescription": "Heartloom uses the camera to capture photos for your memory archive.",
-        "NSPhotoLibraryUsageDescription": "Heartloom accesses your photo library to attach images to memories."
+        "NSPhotoLibraryUsageDescription": "Heartloom accesses your photo library to attach images to memories.",
+        "NSMicrophoneUsageDescription": "Heartloom needs microphone access to record voice memories for your family."
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F5EDD6"
+        "backgroundColor": "#FAF3E2"
       },
       "package": "com.heartloom.app",
       "edgeToEdgeEnabled": true,
@@ -43,7 +44,8 @@
         {
           "microphonePermission": "Heartloom needs microphone access to record voice memories."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "scheme": "heartloom",
     "extra": {
