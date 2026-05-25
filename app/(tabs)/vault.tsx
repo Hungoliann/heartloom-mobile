@@ -1,11 +1,50 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
+import * as DocumentPicker from "expo-document-picker";
+import { File as FSFile } from "expo-file-system";
 import { Colors } from "../../src/constants/colors";
 import { useLetters } from "../../src/hooks/useLetters";
-import { useDocuments } from "../../src/hooks/useDocuments";
+import { useDocuments, useUploadDocument } from "../../src/hooks/useDocuments";
+import { useAuthStore } from "../../src/store/auth.store";
+import { supabase } from "../../src/lib/supabase";
 
+// ── Upload helper ─────────────────────────────────────────────────────────────
+async function pickAndUploadDocument(
+  userId: string,
+  category: string
+): Promise<{ url: string; name: string } | null> {
+  const result = await DocumentPicker.getDocumentAsync({
+    type: ["application/pdf", "image/*"],
+    copyToCacheDirectory: true,
+  });
+
+  if (result.canceled || !result.assets?.[0]) return null;
+
+  const file = result.assets[0];
+  const ext = file.name.split(".").pop() ?? "pdf";
+  const path = `${userId}/${category}/${Date.now()}.${ext}`;
+
+  // Read file bytes via expo-file-system v19 File API
+  const bytes = await new FSFile(file.uri).bytes();
+
+  const { error } = await supabase.storage
+    .from("documents")
+    .upload(path, bytes, { contentType: file.mimeType ?? "application/pdf" });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from("documents").getPublicUrl(path);
+  return { url: data.publicUrl, name: file.name };
+}
 
 // ── Hallmark coin SVG ────────────────────────────────────────────────────────
 function HallmarkCoin() {
@@ -63,6 +102,25 @@ export default function VaultScreen() {
   const { data: dnrDocs = [] } = useDocuments("dnr");
   const { data: financialDocs = [] } = useDocuments("financial");
 
+  // ── Upload ─────────────────────────────────────────────────────────────────
+  const uploadDoc = useUploadDocument();
+  const user = useAuthStore((s) => s.user);
+
+  async function handleUpload(category: string, title: string) {
+    if (!user) return;
+    try {
+      const result = await pickAndUploadDocument(user.id, category);
+      if (!result) return;
+      await uploadDoc.mutateAsync({
+        title: result.name,
+        file_url: result.url,
+        category: category as any,
+      });
+    } catch {
+      Alert.alert("Upload failed", "Please try again.");
+    }
+  }
+
   // ── Dynamic nodes ──────────────────────────────────────────────────────────
   const nodes = [
     {
@@ -74,7 +132,7 @@ export default function VaultScreen() {
         letters.length > 0
           ? `${letters.length} letter${letters.length > 1 ? "s" : ""} · sealed`
           : "Write your first",
-      route: "/record" as const,
+      onPress: () => router.push("/record" as any),
     },
     {
       id: "will",
@@ -82,7 +140,10 @@ export default function VaultScreen() {
       label: "Digital Will",
       filled: willDocs.length > 0,
       sub: willDocs.length > 0 ? "On file" : "Add when ready",
-      route: "/will" as const,
+      onPress: () =>
+        willDocs.length > 0
+          ? router.push("/will" as any)
+          : handleUpload("will", "Digital Will"),
     },
     {
       id: "directive",
@@ -90,7 +151,10 @@ export default function VaultScreen() {
       label: "Advance Directive",
       filled: dnrDocs.length > 0,
       sub: dnrDocs.length > 0 ? "On file" : "Hospice-ready",
-      route: "/will" as const,
+      onPress: () =>
+        dnrDocs.length > 0
+          ? router.push("/will" as any)
+          : handleUpload("dnr", "Advance Directive"),
     },
     {
       id: "executor",
@@ -98,7 +162,10 @@ export default function VaultScreen() {
       label: "Executor Access",
       filled: financialDocs.length > 0,
       sub: financialDocs.length > 0 ? "On file" : "Name a trusted person",
-      route: "/will" as const,
+      onPress: () =>
+        financialDocs.length > 0
+          ? router.push("/will" as any)
+          : handleUpload("financial", "Executor Access"),
     },
   ];
 
@@ -255,25 +322,38 @@ export default function VaultScreen() {
                   );
                 }
 
+                const isUploading =
+                  uploadDoc.isPending &&
+                  node.id !== "letter";
+
                 return (
                   <Pressable
                     key={node.id}
-                    onPress={() => router.push(node.route as any)}
+                    onPress={isUploading ? undefined : node.onPress}
+                    disabled={isUploading}
                     style={({ pressed }) => ({
                       ...cardStyle,
-                      opacity: pressed ? 0.75 : 1,
+                      opacity: isUploading ? 0.55 : pressed ? 0.75 : 1,
                     })}
                     accessibilityLabel={`Add ${node.label}`}
                   >
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        color: Colors.amberDeep,
-                        lineHeight: 22,
-                      }}
-                    >
-                      {node.icon}
-                    </Text>
+                    {isUploading ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={Colors.amberDeep}
+                        style={{ marginBottom: 4 }}
+                      />
+                    ) : (
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          color: Colors.amberDeep,
+                          lineHeight: 22,
+                        }}
+                      >
+                        {node.icon}
+                      </Text>
+                    )}
                     <Text
                       style={{
                         fontFamily: "Georgia",
@@ -292,7 +372,7 @@ export default function VaultScreen() {
                         lineHeight: 15,
                       }}
                     >
-                      {node.sub}
+                      {isUploading ? "Uploading…" : node.sub}
                     </Text>
                   </Pressable>
                 );

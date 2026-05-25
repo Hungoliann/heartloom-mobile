@@ -1,13 +1,32 @@
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { Stack } from "expo-router";
+import { SplashScreen } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 import { useAuthStore } from "../src/store/auth.store";
+import { supabase } from "../src/lib/supabase";
 import "../global.css";
+
+// Prevent the splash screen from auto-hiding before auth initializes
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 2, staleTime: 1000 * 60 * 5 },
   },
+});
+
+// Show notifications while app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
 });
 
 function AuthBootstrap() {
@@ -16,9 +35,53 @@ function AuthBootstrap() {
     let cleanup: (() => void) | undefined;
     initialize().then((unsub) => {
       cleanup = unsub;
+      SplashScreen.hideAsync();
     });
     return () => cleanup?.();
   }, []);
+  return null;
+}
+
+function PushNotificationBootstrap() {
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (!user) return;
+
+    async function registerToken() {
+      if (!Device.isDevice) return;
+
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== "granted") return;
+
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "Heartloom",
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+        });
+      }
+
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: "57073d2b-8afb-4356-813a-17d8185b4689",
+      });
+
+      await supabase.auth.updateUser({
+        data: { push_token: tokenData.data },
+      });
+    }
+
+    registerToken();
+  }, [user?.id]);
+
   return null;
 }
 
@@ -26,6 +89,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthBootstrap />
+      <PushNotificationBootstrap />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />

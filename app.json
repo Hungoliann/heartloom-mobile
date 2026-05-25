@@ -14,7 +14,11 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.heartloom.app"
+      "bundleIdentifier": "com.heartloom.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Heartloom uses the camera to capture photos for your memory archive.",
+        "NSPhotoLibraryUsageDescription": "Heartloom accesses your photo library to attach images to memories."
+      }
     },
     "android": {
       "adaptiveIcon": {
