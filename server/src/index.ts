@@ -35,11 +35,11 @@ const deliverLetters = inngest.createFunction(
         .is("delivered_at", null);
     });
 
-    if (error || !dueLetters?.data) return { delivered: 0 };
+    if (error || !dueLetters) return { delivered: 0 };
 
     const results = await step.run("deliver-and-notify", async () => {
       const deliveredIds: string[] = [];
-      for (const letter of dueLetters.data) {
+      for (const letter of dueLetters) {
         await supabase
           .from("letters")
           .update({ delivered_at: new Date().toISOString() })
