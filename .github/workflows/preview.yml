@@ -20,6 +20,9 @@ jobs:
           version: 9
           run_install: false
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - uses: expo/expo-github-action@v8
         with:
           expo-version: latest
@@ -43,6 +46,9 @@ jobs:
         with:
           version: 9
           run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - uses: expo/expo-github-action@v8
         with:
