@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Heartloom</title>
+  <style>
+    :root {
+      --cream: #FAF3E2;
+      --ink: #2D241A;
+      --ink-muted: #7A6E63;
+      --amber: #D27F14;
+      --rule: #EDE4D4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 0 16px;
+    }
+    header {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 0 32px;
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 40px;
+    }
+    .wordmark {
+      font-family: Georgia, serif;
+      font-style: italic;
+      font-size: 18px;
+      color: var(--amber);
+      display: block;
+      margin-bottom: 16px;
+      text-decoration: none;
+    }
+    h1 {
+      font-family: Georgia, serif;
+      font-size: 32px;
+      font-weight: 500;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .effective {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+    }
+    section {
+      margin-bottom: 36px;
+    }
+    h2 {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+    p {
+      color: #4A3D30;
+      margin-bottom: 12px;
+    }
+    ul {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+    li {
+      color: #4A3D30;
+      margin-bottom: 6px;
+    }
+    li::marker { color: var(--amber); }
+    a { color: var(--amber); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 0;
+      border-top: 1px solid var(--rule);
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="wordmark" href="https://heartloom.com">Heartloom</a>
+    <h1>Privacy Policy</h1>
+    <p class="effective">Effective date: May 25, 2026</p>
+  </header>
+
+  <main>
+    <section>
+      <p>
+        Heartloom ("we", "us", or "our") operates the Heartloom mobile application. This policy explains
+        what personal information we collect, why we collect it, and how we handle it. We built Heartloom
+        to preserve your family's most important words — protecting that trust is non-negotiable.
+      </p>
+    </section>
+
+    <section>
+      <h2>1. Information We Collect</h2>
+      <p>We collect only what is necessary to provide the service:</p>
+      <ul>
+        <li>Email address and password (via Supabase Auth) to create and secure your account.</li>
+        <li>Full name, optionally provided during onboarding, to personalise your experience.</li>
+        <li>Voice recordings, photos, and written letters you create — stored encrypted in Supabase Storage.</li>
+        <li>Legal documents (wills, advance directives) you voluntarily upload to your Vault.</li>
+        <li>Expo push notification token, to deliver letter-arrival alerts to your device.</li>
+        <li>Family membership data — which profiles belong to the same family group.</li>
+        <li>Usage timestamps (when letters are created, sealed, and delivered).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>2. How We Use Your Information</h2>
+      <ul>
+        <li>To authenticate you and keep your account secure.</li>
+        <li>To store and deliver your future letters at the date you choose.</li>
+        <li>To send push notifications when a letter is delivered or a family member joins.</li>
+        <li>To display your memories, documents, and family circle within the app.</li>
+        <li>To provide concierge services if you subscribe to the Family Concierge plan.</li>
+      </ul>
+      <p>We do not use your content to train AI models. We do not sell your data. We do not serve advertisements.</p>
+    </section>
+
+    <section>
+      <h2>3. Data Storage and Security</h2>
+      <p>
+        All data is stored on Supabase infrastructure hosted in the United States (West US — Oregon region).
+        Your auth tokens are stored on-device using iOS Keychain / Android Keystore via expo-secure-store — never
+        in plain text. Voice recordings and documents are stored in private Supabase Storage buckets;
+        access requires a short-lived signed URL generated at the moment you open the file.
+      </p>
+      <p>
+        Row Level Security (RLS) is enforced at the database level: your data is only readable
+        by authenticated members of your family group and by our service backend.
+      </p>
+    </section>
+
+    <section>
+      <h2>4. Data Sharing</h2>
+      <p>We share data only in these limited circumstances:</p>
+      <ul>
+        <li>With Supabase (database, storage, authentication infrastructure).</li>
+        <li>With Inngest (scheduled job execution for letter delivery — no letter content is shared, only metadata).</li>
+        <li>With Expo (push notification delivery — only your push token and notification payload).</li>
+        <li>With family members you explicitly invite and who accept using a valid invite code.</li>
+        <li>With law enforcement if required by a valid legal process.</li>
+      </ul>
+      <p>No other third parties receive your personal information.</p>
+    </section>
+
+    <section>
+      <h2>5. Your Rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li>Access all personal information we hold about you.</li>
+        <li>Correct inaccurate data through the app's profile settings.</li>
+        <li>Delete your account and all associated data — email us and we will complete deletion within 30 days.</li>
+        <li>Export your letters and recordings — contact us and we will provide a data export.</li>
+        <li>Withdraw consent for push notifications at any time via your device settings.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>6. Children's Privacy</h2>
+      <p>
+        Heartloom is not directed at children under 13. We do not knowingly collect personal information
+        from children under 13. If you believe a child has provided us with personal information, please
+        contact us and we will delete it promptly.
+      </p>
+    </section>
+
+    <section>
+      <h2>7. Data Retention</h2>
+      <p>
+        We retain your data for as long as your account is active. Letters marked for future delivery are
+        retained until delivered. After account deletion we purge all personal data within 30 days, except
+        where retention is required by law.
+      </p>
+    </section>
+
+    <section>
+      <h2>8. Changes to This Policy</h2>
+      <p>
+        We may update this policy as the app evolves. We will notify you of material changes via
+        in-app notification or email at least 14 days before the change takes effect. Continued use
+        after that date constitutes acceptance.
+      </p>
+    </section>
+
+    <section>
+      <h2>9. Contact Us</h2>
+      <p>Questions, requests, or concerns? We're a small team and we respond personally.</p>
+      <p>Email: <a href="mailto:privacy@heartloom.com">privacy@heartloom.com</a></p>
+      <p>Heartloom, Inc. · Portland, Oregon, United States</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Heartloom, Inc. All rights reserved.</p>
+  </footer>
+</body>
+</html>

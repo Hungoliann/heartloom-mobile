@@ -23,7 +23,8 @@ const supabase = createClient(
 
 // Deliver letters function (inline to avoid circular imports from the Expo module)
 const deliverLetters = inngest.createFunction(
-  { id: "deliver-letters", name: "Deliver Due Letters", triggers: [{ cron: "0 * * * *" }] },
+  { id: "deliver-letters", name: "Deliver Due Letters" },
+  { cron: "0 * * * *" },
   async ({ step }: { step: any }) => {
     const { data: dueLetters, error } = await step.run("fetch-due-letters", async () => {
       const now = new Date().toISOString();
