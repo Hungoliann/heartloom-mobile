@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Animated, Switch, Linking, Alert } from "react-native";
+import { View, Text, Pressable, Animated, Switch, Linking, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";

@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, SplashScreen } from "expo-router";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
-import { SplashScreen } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
