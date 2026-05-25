@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { SplashScreen } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
@@ -44,6 +44,7 @@ function AuthBootstrap() {
 
 function PushNotificationBootstrap() {
   const user = useAuthStore((s) => s.user);
+  const router = useRouter();
 
   useEffect(() => {
     if (!user) return;
@@ -80,6 +81,16 @@ function PushNotificationBootstrap() {
     }
 
     registerToken();
+
+    // Navigate to the letter screen when user taps a delivery notification
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const letterId = response.notification.request.content.data?.letterId as string | undefined;
+      if (letterId) {
+        router.push({ pathname: "/letter", params: { letterId } } as any);
+      }
+    });
+
+    return () => sub.remove();
   }, [user?.id]);
 
   return null;

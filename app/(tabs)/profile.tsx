@@ -56,7 +56,7 @@ export default function ProfileScreen() {
 
             {/* Will document card */}
             <Pressable
-              onPress={() => router.push("/letter")}
+              onPress={() => router.push("/(tabs)/legacy" as any)}
               style={{ marginHorizontal: 16, marginBottom: 14, position: "relative" }}
             >
               {/* Ambient glow */}

@@ -54,11 +54,9 @@ async function pickAndUploadDocument(
 
   if (error) throw error;
 
-  const { data: signedData, error: signError } = await supabase.storage
-    .from("documents")
-    .createSignedUrl(path, 3600);
-  if (signError || !signedData) throw signError ?? new Error("Failed to generate URL");
-  return { url: signedData.signedUrl, name: file.name };
+  // Store the storage path, not a signed URL — signed URLs expire and would break links.
+  // Generate a fresh signed URL at open/download time via createSignedUrl().
+  return { url: path, name: file.name };
 }
 
 // ── Hallmark coin SVG ────────────────────────────────────────────────────────

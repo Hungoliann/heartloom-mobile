@@ -229,6 +229,8 @@ function GhostBtn({ label, onPress }: { label: string; onPress?: () => void }) {
 }
 
 // ─── Audio upload helper ──────────────────────────────────────────────────────
+// Returns the storage path (not a signed URL) so it never expires in the DB.
+// Generate a signed URL at playback time via supabase.storage.createSignedUrl().
 async function uploadAudio(uri: string, userId: string): Promise<string | null> {
   try {
     const response = await fetch(uri);
@@ -239,11 +241,7 @@ async function uploadAudio(uri: string, userId: string): Promise<string | null> 
       .from('voice-memos')
       .upload(path, blob, { contentType: `audio/${ext}` });
     if (error) return null;
-    const { data: signedData, error: signError } = await supabase.storage
-      .from('voice-memos')
-      .createSignedUrl(path, 86400);
-    if (signError || !signedData) return null;
-    return signedData.signedUrl;
+    return path;
   } catch {
     return null;
   }

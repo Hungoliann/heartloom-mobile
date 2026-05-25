@@ -260,7 +260,7 @@ export default function HomeScreen() {
             {/* ── Pinned Letter Card ── */}
             {pinnedLetter ? (
               <Pressable
-                onPress={() => router.push("/letter" as any)}
+                onPress={() => router.push({ pathname: "/letter", params: { letterId: pinnedLetter!.id } } as any)}
                 style={({ pressed }) => ({
                   marginHorizontal: 22,
                   marginBottom: 14,
