@@ -3,13 +3,7 @@ import { View, Text, Pressable, ScrollView, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const CREAM = "#FAF3E2";
+import { Colors } from "../src/constants/colors";
 
 const ALL_STORIES = [
   { id: "1", title: "The porch in Alabama", person: "Grandma Ruth", duration: "3:42", bars: [8, 14, 18, 11, 15, 8, 12, 16, 9, 13], date: "Mar 12, 2024", tag: "For Maya" },
@@ -34,7 +28,7 @@ export default function StoriesScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: CREAM }}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* Header */}
         <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "rgba(45,36,26,0.07)" }}>
@@ -42,16 +36,16 @@ export default function StoriesScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, marginRight: 12, padding: 4 })}
           >
-            <Feather name="chevron-left" size={22} color={INK_SOFT} />
+            <Feather name="chevron-left" size={22} color={Colors.inkSoft} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 17, fontFamily: "Georgia", fontWeight: "600", color: INK }}>Saved Stories</Text>
-            <Text style={{ fontSize: 10, color: INK_MUTED, marginTop: 1 }}>{ALL_STORIES.length} recordings</Text>
+            <Text style={{ fontSize: 17, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>Saved Stories</Text>
+            <Text style={{ fontSize: 10, color: Colors.inkMuted, marginTop: 1 }}>{ALL_STORIES.length} recordings</Text>
           </View>
           <Pressable
             onPress={() => router.push("/record")}
             style={({ pressed }) => ({
-              backgroundColor: AMBER,
+              backgroundColor: Colors.amber,
               borderRadius: 999,
               paddingVertical: 8,
               paddingHorizontal: 14,
@@ -61,8 +55,8 @@ export default function StoriesScreen() {
               gap: 5,
             })}
           >
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#FFFFFF" }} />
-            <Text style={{ fontSize: 12, fontWeight: "600", color: "#FFFFFF" }}>Record</Text>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.white }} />
+            <Text style={{ fontSize: 12, fontWeight: "600", color: Colors.white }}>Record</Text>
           </Pressable>
         </View>
 
@@ -78,12 +72,12 @@ export default function StoriesScreen() {
               <Pressable
                 key={story.id}
                 style={({ pressed }) => ({
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: Colors.white,
                   borderRadius: 16,
                   padding: 14,
                   borderWidth: isPlaying ? 1.5 : 1,
-                  borderColor: isPlaying ? AMBER : "rgba(45,36,26,0.07)",
-                  shadowColor: INK,
+                  borderColor: isPlaying ? Colors.amber : "rgba(45,36,26,0.07)",
+                  shadowColor: Colors.ink,
                   shadowOffset: { width: 0, height: isPlaying ? 6 : 2 },
                   shadowOpacity: isPlaying ? 0.12 : 0.06,
                   shadowRadius: isPlaying ? 14 : 6,
@@ -99,10 +93,10 @@ export default function StoriesScreen() {
                       width: 44,
                       height: 44,
                       borderRadius: 22,
-                      backgroundColor: isPlaying ? AMBER : "rgba(210,127,20,0.1)",
+                      backgroundColor: isPlaying ? Colors.amber : "rgba(210,127,20,0.1)",
                       alignItems: "center",
                       justifyContent: "center",
-                      shadowColor: AMBER,
+                      shadowColor: Colors.amber,
                       shadowOffset: { width: 0, height: isPlaying ? 4 : 0 },
                       shadowOpacity: isPlaying ? 0.4 : 0,
                       shadowRadius: 8,
@@ -112,20 +106,20 @@ export default function StoriesScreen() {
                     <Feather
                       name={isPlaying ? "pause" : "play"}
                       size={16}
-                      color={isPlaying ? "#FFFFFF" : AMBER}
+                      color={isPlaying ? Colors.white : Colors.amber}
                       style={{ marginLeft: isPlaying ? 0 : 2 }}
                     />
                   </Pressable>
 
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13.5, fontFamily: "Georgia", fontWeight: "600", color: INK, marginBottom: 2 }}>
+                    <Text style={{ fontSize: 13.5, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink, marginBottom: 2 }}>
                       {story.title}
                     </Text>
-                    <Text style={{ fontSize: 10.5, color: INK_MUTED }}>{story.person} · {story.duration}</Text>
+                    <Text style={{ fontSize: 10.5, color: Colors.inkMuted }}>{story.person} · {story.duration}</Text>
                   </View>
 
                   <View style={{ backgroundColor: "rgba(210,127,20,0.1)", borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 }}>
-                    <Text style={{ fontSize: 9, fontWeight: "600", color: AMBER_DEEP }}>{story.tag}</Text>
+                    <Text style={{ fontSize: 9, fontWeight: "600", color: Colors.amberDeep }}>{story.tag}</Text>
                   </View>
                 </View>
 
@@ -138,7 +132,7 @@ export default function StoriesScreen() {
                         flex: 1,
                         height: h,
                         borderRadius: 2,
-                        backgroundColor: isPlaying && i < playhead ? AMBER : "#8B6039",
+                        backgroundColor: isPlaying && i < playhead ? Colors.amber : "#8B6039",
                         opacity: isPlaying && i < playhead ? 0.9 : 0.28,
                       }}
                     />
@@ -146,9 +140,9 @@ export default function StoriesScreen() {
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8, paddingLeft: 56 }}>
-                  <Text style={{ fontSize: 9.5, color: INK_MUTED }}>{story.date}</Text>
+                  <Text style={{ fontSize: 9.5, color: Colors.inkMuted }}>{story.date}</Text>
                   <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-                    <Feather name="more-horizontal" size={16} color={INK_MUTED} />
+                    <Feather name="more-horizontal" size={16} color={Colors.inkMuted} />
                   </Pressable>
                 </View>
               </Pressable>

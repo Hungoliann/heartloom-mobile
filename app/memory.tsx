@@ -8,17 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-// ── Colors ──────────────────────────────────────────────────────────────────
-const BG         = "#F5EDDF";
-const INK        = "#2D241A";
-const INK_SOFT   = "#4A3D2E";
-const INK_MUTED  = "#8A7A66";
-const AMBER      = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const AMBER_DIM  = "#6B4A2B";
-const WHITE      = "#FFFFFF";
-const PARCHMENT  = "#FBF2DD";
+import { Colors } from "../src/constants/colors";
 
 // ── Waveform bars from prototype SVG ─────────────────────────────────────────
 // Two groups: played (amber) vs unplayed (dim brown)
@@ -37,21 +27,21 @@ const PLAYHEAD_PCT = 0.3;
 const VOICES = [
   {
     initials: "EH",
-    bgColor: AMBER,
+    bgColor: Colors.amber,
     name: "Eleanor",
     detail: "4 recordings · 38 min",
     last: "the sound of the screen door",
   },
   {
     initials: "JH",
-    bgColor: "#4A6741",
+    bgColor: Colors.sageDark,
     name: "James",
     detail: "6 recordings · 1h 12 min",
     last: "how I asked your mother to marry me",
   },
   {
     initials: "LM",
-    bgColor: "#F5EDDF",
+    bgColor: Colors.bg,
     name: "Lila (Mom)",
     detail: "11 recordings · 3h 04 min",
     last: "1976, the summer of the brown station wagon",
@@ -79,7 +69,7 @@ export default function MemoryScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* ── Header ──────────────────────────────────────────────────── */}
         <View
@@ -89,8 +79,8 @@ export default function MemoryScreen() {
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderBottomWidth: 1,
-            borderBottomColor: "rgba(74,47,24,0.14)",
-            backgroundColor: BG,
+            borderBottomColor: Colors.rule,
+            backgroundColor: Colors.bg,
           }}
         >
           {/* Back button */}
@@ -101,14 +91,14 @@ export default function MemoryScreen() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: "rgba(74,47,24,0.14)",
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.65 : 1,
             })}
             accessibilityLabel="Back to Home"
           >
-            <Text style={{ fontSize: 20, color: INK_SOFT, lineHeight: 24, marginTop: -1 }}>‹</Text>
+            <Text style={{ fontSize: 20, color: Colors.inkSoft, lineHeight: 24, marginTop: -1 }}>‹</Text>
           </Pressable>
 
           {/* Title */}
@@ -119,7 +109,7 @@ export default function MemoryScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Audio Legacy
@@ -130,7 +120,7 @@ export default function MemoryScreen() {
             style={{
               fontSize: 11,
               letterSpacing: 1.4,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               minWidth: 68,
               textAlign: "right",
             }}
@@ -151,7 +141,7 @@ export default function MemoryScreen() {
               fontSize: 10,
               fontWeight: "700",
               letterSpacing: 1.8,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               marginBottom: 8,
             }}
           >
@@ -164,24 +154,24 @@ export default function MemoryScreen() {
               fontFamily: "Georgia",
               fontSize: 24,
               fontWeight: "500",
-              color: INK,
+              color: Colors.ink,
               lineHeight: 30,
               letterSpacing: -0.3,
               marginBottom: 22,
             }}
           >
             Their voice.{"\n"}
-            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>Pressed into time.</Text>
+            <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>Pressed into time.</Text>
           </Text>
 
           {/* ── Audio player card ───────────────────────────────────── */}
           <View
             style={{
-              backgroundColor: WHITE,
+              backgroundColor: Colors.white,
               borderRadius: 16,
               padding: 16,
               marginBottom: 28,
-              shadowColor: INK,
+              shadowColor: Colors.ink,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
               shadowRadius: 12,
@@ -195,12 +185,12 @@ export default function MemoryScreen() {
                   width: 44,
                   height: 44,
                   borderRadius: 22,
-                  backgroundColor: AMBER,
+                  backgroundColor: Colors.amber,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ fontSize: 14, fontWeight: "700", color: WHITE }}>EH</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.white }}>EH</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -208,14 +198,14 @@ export default function MemoryScreen() {
                     fontFamily: "Georgia",
                     fontStyle: "italic",
                     fontSize: 14,
-                    color: INK,
+                    color: Colors.ink,
                     lineHeight: 19,
                     marginBottom: 2,
                   }}
                 >
                   "the sound of the screen door"
                 </Text>
-                <Text style={{ fontSize: 11, color: INK_MUTED }}>
+                <Text style={{ fontSize: 11, color: Colors.inkMuted }}>
                   Eleanor M. Hayes · May 13, 2026 · 1:42
                 </Text>
               </View>
@@ -247,7 +237,7 @@ export default function MemoryScreen() {
                     style={{
                       flex: 1,
                       height: (h / 60) * 56,
-                      backgroundColor: AMBER,
+                      backgroundColor: Colors.amber,
                       borderRadius: 2,
                       opacity: 0.95,
                     }}
@@ -260,7 +250,7 @@ export default function MemoryScreen() {
                 style={{
                   width: 2,
                   height: 60,
-                  backgroundColor: AMBER_DEEP,
+                  backgroundColor: Colors.amberDeep,
                   marginHorizontal: 1,
                 }}
               />
@@ -281,7 +271,7 @@ export default function MemoryScreen() {
                     style={{
                       flex: 1,
                       height: (h / 60) * 56,
-                      backgroundColor: AMBER_DIM,
+                      backgroundColor: Colors.amberDim,
                       borderRadius: 2,
                       opacity: 0.55,
                     }}
@@ -306,22 +296,22 @@ export default function MemoryScreen() {
                   width: 44,
                   height: 44,
                   borderRadius: 22,
-                  backgroundColor: INK,
+                  backgroundColor: Colors.ink,
                   alignItems: "center",
                   justifyContent: "center",
                   opacity: pressed ? 0.8 : 1,
                 })}
                 accessibilityLabel={isPlaying ? "Pause" : "Play"}
               >
-                <Text style={{ fontSize: 16, color: WHITE, marginLeft: isPlaying ? 0 : 2 }}>
+                <Text style={{ fontSize: 16, color: Colors.white, marginLeft: isPlaying ? 0 : 2 }}>
                   {isPlaying ? "⏸" : "▶"}
                 </Text>
               </Pressable>
 
               {/* Time */}
-              <Text style={{ fontSize: 13, fontWeight: "600", color: INK_SOFT, letterSpacing: 0.5 }}>
-                <Text style={{ color: AMBER_DEEP }}>0:32</Text>
-                <Text style={{ color: INK_MUTED }}> / 1:42</Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.inkSoft, letterSpacing: 0.5 }}>
+                <Text style={{ color: Colors.amberDeep }}>0:32</Text>
+                <Text style={{ color: Colors.inkMuted }}> / 1:42</Text>
               </Text>
 
               {/* Speed button */}
@@ -335,14 +325,14 @@ export default function MemoryScreen() {
                 })}
                 accessibilityLabel="Playback speed"
               >
-                <Text style={{ fontSize: 12, fontWeight: "600", color: INK_SOFT }}>1.0×</Text>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: Colors.inkSoft }}>1.0×</Text>
               </Pressable>
             </View>
 
             {/* Transcript */}
             <View
               style={{
-                backgroundColor: PARCHMENT,
+                backgroundColor: Colors.parchment,
                 borderRadius: 10,
                 padding: 14,
               }}
@@ -352,16 +342,16 @@ export default function MemoryScreen() {
                   fontFamily: "Georgia",
                   fontStyle: "italic",
                   fontSize: 13,
-                  color: INK_SOFT,
+                  color: Colors.inkSoft,
                   lineHeight: 20,
                   marginBottom: 8,
                 }}
               >
                 "…and the screen door — that screen door — would{" "}
-                <Text style={{ backgroundColor: "rgba(210,127,20,0.25)", color: AMBER_DEEP }}>slap</Text>
+                <Text style={{ backgroundColor: "rgba(210,127,20,0.25)", color: Colors.amberDeep }}>slap</Text>
                 {" "}twice, never once, and we'd know exactly who was home. My mother's slap was slow. Mine was a hurry. Yours, Maya — yours was the laughing kind. I want you to remember that sound when nothing else makes sense…"
               </Text>
-              <Text style={{ fontSize: 10.5, color: INK_MUTED }}>Auto-transcribed · edit ›</Text>
+              <Text style={{ fontSize: 10.5, color: Colors.inkMuted }}>Auto-transcribed · edit ›</Text>
             </View>
           </View>
 
@@ -371,7 +361,7 @@ export default function MemoryScreen() {
               fontSize: 13,
               fontWeight: "700",
               letterSpacing: 0.3,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               textTransform: "uppercase",
               marginBottom: 14,
             }}
@@ -401,7 +391,7 @@ export default function MemoryScreen() {
                   backgroundColor: voice.bgColor,
                   alignItems: "center",
                   justifyContent: "center",
-                  borderWidth: voice.bgColor === "#F5EDDF" ? 1 : 0,
+                  borderWidth: voice.bgColor === Colors.bg ? 1 : 0,
                   borderColor: "rgba(74,47,24,0.2)",
                   flexShrink: 0,
                 }}
@@ -410,7 +400,7 @@ export default function MemoryScreen() {
                   style={{
                     fontSize: 12,
                     fontWeight: "700",
-                    color: voice.bgColor === "#F5EDDF" ? INK_SOFT : WHITE,
+                    color: voice.bgColor === Colors.bg ? Colors.inkSoft : Colors.white,
                   }}
                 >
                   {voice.initials}
@@ -419,10 +409,10 @@ export default function MemoryScreen() {
 
               {/* Info */}
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13, fontWeight: "600", color: INK, marginBottom: 2 }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.ink, marginBottom: 2 }}>
                   {voice.name} · {voice.detail}
                 </Text>
-                <Text style={{ fontSize: 11.5, color: INK_MUTED }} numberOfLines={1}>
+                <Text style={{ fontSize: 11.5, color: Colors.inkMuted }} numberOfLines={1}>
                   Last: "{voice.last}"
                 </Text>
               </View>
@@ -433,20 +423,20 @@ export default function MemoryScreen() {
           <Pressable
             onPress={() => router.push("/record")}
             style={({ pressed }) => ({
-              backgroundColor: INK,
+              backgroundColor: Colors.ink,
               borderRadius: 26,
               paddingVertical: 15,
               alignItems: "center",
               marginTop: 24,
               opacity: pressed ? 0.82 : 1,
-              shadowColor: INK,
+              shadowColor: Colors.ink,
               shadowOffset: { width: 0, height: 6 },
               shadowOpacity: 0.25,
               shadowRadius: 14,
               elevation: 4,
             })}
           >
-            <Text style={{ fontSize: 15, fontWeight: "500", color: PARCHMENT, letterSpacing: 0.2 }}>
+            <Text style={{ fontSize: 15, fontWeight: "500", color: Colors.parchment, letterSpacing: 0.2 }}>
               Record a new memory
             </Text>
           </Pressable>

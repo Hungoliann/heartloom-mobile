@@ -2,16 +2,7 @@ import { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-// ── Brand tokens (matching prototype.css) ──────────────────────────────────
-const CREAM = "#FAF3E2";
-const PAPER = "#FBF4DC";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTE = "#8A7A66";
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const RULE = "rgba(74,47,24,0.14)";
+import { Colors } from "../src/constants/colors";
 
 type PlanId = "gift" | "vault" | "family";
 
@@ -76,7 +67,7 @@ export default function PlansScreen() {
   const [selected, setSelected] = useState<PlanId>("vault");
 
   return (
-    <View style={{ flex: 1, backgroundColor: CREAM }}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 
         {/* ── Header ───────────────────────────────────────────────────── */}
@@ -88,7 +79,7 @@ export default function PlansScreen() {
             paddingTop: 8,
             paddingBottom: 12,
             borderBottomWidth: 1,
-            borderBottomColor: RULE,
+            borderBottomColor: Colors.rule,
           }}
         >
           <Pressable
@@ -98,14 +89,14 @@ export default function PlansScreen() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: RULE,
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: pressed ? "rgba(210,127,20,0.08)" : "transparent",
             })}
             accessibilityLabel="Back"
           >
-            <Text style={{ fontSize: 18, color: INK_SOFT, lineHeight: 22 }}>‹</Text>
+            <Text style={{ fontSize: 18, color: Colors.inkSoft, lineHeight: 22 }}>‹</Text>
           </Pressable>
 
           <Text
@@ -115,7 +106,7 @@ export default function PlansScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             A few honest options
@@ -136,7 +127,7 @@ export default function PlansScreen() {
               fontSize: 10.5,
               fontWeight: "600",
               letterSpacing: 2.0,
-              color: AMBER_DEEP,
+              color: Colors.amberDeep,
               textTransform: "uppercase",
               marginBottom: -8,
             }}
@@ -152,12 +143,12 @@ export default function PlansScreen() {
               fontWeight: "500",
               lineHeight: 29,
               letterSpacing: -0.3,
-              color: INK,
+              color: Colors.ink,
               marginBottom: 4,
             }}
           >
             Today's heirloom is{" "}
-            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>free.</Text>
+            <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>free.</Text>
             {" "}Here is what comes next.
           </Text>
 
@@ -175,12 +166,12 @@ export default function PlansScreen() {
               backgroundColor: "rgba(210,127,20,0.07)",
             }}
           >
-            <Text style={{ fontSize: 12, color: AMBER_DEEP, marginTop: 1 }}>✦</Text>
+            <Text style={{ fontSize: 12, color: Colors.amberDeep, marginTop: 1 }}>✦</Text>
             <Text
               style={{
                 flex: 1,
                 fontSize: 13,
-                color: INK_SOFT,
+                color: Colors.inkSoft,
                 lineHeight: 19,
               }}
             >
@@ -201,20 +192,19 @@ export default function PlansScreen() {
                   style={({ pressed }) => ({
                     position: "relative",
                     borderRadius: 14,
-                    borderWidth: isSelected && isAnchor ? 1 : 1,
+                    borderWidth: 1,
                     borderColor: isSelected && isAnchor
-                      ? AMBER
+                      ? Colors.amber
                       : isSelected
-                      ? INK
-                      : RULE,
-                    backgroundColor: isAnchor ? INK : PAPER,
+                      ? Colors.ink
+                      : Colors.rule,
+                    backgroundColor: isAnchor ? Colors.ink : Colors.paper,
                     padding: 14,
                     paddingBottom: 12,
                     opacity: pressed ? 0.94 : 1,
-                    // Double border for selected anchor plan
                     ...(isSelected && isAnchor
                       ? {
-                          shadowColor: AMBER,
+                          shadowColor: Colors.amber,
                           shadowOffset: { width: 0, height: 0 },
                           shadowOpacity: 0.35,
                           shadowRadius: 0,
@@ -222,7 +212,7 @@ export default function PlansScreen() {
                         }
                       : isSelected
                       ? {
-                          shadowColor: INK,
+                          shadowColor: Colors.ink,
                           shadowOffset: { width: 0, height: 0 },
                           shadowOpacity: 0.25,
                           shadowRadius: 0,
@@ -238,7 +228,7 @@ export default function PlansScreen() {
                         position: "absolute",
                         top: -9,
                         right: 14,
-                        backgroundColor: AMBER,
+                        backgroundColor: Colors.amber,
                         borderRadius: 999,
                         paddingHorizontal: 8,
                         paddingVertical: 3,
@@ -250,7 +240,7 @@ export default function PlansScreen() {
                           fontWeight: "600",
                           letterSpacing: 1.4,
                           textTransform: "uppercase",
-                          color: "#FFFFFF",
+                          color: Colors.white,
                         }}
                       >
                         {plan.badge}
@@ -273,7 +263,7 @@ export default function PlansScreen() {
                         fontFamily: "Georgia",
                         fontSize: 17,
                         fontWeight: "500",
-                        color: isAnchor ? CREAM : INK,
+                        color: isAnchor ? Colors.cream : Colors.ink,
                         flex: 1,
                       }}
                     >
@@ -291,7 +281,7 @@ export default function PlansScreen() {
                           fontFamily: "Georgia",
                           fontSize: 22,
                           fontWeight: "500",
-                          color: isAnchor ? CREAM : INK,
+                          color: isAnchor ? Colors.cream : Colors.ink,
                         }}
                       >
                         {plan.price}
@@ -303,7 +293,7 @@ export default function PlansScreen() {
                           letterSpacing: 0.4,
                           color: isAnchor
                             ? "rgba(250,243,226,0.60)"
-                            : INK_MUTE,
+                            : Colors.inkMuted,
                           textTransform: "lowercase",
                         }}
                       >
@@ -316,7 +306,7 @@ export default function PlansScreen() {
                   <Text
                     style={{
                       fontSize: isAnchor ? 12 : 11.5,
-                      color: isAnchor ? AMBER : INK_MUTE,
+                      color: isAnchor ? Colors.amber : Colors.inkMuted,
                       marginBottom: 8,
                       lineHeight: 16,
                     }}
@@ -329,7 +319,7 @@ export default function PlansScreen() {
                     style={{
                       fontSize: 12.5,
                       lineHeight: 18,
-                      color: isAnchor ? "rgba(250,243,226,0.84)" : INK_SOFT,
+                      color: isAnchor ? "rgba(250,243,226,0.84)" : Colors.inkSoft,
                       marginBottom: 8,
                     }}
                   >
@@ -352,7 +342,7 @@ export default function PlansScreen() {
                           style={{
                             fontSize: 11,
                             fontWeight: "600",
-                            color: isAnchor ? AMBER : AMBER_DEEP,
+                            color: isAnchor ? Colors.amber : Colors.amberDeep,
                             lineHeight: 17,
                             width: 14,
                           }}
@@ -365,7 +355,7 @@ export default function PlansScreen() {
                             lineHeight: 17,
                             color: isAnchor
                               ? "rgba(250,243,226,0.78)"
-                              : INK_MUTE,
+                              : Colors.inkMuted,
                             flex: 1,
                           }}
                         >
@@ -384,7 +374,7 @@ export default function PlansScreen() {
             style={{
               textAlign: "center",
               fontSize: 11.5,
-              color: INK_MUTE,
+              color: Colors.inkMuted,
               lineHeight: 17,
               marginTop: 4,
             }}
@@ -404,7 +394,7 @@ export default function PlansScreen() {
                 width: "100%",
                 minHeight: 50,
                 borderRadius: 26,
-                backgroundColor: INK,
+                backgroundColor: Colors.ink,
                 alignItems: "center",
                 justifyContent: "center",
                 paddingVertical: 13,
@@ -416,7 +406,7 @@ export default function PlansScreen() {
                 style={{
                   fontSize: 15,
                   fontWeight: "500",
-                  color: CREAM,
+                  color: Colors.cream,
                 }}
               >
                 Start 3-day free trial
@@ -431,7 +421,7 @@ export default function PlansScreen() {
                 minHeight: 42,
                 borderRadius: 26,
                 borderWidth: 1,
-                borderColor: RULE,
+                borderColor: Colors.rule,
                 backgroundColor: "transparent",
                 alignItems: "center",
                 justifyContent: "center",
@@ -444,7 +434,7 @@ export default function PlansScreen() {
                 style={{
                   fontSize: 13,
                   fontWeight: "500",
-                  color: INK,
+                  color: Colors.ink,
                 }}
               >
                 Skip for now

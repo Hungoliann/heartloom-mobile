@@ -2,16 +2,7 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
-
-// ── Brand tokens ─────────────────────────────────────────────────────────────
-const CREAM = "#FAF3E2";
-const PAPER = "#FBF4DC";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTE = "#8A7A66";
-const AMBER_DEEP = "#B06600";
-const SAGE_DEEP = "#6F8564";
-const RULE = "rgba(74,47,24,0.14)";
+import { Colors } from "../src/constants/colors";
 
 // ── Bloom SVG ─────────────────────────────────────────────────────────────────
 function BloomArt() {
@@ -21,13 +12,13 @@ function BloomArt() {
         cx={100}
         cy={100}
         r={86}
-        stroke={SAGE_DEEP}
+        stroke={Colors.sageDeep}
         strokeWidth={1}
         strokeDasharray="2 8"
         opacity={0.35}
       />
-      <Circle cx={100} cy={100} r={60} fill={SAGE_DEEP} opacity={0.08} />
-      <Circle cx={100} cy={100} r={36} fill={SAGE_DEEP} opacity={0.18} />
+      <Circle cx={100} cy={100} r={60} fill={Colors.sageDeep} opacity={0.08} />
+      <Circle cx={100} cy={100} r={36} fill={Colors.sageDeep} opacity={0.18} />
       <SvgText
         x={100}
         y={114}
@@ -35,7 +26,7 @@ function BloomArt() {
         fontFamily="Georgia"
         fontSize={46}
         fontStyle="italic"
-        fill={SAGE_DEEP}
+        fill={Colors.sageDeep}
       >
         H
       </SvgText>
@@ -50,7 +41,7 @@ export default function DoneScreen() {
     <View
       style={{
         flex: 1,
-        backgroundColor: CREAM,
+        backgroundColor: Colors.cream,
       }}
     >
       {/* Subtle sage gradient tint at top */}
@@ -91,12 +82,12 @@ export default function DoneScreen() {
               fontWeight: "500",
               lineHeight: 29,
               letterSpacing: -0.3,
-              color: INK,
+              color: Colors.ink,
               textAlign: "center",
             }}
           >
             You haven't signed up.{"\n"}
-            <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>
+            <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>
               You've created an heirloom.
             </Text>
           </Text>
@@ -107,7 +98,7 @@ export default function DoneScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
               textAlign: "center",
               lineHeight: 21,
             }}
@@ -120,9 +111,9 @@ export default function DoneScreen() {
           <View
             style={{
               width: "100%",
-              backgroundColor: PAPER,
+              backgroundColor: Colors.paper,
               borderWidth: 1,
-              borderColor: RULE,
+              borderColor: Colors.rule,
               borderRadius: 12,
               padding: 14,
               gap: 6,
@@ -147,7 +138,7 @@ export default function DoneScreen() {
                     fontSize: 10,
                     fontWeight: "600",
                     letterSpacing: 1.4,
-                    color: INK_MUTE,
+                    color: Colors.inkMuted,
                     textTransform: "uppercase",
                   }}
                 >
@@ -157,7 +148,7 @@ export default function DoneScreen() {
                   style={{
                     fontFamily: "Georgia",
                     fontSize: 13.5,
-                    color: INK,
+                    color: Colors.ink,
                   }}
                 >
                   {row.value}
@@ -173,7 +164,7 @@ export default function DoneScreen() {
               width: "100%",
               minHeight: 50,
               borderRadius: 26,
-              backgroundColor: INK,
+              backgroundColor: Colors.ink,
               alignItems: "center",
               justifyContent: "center",
               paddingVertical: 13,
@@ -186,7 +177,7 @@ export default function DoneScreen() {
               style={{
                 fontSize: 15,
                 fontWeight: "500",
-                color: CREAM,
+                color: Colors.cream,
               }}
             >
               See your Heartloom
@@ -198,7 +189,7 @@ export default function DoneScreen() {
             style={{
               textAlign: "center",
               fontSize: 11.5,
-              color: INK_MUTE,
+              color: Colors.inkMuted,
               lineHeight: 17,
               marginTop: -4,
             }}

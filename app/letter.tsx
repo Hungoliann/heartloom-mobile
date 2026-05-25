@@ -1,15 +1,35 @@
 import { useRef, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import { View, Text, Pressable, Animated, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { Colors } from "../src/constants/colors";
+import { supabase } from "../src/lib/supabase";
+import { useAuthStore } from "../src/store/auth.store";
 
 export default function LetterScreen() {
   const router = useRouter();
+  const { letterId } = useLocalSearchParams<{ letterId?: string }>();
+  const user = useAuthStore((s) => s.user);
+
   const waxScale = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(20)).current;
+
+  const { data: letter, isLoading } = useQuery({
+    queryKey: ["letter", letterId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("letters")
+        .select("*")
+        .eq("id", letterId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!letterId,
+  });
 
   useEffect(() => {
     Animated.parallel([
@@ -20,6 +40,59 @@ export default function LetterScreen() {
       Animated.spring(waxScale, { toValue: 1, tension: 80, friction: 8, useNativeDriver: true }).start();
     }, 350);
   }, []);
+
+  if (!letterId) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#F5E9D6", justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ fontFamily: "Georgia", fontSize: 16, color: Colors.inkSoft }}>No letter selected</Text>
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F5E9D6" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!letter) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#F5E9D6", justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ fontFamily: "Georgia", fontSize: 16, color: Colors.inkSoft }}>Letter not found</Text>
+      </View>
+    );
+  }
+
+  // Delivery status pill
+  let statusText: string;
+  let dotColor: string;
+  if (!letter.delivered_at && letter.deliver_at) {
+    const formatted = new Date(letter.deliver_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    statusText = `Sealed · Opens ${formatted}`;
+    dotColor = Colors.amber;
+  } else if (letter.delivered_at) {
+    const formatted = new Date(letter.delivered_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    statusText = `Delivered · ${formatted}`;
+    dotColor = "#8BAE72";
+  } else {
+    statusText = "Draft";
+    dotColor = Colors.inkMuted;
+  }
+
+  // Metadata
+  const recipientName = letter.recipient_name ?? "Family";
+  const opensWhen = letter.deliver_at
+    ? new Date(letter.deliver_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : "Whenever the time is right";
+  const certNumber = "HL-" + letter.id.slice(0, 8).toUpperCase();
+  const signedDate = letter.created_at
+    ? new Date(letter.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : "";
+
+  const authorName = user?.name ?? "Author";
+  const waxInitial = authorName.charAt(0).toUpperCase();
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5E9D6" }}>
@@ -32,7 +105,7 @@ export default function LetterScreen() {
           >
             <Feather name="x" size={20} color={Colors.inkSoft} />
           </Pressable>
-          <Text style={{ flex: 1, fontSize: 15, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>Future Letter</Text>
+          <Text style={{ flex: 1, fontSize: 15, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>{letter.title}</Text>
           <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4 })}>
             <Feather name="share-2" size={18} color={Colors.inkSoft} />
           </Pressable>
@@ -45,8 +118,8 @@ export default function LetterScreen() {
         >
           {/* Delivery status pill */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16, backgroundColor: "rgba(210,127,20,0.1)", borderRadius: 12, padding: 12 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.amber }} />
-            <Text style={{ fontSize: 12, color: "#7A4820", fontWeight: "500", flex: 1 }}>Sealed · Opens June 14, 2034</Text>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: dotColor }} />
+            <Text style={{ fontSize: 12, color: "#7A4820", fontWeight: "500", flex: 1 }}>{statusText}</Text>
             <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
               <Text style={{ fontSize: 11, color: Colors.amber, fontWeight: "600" }}>Edit →</Text>
             </Pressable>
@@ -93,7 +166,7 @@ export default function LetterScreen() {
                 elevation: 4,
               }}
             >
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontWeight: "700", fontSize: 24, color: "#F3C896" }}>H</Text>
+              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontWeight: "700", fontSize: 24, color: "#F3C896" }}>{waxInitial}</Text>
             </Animated.View>
 
             {/* Document header */}
@@ -103,49 +176,36 @@ export default function LetterScreen() {
               </Text>
               <Text style={{ fontFamily: "Georgia", fontSize: 11, color: "rgba(74,47,24,0.65)", fontStyle: "italic" }}>
                 from{" "}
-                <Text style={{ fontSize: 16, fontStyle: "normal", fontWeight: "600", color: "#4A2F18" }}>Eleanor M. Hayes</Text>
+                <Text style={{ fontSize: 16, fontStyle: "normal", fontWeight: "600", color: "#4A2F18" }}>{authorName}</Text>
               </Text>
             </View>
 
             {/* Letter body */}
             <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 11, color: "#4A2F18", marginBottom: 12 }}>
-              To my daughter, Maya
-            </Text>
-
-            <Text style={{ fontFamily: "Georgia", fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 14 }}>
-              By the time you read this, I hope you've found the kind of love that makes you laugh at nothing, that makes ordinary Tuesday evenings feel sacred.
-            </Text>
-
-            <Text style={{ fontFamily: "Georgia", fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 14 }}>
-              I leave you the cabin in Tahoe, the recipe box from my mother, and the letter inside the second drawer of my writing desk. You'll know when it's time to open it.
+              To {recipientName}
             </Text>
 
             <Text style={{ fontFamily: "Georgia", fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 20 }}>
-              Most of all, I leave you my certainty: that you were the bravest thing I ever did.
-            </Text>
-
-            <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 13, color: "#4A2F18", marginBottom: 20 }}>
-              With all my love,{"\n"}
-              <Text style={{ fontFamily: "Georgia", fontSize: 18, fontWeight: "600", fontStyle: "normal" }}>Mom</Text>
+              {letter.body ?? "(No content)"}
             </Text>
 
             {/* Sign line */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(169,95,10,0.15)" }}>
               <View style={{ flex: 1, height: 1, backgroundColor: "rgba(74,47,24,0.25)" }} />
               <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 8.5, letterSpacing: 1.2, color: "rgba(74,47,24,0.45)", textTransform: "uppercase" }}>
-                Signed & sealed · May 19, 2026
+                {signedDate ? `Signed & sealed · ${signedDate}` : "Signed & sealed"}
               </Text>
             </View>
           </View>
 
           {/* Metadata rows */}
           <View style={{ marginTop: 18, backgroundColor: Colors.white, borderRadius: 14, overflow: "hidden", shadowColor: Colors.ink, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}>
-            {[
-              ["Recipient", "Maya"],
-              ["Opens when", "June 14, 2034"],
+            {([
+              ["Recipient", recipientName],
+              ["Opens when", opensWhen],
               ["Delivery", "Push notification + email"],
-              ["Certificate", "HL-A3F82C1D"],
-            ].map(([label, value], i, arr) => (
+              ["Certificate", certNumber],
+            ] as [string, string][]).map(([label, value], i, arr) => (
               <View
                 key={label}
                 style={{

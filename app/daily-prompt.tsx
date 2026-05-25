@@ -8,16 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-const AMBER = "#D27F14";
-const AMBER_DEEP = "#B06600";
-const INK = "#2D241A";
-const INK_SOFT = "#4A3D2E";
-const INK_MUTED = "#8A7A66";
-const CREAM = "#FAF3E2";
-const PAPER = "#FBF4DC";
-const RULE = "rgba(74,47,24,0.14)";
-const SAGE_DEEP = "#6F8564";
+import { Colors } from "../src/constants/colors";
 
 const PROMPT_LOG = [
   {
@@ -53,7 +44,7 @@ export default function DailyPromptScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: CREAM }}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 
         {/* ── Header ── */}
@@ -64,10 +55,9 @@ export default function DailyPromptScreen() {
             paddingHorizontal: 16,
             paddingTop: 8,
             paddingBottom: 12,
-            backgroundColor: CREAM,
+            backgroundColor: Colors.cream,
             borderBottomWidth: 1,
-            borderBottomColor: RULE,
-            // grid: 36px | 1fr | auto
+            borderBottomColor: Colors.rule,
           }}
         >
           {/* Back button */}
@@ -78,14 +68,14 @@ export default function DailyPromptScreen() {
               height: 34,
               borderRadius: 17,
               borderWidth: 1,
-              borderColor: RULE,
+              borderColor: Colors.rule,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.6 : 1,
               flexShrink: 0,
             })}
           >
-            <Text style={{ fontSize: 20, color: INK_SOFT, lineHeight: 24, marginTop: -1 }}>‹</Text>
+            <Text style={{ fontSize: 20, color: Colors.inkSoft, lineHeight: 24, marginTop: -1 }}>‹</Text>
           </Pressable>
 
           {/* Title */}
@@ -96,7 +86,7 @@ export default function DailyPromptScreen() {
               fontFamily: "Georgia",
               fontStyle: "italic",
               fontSize: 14,
-              color: INK_SOFT,
+              color: Colors.inkSoft,
             }}
           >
             Today's prompt
@@ -107,7 +97,7 @@ export default function DailyPromptScreen() {
             style={{
               fontSize: 11,
               letterSpacing: 1.6,
-              color: INK_MUTED,
+              color: Colors.inkMuted,
               minWidth: 48,
               textAlign: "right",
             }}
@@ -129,7 +119,7 @@ export default function DailyPromptScreen() {
                 fontSize: 10,
                 fontWeight: "700",
                 letterSpacing: 2,
-                color: INK_MUTED,
+                color: Colors.inkMuted,
                 marginBottom: 8,
               }}
             >
@@ -144,12 +134,12 @@ export default function DailyPromptScreen() {
                 fontSize: 26,
                 lineHeight: 32,
                 letterSpacing: -0.3,
-                color: INK,
+                color: Colors.ink,
                 marginBottom: 22,
               }}
             >
               One small thing,{"\n"}
-              <Text style={{ fontStyle: "italic", color: AMBER_DEEP }}>
+              <Text style={{ fontStyle: "italic", color: Colors.amberDeep }}>
                 before the day pulls you away.
               </Text>
             </Text>
@@ -157,12 +147,12 @@ export default function DailyPromptScreen() {
             {/* ── Prompt card ── */}
             <View
               style={{
-                backgroundColor: "#FFFFFF",
+                backgroundColor: Colors.white,
                 borderRadius: 14,
                 marginBottom: 28,
                 borderLeftWidth: 3,
-                borderLeftColor: AMBER,
-                shadowColor: INK,
+                borderLeftColor: Colors.amber,
+                shadowColor: Colors.ink,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.08,
                 shadowRadius: 8,
@@ -177,7 +167,7 @@ export default function DailyPromptScreen() {
                     fontSize: 9,
                     fontWeight: "700",
                     letterSpacing: 1.8,
-                    color: AMBER_DEEP,
+                    color: Colors.amberDeep,
                   }}
                 >
                   PROMPT OF THE DAY
@@ -189,7 +179,7 @@ export default function DailyPromptScreen() {
                     fontFamily: "Georgia",
                     fontStyle: "italic",
                     fontSize: 17,
-                    color: INK,
+                    color: Colors.ink,
                     lineHeight: 26,
                   }}
                 >
@@ -198,11 +188,11 @@ export default function DailyPromptScreen() {
 
                 {/* Meta row */}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Text style={{ fontSize: 12, color: INK_MUTED }}>60 seconds</Text>
-                  <Text style={{ fontSize: 12, color: INK_MUTED }}>·</Text>
-                  <Text style={{ fontSize: 12, color: INK_MUTED }}>Voice or text</Text>
-                  <Text style={{ fontSize: 12, color: INK_MUTED }}>·</Text>
-                  <Text style={{ fontSize: 12, color: INK_MUTED }}>
+                  <Text style={{ fontSize: 12, color: Colors.inkMuted }}>60 seconds</Text>
+                  <Text style={{ fontSize: 12, color: Colors.inkMuted }}>·</Text>
+                  <Text style={{ fontSize: 12, color: Colors.inkMuted }}>Voice or text</Text>
+                  <Text style={{ fontSize: 12, color: Colors.inkMuted }}>·</Text>
+                  <Text style={{ fontSize: 12, color: Colors.inkMuted }}>
                     For <Text style={{ fontStyle: "italic" }}>Maya</Text>
                   </Text>
                 </View>
@@ -212,7 +202,7 @@ export default function DailyPromptScreen() {
                   <Pressable
                     onPress={() => router.push("/record" as any)}
                     style={({ pressed }) => ({
-                      backgroundColor: INK,
+                      backgroundColor: Colors.ink,
                       borderRadius: 26,
                       paddingVertical: 10,
                       paddingHorizontal: 18,
@@ -223,7 +213,7 @@ export default function DailyPromptScreen() {
                   >
                     <Text
                       style={{
-                        color: CREAM,
+                        color: Colors.cream,
                         fontSize: 14,
                         fontWeight: "500",
                       }}
@@ -240,13 +230,13 @@ export default function DailyPromptScreen() {
                       alignItems: "center",
                       justifyContent: "center",
                       borderWidth: 1,
-                      borderColor: RULE,
+                      borderColor: Colors.rule,
                       opacity: pressed ? 0.7 : 1,
                     })}
                   >
                     <Text
                       style={{
-                        color: INK,
+                        color: Colors.ink,
                         fontSize: 14,
                         fontWeight: "500",
                       }}
@@ -264,7 +254,7 @@ export default function DailyPromptScreen() {
                 fontFamily: "Georgia",
                 fontWeight: "500",
                 fontSize: 16,
-                color: INK,
+                color: Colors.ink,
                 marginBottom: 12,
               }}
             >
@@ -281,7 +271,7 @@ export default function DailyPromptScreen() {
                     gap: 12,
                     paddingVertical: 14,
                     borderBottomWidth: index < PROMPT_LOG.length - 1 ? 1 : 0,
-                    borderBottomColor: RULE,
+                    borderBottomColor: Colors.rule,
                   }}
                 >
                   {/* Day label */}
@@ -290,7 +280,7 @@ export default function DailyPromptScreen() {
                       fontSize: 10,
                       fontWeight: "700",
                       letterSpacing: 1,
-                      color: item.done ? AMBER_DEEP : INK_MUTED,
+                      color: item.done ? Colors.amberDeep : Colors.inkMuted,
                       width: 32,
                       marginTop: 2,
                     }}
@@ -304,14 +294,14 @@ export default function DailyPromptScreen() {
                       style={{
                         fontFamily: "Georgia",
                         fontSize: 14,
-                        color: item.done ? INK_SOFT : INK_MUTED,
+                        color: item.done ? Colors.inkSoft : Colors.inkMuted,
                         lineHeight: 20,
                         marginBottom: 3,
                       }}
                     >
                       {item.prompt}
                     </Text>
-                    <Text style={{ fontSize: 11.5, color: INK_MUTED }}>
+                    <Text style={{ fontSize: 11.5, color: Colors.inkMuted }}>
                       {item.meta}
                     </Text>
                   </View>
@@ -330,7 +320,7 @@ export default function DailyPromptScreen() {
                     <Text
                       style={{
                         fontSize: item.done ? 15 : 14,
-                        color: item.done ? SAGE_DEEP : INK_MUTED,
+                        color: item.done ? Colors.sageDeep : Colors.inkMuted,
                         lineHeight: 20,
                       }}
                     >
@@ -347,7 +337,7 @@ export default function DailyPromptScreen() {
                 fontFamily: "Georgia",
                 fontStyle: "italic",
                 fontSize: 14,
-                color: INK_MUTED,
+                color: Colors.inkMuted,
                 marginTop: 20,
                 lineHeight: 22,
               }}

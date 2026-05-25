@@ -22,7 +22,11 @@
         "backgroundColor": "#F5EDD6"
       },
       "package": "com.heartloom.app",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,6 +41,13 @@
         }
       ]
     ],
-    "scheme": "heartloom"
+    "scheme": "heartloom",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "57073d2b-8afb-4356-813a-17d8185b4689"
+      }
+    },
+    "owner": "heartloom"
   }
 }

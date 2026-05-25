@@ -50,7 +50,7 @@ const SOFT_SUGGESTIONS = [
   {
     id: "5",
     icon: "✎",
-    title: "A recipe for Maya's first apartment",
+    title: "A recipe to pass down",
     sub: "5 minutes · voice + photo",
     route: "/record" as const,
   },
@@ -457,7 +457,7 @@ export default function HomeScreen() {
                   marginBottom: 8,
                 }}
               >
-                Gentle next steps for Maya
+                Gentle next steps
               </Text>
 
               <View style={{ gap: 6 }}>

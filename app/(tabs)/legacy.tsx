@@ -116,6 +116,7 @@ export default function LegacyScreen() {
                 style={{ opacity, transform: [{ translateY }] }}
               >
                 <Pressable
+                  onPress={() => router.push({ pathname: "/letter", params: { letterId: letter.id } })}
                   style={({ pressed }) => ({
                     backgroundColor: "#FFFFFF",
                     borderRadius: 20,

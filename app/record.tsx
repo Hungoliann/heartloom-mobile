@@ -7,6 +7,7 @@ import {
   ScrollView,
   Animated,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -18,6 +19,8 @@ import useStepTransition from "../src/components/ui/useStepTransition";
 import { useAudioRecorder } from "../src/hooks/useAudioRecorder";
 import { useAudioPlayer } from "../src/hooks/useAudioPlayer";
 import { Colors } from "../src/constants/colors";
+import { useCreateLetter } from "../src/hooks/useLetters";
+import { supabase } from "../src/lib/supabase";
 import {
   useAudioRecorder as useExpoAudioRecorder,
   useAudioRecorderState,
@@ -225,10 +228,40 @@ function GhostBtn({ label, onPress }: { label: string; onPress?: () => void }) {
   );
 }
 
+// ─── Audio upload helper ──────────────────────────────────────────────────────
+async function uploadAudio(uri: string, userId: string): Promise<string | null> {
+  try {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const ext = uri.split('.').pop() ?? 'm4a';
+    const path = `${userId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from('voice-memos')
+      .upload(path, blob, { contentType: `audio/${ext}` });
+    if (error) return null;
+    const { data } = supabase.storage.from('voice-memos').getPublicUrl(path);
+    return data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Delivery date helper ─────────────────────────────────────────────────────
+function getDeliverAt(option: string): string | null {
+  if (option === "now") return new Date().toISOString();
+  if (option === "date") {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString();
+  }
+  return null;
+}
+
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function RecordScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const createLetter = useCreateLetter();
 
   const [step, setStep] = useState(0);
 
@@ -272,6 +305,7 @@ export default function RecordScreen() {
 
   // Step 6 – Deliver
   const [deliveryOption, setDeliveryOption] = useState("date");
+  const [isSaving, setIsSaving] = useState(false);
 
   // Step 7 – Certificate
   const certScale = useRef(new Animated.Value(0.88)).current;
@@ -341,6 +375,37 @@ export default function RecordScreen() {
   }
 
   function goNext() {
+    transitionForward(() => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1)));
+  }
+
+  async function handleGoNext() {
+    if (step === 6) {
+      setIsSaving(true);
+      try {
+        const mediaUrl =
+          recordingUri && user
+            ? await uploadAudio(recordingUri, user.id)
+            : null;
+
+        const promptText = PROMPTS[promptIdx];
+        const title = `A letter for ${recipient.trim() || "my family"}`;
+
+        await createLetter.mutateAsync({
+          title,
+          body: `${promptText.line1} ${promptText.line2} ${promptText.line3}`.replace(/{name}/g, recipient),
+          recipient_name: recipient.trim() || null,
+          deliver_at: getDeliverAt(deliveryOption),
+          media_type: mediaUrl ? "audio" : null,
+          media_url: mediaUrl,
+        });
+        transitionForward(() => setStep(7));
+      } catch {
+        Alert.alert("Couldn't save letter", "Please try again.");
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
     transitionForward(() => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1)));
   }
 
@@ -551,7 +616,8 @@ export default function RecordScreen() {
                 name={name}
                 deliveryOption={deliveryOption}
                 setDeliveryOption={setDeliveryOption}
-                onNext={goNext}
+                onNext={handleGoNext}
+                isSaving={isSaving}
               />
             )}
             {step === 7 && (
@@ -1645,11 +1711,13 @@ function StepDeliver({
   deliveryOption,
   setDeliveryOption,
   onNext,
+  isSaving,
 }: {
   name: string;
   deliveryOption: string;
   setDeliveryOption: (v: string) => void;
   onNext: () => void;
+  isSaving?: boolean;
 }) {
   return (
     <View>
@@ -1722,7 +1790,7 @@ function StepDeliver({
         })}
       </View>
 
-      <PrimaryBtn label="Confirm" onPress={onNext} />
+      <PrimaryBtn label={isSaving ? "Saving…" : "Confirm"} onPress={onNext} disabled={isSaving} />
     </View>
   );
 }

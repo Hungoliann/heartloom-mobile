@@ -1,6 +1,7 @@
 export const Colors = {
   amber:     "#D27F14",
   amberDeep: "#B06600",
+  amberDim:  "#6B4A2B",
   ink:       "#2D241A",
   inkSoft:   "#4A3D2E",
   inkMuted:  "#8A7A66",

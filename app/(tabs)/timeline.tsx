@@ -24,64 +24,7 @@ type TimelineSection = {
   entries: TimelineEntry[];
 };
 
-const TIMELINE_DATA: TimelineSection[] = [
-  {
-    year: "2034",
-    entries: [
-      {
-        id: "1",
-        date: "JUN 14",
-        dateSub: "8 yrs out",
-        title: "For Maya, on her 30th",
-        sub: "Future Letter · sealed · \"…you are allowed to be tired.\"",
-        tag: "SEALED",
-      },
-      {
-        id: "2",
-        date: "APR 02",
-        dateSub: "milestone",
-        title: "Maya's wedding (anticipated)",
-        sub: "Suggest: record a toast in advance · 90 sec",
-        tag: "SUGGESTED",
-      },
-    ],
-  },
-  {
-    year: "2028",
-    entries: [
-      {
-        id: "3",
-        date: "SEP 09",
-        dateSub: "2 yrs out",
-        title: "College send-off letter",
-        sub: "For Maya · sealed · opens her first dorm morning",
-        tag: "SEALED",
-      },
-    ],
-  },
-  {
-    year: "2026",
-    entries: [
-      {
-        id: "4",
-        date: "MAY 13",
-        dateSub: "today",
-        title: "Voice memory: \"the sound of the screen door\"",
-        sub: "1:42 · added to Story Archive",
-        tag: "AUDIO",
-        isToday: true,
-        isAudio: true,
-      },
-      {
-        id: "5",
-        date: "MAY 08",
-        dateSub: "milestone",
-        title: "Mother's Day · brunch at Lila's",
-        sub: "Photo added · 4 stories collected",
-      },
-    ],
-  },
-];
+// TIMELINE_DATA removed — empty state is shown when no letters exist
 
 type Tab = "forward" | "backward" | "all";
 
@@ -265,7 +208,7 @@ export default function TimelineScreen() {
       return true;
     });
 
-    if (filtered.length === 0) return TIMELINE_DATA;
+    if (filtered.length === 0) return [];
 
     const byYear = new Map<string, TimelineEntry[]>();
     for (const e of filtered) {
@@ -432,7 +375,62 @@ export default function TimelineScreen() {
             </View>
 
             {/* ── Timeline entries ── */}
-            {timelineData.map((section) => (
+            {timelineData.length === 0 ? (
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 36,
+                  paddingTop: 40,
+                  paddingBottom: 32,
+                  gap: 10,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "Georgia",
+                    fontSize: 18,
+                    fontWeight: "600",
+                    color: Colors.ink,
+                    textAlign: "center",
+                  }}
+                >
+                  No letters yet
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: Colors.inkMuted,
+                    textAlign: "center",
+                    lineHeight: 20,
+                  }}
+                >
+                  Letters you write and receive will appear here.
+                </Text>
+                <Pressable
+                  onPress={() => router.push("/record" as any)}
+                  style={({ pressed }) => ({
+                    marginTop: 8,
+                    paddingVertical: 10,
+                    paddingHorizontal: 22,
+                    backgroundColor: Colors.ink,
+                    borderRadius: 999,
+                    opacity: pressed ? 0.85 : 1,
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "Georgia",
+                      fontSize: 14,
+                      color: Colors.cream,
+                      fontWeight: "500",
+                    }}
+                  >
+                    Write your first letter →
+                  </Text>
+                </Pressable>
+              </View>
+            ) : timelineData.map((section) => (
               <View key={section.year}>
                 <YearMarker year={section.year} />
 

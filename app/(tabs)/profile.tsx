@@ -27,7 +27,7 @@ export default function ProfileScreen() {
     }, 800);
   }, []);
 
-  const ownerName = user?.name ?? "Eleanor M. Hayes";
+  const ownerName = user?.name ?? "You";
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5E9D6" }}>
@@ -47,7 +47,7 @@ export default function ProfileScreen() {
             <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
               <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 16, lineHeight: 22, color: "#3A2616", fontWeight: "500" }}>
                 What would you leave for{" "}
-                <Text style={{ color: "#A95F0A", borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.4)" }}>Maya's wedding day</Text>?
+                <Text style={{ color: "#A95F0A", borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.4)" }}>the people you love most</Text>?
               </Text>
               <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 10.5, lineHeight: 15, color: "rgba(74,47,24,0.6)", marginTop: 5 }}>
                 Most families spend 18 months untangling. Yours can open a paragraph instead.
@@ -119,24 +119,24 @@ export default function ProfileScreen() {
 
                 {/* First entry (complete) */}
                 <View style={{ marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.08)" }}>
-                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To my daughter, Maya</Text>
+                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To those I love</Text>
                   <Text style={{ fontFamily: "Georgia", fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
-                    I leave the cabin in Tahoe, the recipe box, and the letter inside the second drawer.
+                    I leave everything that matters — the memories, the lessons, and the letters sealed with care.
                   </Text>
                   {/* Delivery pill */}
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6, alignSelf: "flex-start", backgroundColor: "#FFF5E3", borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3, borderWidth: 1, borderColor: "rgba(169,95,10,0.3)" }}>
                     <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: "#A95F0A", alignItems: "center", justifyContent: "center" }}>
                       <Text style={{ fontSize: 7, color: "#FBE7C1" }}>✦</Text>
                     </View>
-                    <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 9.5, color: "#6B3F10" }}>Sealed · opens on her wedding day</Text>
+                    <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 9.5, color: "#6B3F10" }}>Sealed · opens when the time is right</Text>
                   </View>
                 </View>
 
                 {/* Second entry (in progress) */}
                 <View style={{ marginBottom: 4 }}>
-                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To my son, Theo</Text>
+                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>Your next letter</Text>
                   <Text style={{ fontFamily: "Georgia", fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
-                    I leave the workshop, the blue Volvo…
+                    Start writing something meaningful…
                     <Text style={{ color: "#A95F0A" }}>|</Text>
                   </Text>
                 </View>

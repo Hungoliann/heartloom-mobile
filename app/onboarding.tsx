@@ -11,15 +11,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../src/store/auth.store";
+import { Colors } from "../src/constants/colors";
 
-// ── Brand colors (extracted from prototype CSS) ──────────────────────────────
-const CREAM = "#FAF3E2";        // --pt-cream / app background
-const INK = "#2D241A";          // --pt-ink
-const INK_SOFT = "#4A3D2E";     // --pt-ink-soft
-const INK_MUTED = "#8A7A66";    // --pt-ink-mute
-const AMBER_DEEP = "#B06600";   // --pt-amber-deep (italic em colour)
-const RULE = "rgba(74,47,24,0.14)"; // --pt-rule (border colour)
-const PAPER_BG = "rgba(255,251,243,0.6)"; // textarea background base
+// Textarea background: semi-transparent warm white overlay (not a brand token)
+const PAPER_BG = "rgba(255,251,243,0.6)";
 
 const MAX_CHARS = 240;
 
@@ -42,7 +37,7 @@ export default function OnboardingScreen() {
   const charCount = text.length;
 
   return (
-    <View style={{ flex: 1, backgroundColor: CREAM }}>
+    <View style={{ flex: 1, backgroundColor: Colors.cream }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -60,15 +55,6 @@ export default function OnboardingScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* ── HEARTLOOM wordmark ─────────────────────────────────────── */}
-            {/*
-              Prototype: .pt-wordmark
-                font-family: var(--serif-alt) → Playfair Display / Georgia
-                font-size: 13px
-                letter-spacing: 0.34em
-                text-align: center
-                color: var(--pt-ink)
-              Screen inner padding-top is 70px (welcome variant adds extra)
-            */}
             <View style={{ width: "100%", alignItems: "center", paddingTop: 20, paddingBottom: 0 }}>
               <Text
                 style={{
@@ -76,7 +62,7 @@ export default function OnboardingScreen() {
                   fontSize: 13,
                   fontWeight: "400",
                   letterSpacing: 4.5,
-                  color: INK,
+                  color: Colors.ink,
                   textAlign: "center",
                 }}
               >
@@ -85,17 +71,6 @@ export default function OnboardingScreen() {
             </View>
 
             {/* ── Display heading ────────────────────────────────────────── */}
-            {/*
-              Prototype: .pt-display.pt-welcome__h.pt-welcome__h--prompt
-                font-family: var(--serif-alt) → Playfair Display / Georgia
-                font-weight: 500
-                font-size: 28px (--prompt override)
-                line-height: 1.18
-                letter-spacing: -0.012em
-                color: var(--pt-ink)
-                margin: 4px 0 6px  (--prompt override adds gap: 16px in the inner flex)
-              em → color: var(--pt-amber-deep), font-style: italic
-            */}
             <View style={{ width: "100%", marginTop: 20, marginBottom: 0 }}>
               <Text
                 style={{
@@ -104,7 +79,7 @@ export default function OnboardingScreen() {
                   fontWeight: "500",
                   lineHeight: 33,
                   letterSpacing: -0.34,
-                  color: INK,
+                  color: Colors.ink,
                   textAlign: "center",
                 }}
               >
@@ -112,7 +87,7 @@ export default function OnboardingScreen() {
                 <Text
                   style={{
                     fontStyle: "italic",
-                    color: AMBER_DEEP,
+                    color: Colors.amberDeep,
                   }}
                 >
                   know forever?
@@ -121,20 +96,12 @@ export default function OnboardingScreen() {
             </View>
 
             {/* ── Subtext ────────────────────────────────────────────────── */}
-            {/*
-              Prototype: .pt-welcome__sub
-                font-family: var(--serif) → Boska / Source Serif 4 / Georgia
-                font-size: 15px
-                color: var(--pt-ink-soft)
-                margin: 0
-              Gap between elements is 16px (flex gap in .pt-scr__inner)
-            */}
             <Text
               style={{
                 fontFamily: "Georgia",
                 fontSize: 15,
                 lineHeight: 23,
-                color: INK_SOFT,
+                color: Colors.inkSoft,
                 textAlign: "center",
                 marginTop: 18,
                 marginBottom: 0,
@@ -145,22 +112,6 @@ export default function OnboardingScreen() {
             </Text>
 
             {/* ── Textarea (pt-firstline) ─────────────────────────────────── */}
-            {/*
-              Prototype: .pt-firstline
-                position: relative; display: block; margin: 6px 0 4px
-              .pt-firstline__input
-                width: 100%; min-height: 110px
-                border: 1px solid var(--pt-rule)
-                border-radius: 14px
-                padding: 14px 16px 28px
-                background: repeating-linear-gradient lined + rgba(255,251,243,.6)
-                font-family: var(--script) or var(--serif) → Georgia
-                font-size: 19px; line-height: 28px
-                color: var(--pt-ink)
-              .pt-firstline__count
-                position: absolute; right: 14px; bottom: 8px
-                font-size: 10.5px; letter-spacing: 0.05em; color: var(--pt-ink-mute)
-            */}
             <View
               style={{
                 width: "100%",
@@ -172,10 +123,9 @@ export default function OnboardingScreen() {
               <View
                 style={{
                   borderWidth: 1,
-                  borderColor: textareaFocused ? "#D27F14" : RULE,
+                  borderColor: textareaFocused ? Colors.amber : Colors.rule,
                   borderRadius: 14,
                   backgroundColor: PAPER_BG,
-                  // Shadow ring on focus is done via borderColor only (RN limitation)
                   overflow: "hidden",
                 }}
               >
@@ -193,17 +143,16 @@ export default function OnboardingScreen() {
                     fontStyle: "italic",
                     fontSize: 19,
                     lineHeight: 28,
-                    color: INK,
+                    color: Colors.ink,
                     minHeight: 110,
                     paddingHorizontal: 16,
                     paddingTop: 14,
-                    // Extra bottom padding leaves room for the char counter
                     paddingBottom: 32,
                   }}
                 />
               </View>
 
-              {/* Char counter — sits at bottom-right of the textarea container */}
+              {/* Char counter */}
               <Text
                 style={{
                   position: "absolute",
@@ -212,29 +161,14 @@ export default function OnboardingScreen() {
                   fontFamily: "System",
                   fontSize: 10.5,
                   letterSpacing: 0.5,
-                  color: INK_MUTED,
+                  color: Colors.inkMuted,
                 }}
               >
                 {charCount} / {MAX_CHARS}
               </Text>
             </View>
 
-            {/* ── Button row (pt-welcome__row) ────────────────────────────── */}
-            {/*
-              Prototype: .pt-welcome__row
-                flex-direction: column; gap: 8px; margin-top: 4px
-              .pt-btn
-                width: 100%; min-height: 50px; padding: 13px 22px
-                border-radius: 26px; font-size: 15px; font-weight: 500
-              .pt-btn--primary
-                background: var(--pt-ink) → #2D241A
-                color: var(--pt-cream) → #FAF3E2
-              .pt-btn--ghost
-                background: transparent; color: var(--pt-ink)
-                border: 1px solid var(--pt-rule)
-              .pt-btn--inline → font-size: 13px; min-height: 42px
-              .pt-btn__ico → margin-right: 6px
-            */}
+            {/* ── Button row ────────────────────────────────────────────── */}
             <View style={{ width: "100%", marginTop: 16, alignSelf: "stretch" }}>
               {/* Primary: Draft Your First Future Letter */}
               <Pressable
@@ -242,7 +176,7 @@ export default function OnboardingScreen() {
                 style={({ pressed }) => ({
                   width: "100%",
                   alignSelf: "stretch",
-                  backgroundColor: INK,
+                  backgroundColor: Colors.ink,
                   borderRadius: 26,
                   minHeight: 50,
                   paddingVertical: 13,
@@ -258,7 +192,7 @@ export default function OnboardingScreen() {
                   style={{
                     fontSize: 15,
                     fontWeight: "500",
-                    color: CREAM,
+                    color: Colors.cream,
                     marginRight: 2,
                   }}
                 >
@@ -268,7 +202,7 @@ export default function OnboardingScreen() {
                   style={{
                     fontSize: 15,
                     fontWeight: "500",
-                    color: CREAM,
+                    color: Colors.cream,
                   }}
                 >
                   Draft Your First Future Letter
@@ -298,7 +232,7 @@ export default function OnboardingScreen() {
                   style={{
                     fontSize: 13,
                     fontWeight: "500",
-                    color: INK,
+                    color: Colors.ink,
                     marginRight: 2,
                   }}
                 >
@@ -308,7 +242,7 @@ export default function OnboardingScreen() {
                   style={{
                     fontSize: 13,
                     fontWeight: "500",
-                    color: INK,
+                    color: Colors.ink,
                   }}
                 >
                   Record 60 seconds instead
@@ -317,20 +251,12 @@ export default function OnboardingScreen() {
             </View>
 
             {/* ── Footer ─────────────────────────────────────────────────── */}
-            {/*
-              Prototype: .pt-welcome__foot
-                font-family: var(--serif-alt) → Playfair Display / Georgia
-                font-style: italic
-                font-size: 12px
-                color: var(--pt-ink-mute)
-                margin: 4px 0 0
-            */}
             <Text
               style={{
                 fontFamily: "Georgia",
                 fontStyle: "italic",
                 fontSize: 12,
-                color: INK_MUTED,
+                color: Colors.inkMuted,
                 textAlign: "center",
                 marginTop: 16,
                 lineHeight: 18,

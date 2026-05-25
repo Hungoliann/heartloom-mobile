@@ -1,5 +1,8 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
+
+const HAS_ONBOARDED_KEY = "hasOnboarded";
 
 export interface AppUser {
   id: string;
@@ -37,12 +40,26 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
+    await AsyncStorage.removeItem(HAS_ONBOARDED_KEY);
     set({ user: null, hasOnboarded: false });
   },
 
-  setHasOnboarded: () => set({ hasOnboarded: true }),
+  setHasOnboarded: () => {
+    AsyncStorage.setItem(HAS_ONBOARDED_KEY, "true").catch(() => {
+      // Best-effort persistence; in-memory state is already set.
+    });
+    set({ hasOnboarded: true });
+  },
 
   initialize: async () => {
+    // Restore hasOnboarded independently of the Supabase session so that
+    // users who completed onboarding are not sent back to /onboarding on
+    // cold restart, even if their session has expired.
+    const storedOnboarded = await AsyncStorage.getItem(HAS_ONBOARDED_KEY);
+    const hasOnboarded = storedOnboarded === "true";
+
+    // Supabase persists the auth tokens in its own storage and restores them
+    // via getSession() on cold start — no extra work needed for user session.
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -60,7 +77,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         hasOnboarded: true,
       });
     } else {
-      set({ isLoading: false });
+      set({ isLoading: false, hasOnboarded });
     }
 
     const {
