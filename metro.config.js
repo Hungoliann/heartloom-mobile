@@ -1,5 +1,4 @@
 const { getDefaultConfig } = require("expo/metro-config");
-const path = require("path");
 
 const config = getDefaultConfig(__dirname);
 
@@ -14,13 +13,6 @@ config.resolver = {
   ...resolver,
   assetExts: resolver.assetExts.filter((ext) => ext !== "svg"),
   sourceExts: [...resolver.sourceExts, "svg"],
-  resolveRequest: (context, moduleName, platform) => {
-    // Stub OpenTelemetry — it uses dynamic import() which Hermes cannot compile
-    if (moduleName.startsWith("@opentelemetry/")) {
-      return { type: "empty" };
-    }
-    return context.resolveRequest(context, moduleName, platform);
-  },
 };
 
 module.exports = config;
