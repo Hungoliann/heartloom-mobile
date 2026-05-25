@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Animated, Share, Alert } from "react-native";
+import { View, Text, Pressable, ScrollView, Animated, Share, Alert, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useFamily } from "../../src/hooks/useFamily";
@@ -92,6 +92,7 @@ export default function FamilyScreen() {
   const { data: members = [], isLoading } = useFamily();
   const user = useAuthStore((s) => s.user);
   const [familyId, setFamilyId] = useState<string | null>(null);
+  const [isJoining, setIsJoining] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -117,6 +118,16 @@ export default function FamilyScreen() {
     }
     const inviteCode = generateInviteCode();
 
+    // Store invite code in database so it can be validated.
+    // Cast to any until `supabase gen types` is re-run after applying the migration.
+    await (supabase as any)
+      .from("family_invites")
+      .insert({
+        family_id: familyId,
+        invite_code: inviteCode,
+        created_by: user?.id ?? "",
+      });
+
     try {
       await Share.share({
         message: `I'd like you to join my family circle on Heartloom — a place to preserve memories and letters for the people we love.\n\nDownload Heartloom, then tap "Join a family" and enter this code:\n\n${inviteCode}`,
@@ -124,6 +135,43 @@ export default function FamilyScreen() {
       });
     } catch {
       // User dismissed share sheet — no action needed
+    }
+  }
+
+  async function redeemCode(code: string) {
+    setIsJoining(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("join-family", {
+        body: { invite_code: code.toUpperCase() },
+      });
+      if (error || data?.error) {
+        Alert.alert("Invalid code", data?.error ?? "Could not join. Check the code and try again.");
+      } else {
+        Alert.alert("Joined!", "You've been added to the family circle.");
+      }
+    } catch {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setIsJoining(false);
+    }
+  }
+
+  function handleJoinWithCode() {
+    if (Platform.OS === "ios") {
+      Alert.prompt(
+        "Join a family",
+        "Enter the invite code you received:",
+        async (code) => {
+          if (code?.trim()) await redeemCode(code.trim());
+        },
+        "plain-text"
+      );
+    } else {
+      // On Android, Alert.prompt is not available — guide user to contact family owner
+      Alert.alert(
+        "Join a family",
+        "Ask the family owner to share their invite code, then paste it here. Android code entry coming soon."
+      );
     }
   }
 
@@ -215,6 +263,31 @@ export default function FamilyScreen() {
                   <Text style={{ color: Colors.white, fontSize: 14, fontWeight: "500" }}>Invite a loved one</Text>
                 </Pressable>
               </View>
+            </View>
+
+            {/* Join with code */}
+            <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
+              <Pressable
+                onPress={handleJoinWithCode}
+                disabled={isJoining}
+                style={({ pressed }) => ({
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: Colors.rule,
+                  paddingVertical: 13,
+                  paddingHorizontal: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  opacity: pressed || isJoining ? 0.6 : 1,
+                })}
+              >
+                <Feather name="log-in" size={15} color={Colors.inkSoft} />
+                <Text style={{ fontSize: 14, color: Colors.inkSoft, fontWeight: "500" }}>
+                  {isJoining ? "Joining…" : "Have an invite code? Join a family →"}
+                </Text>
+              </Pressable>
             </View>
 
             {/* Members */}

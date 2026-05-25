@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { Stack, useRouter } from "expo-router";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { SplashScreen } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
@@ -98,6 +99,7 @@ function PushNotificationBootstrap() {
 
 export default function RootLayout() {
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <AuthBootstrap />
       <PushNotificationBootstrap />
@@ -150,5 +152,6 @@ export default function RootLayout() {
         <Stack.Screen name="terms" options={{ animation: "slide_from_right" }} />
       </Stack>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
