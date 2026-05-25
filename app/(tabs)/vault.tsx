@@ -30,6 +30,18 @@ async function pickAndUploadDocument(
   if (result.canceled || !result.assets?.[0]) return null;
 
   const file = result.assets[0];
+
+  // Validate file size (max 25 MB)
+  if (file.size && file.size > 25 * 1024 * 1024) {
+    throw new Error("File too large. Maximum size is 25 MB.");
+  }
+
+  // Validate MIME type
+  const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/heic"];
+  if (file.mimeType && !allowedTypes.includes(file.mimeType)) {
+    throw new Error("File type not allowed.");
+  }
+
   const ext = file.name.split(".").pop() ?? "pdf";
   const path = `${userId}/${category}/${Date.now()}.${ext}`;
 
@@ -42,8 +54,11 @@ async function pickAndUploadDocument(
 
   if (error) throw error;
 
-  const { data } = supabase.storage.from("documents").getPublicUrl(path);
-  return { url: data.publicUrl, name: file.name };
+  const { data: signedData, error: signError } = await supabase.storage
+    .from("documents")
+    .createSignedUrl(path, 3600);
+  if (signError || !signedData) throw signError ?? new Error("Failed to generate URL");
+  return { url: signedData.signedUrl, name: file.name };
 }
 
 // ── Hallmark coin SVG ────────────────────────────────────────────────────────

@@ -239,8 +239,11 @@ async function uploadAudio(uri: string, userId: string): Promise<string | null> 
       .from('voice-memos')
       .upload(path, blob, { contentType: `audio/${ext}` });
     if (error) return null;
-    const { data } = supabase.storage.from('voice-memos').getPublicUrl(path);
-    return data.publicUrl;
+    const { data: signedData, error: signError } = await supabase.storage
+      .from('voice-memos')
+      .createSignedUrl(path, 86400);
+    if (signError || !signedData) return null;
+    return signedData.signedUrl;
   } catch {
     return null;
   }
@@ -320,7 +323,7 @@ export default function RecordScreen() {
   const { fadeAnim, slideAnim, transitionForward, transitionBack, animatedStyle } = useStepTransition();
 
   const certNo = useMemo(
-    () => `HL-2026-${Math.floor(10000 + Math.random() * 90000)} · sha256 a47f…0b21`,
+    () => `HL-2026-${Math.floor(10000 + Math.random() * 90000)}`,
     []
   );
   const sealDate = useMemo(

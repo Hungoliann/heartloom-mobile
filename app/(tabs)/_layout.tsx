@@ -1,7 +1,19 @@
-import { Tabs } from "expo-router";
+import { useEffect } from "react";
+import { Tabs, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { useAuthStore } from "../../src/store/auth.store";
 
 export default function TabsLayout() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const isLoading = useAuthStore((s) => s.isLoading);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/(auth)/sign-in");
+    }
+  }, [user, isLoading]);
+
   return (
     <Tabs
       screenOptions={{

@@ -24,6 +24,7 @@ export default function LetterScreen() {
         .from("letters")
         .select("*")
         .eq("id", letterId!)
+        .eq("author_id", user?.id!)
         .single();
       if (error) throw error;
       return data;
