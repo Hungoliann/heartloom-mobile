@@ -9,6 +9,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Colors } from "../src/constants/colors";
+import { useDocuments } from "../src/hooks/useDocuments";
+import { useLetters } from "../src/hooks/useLetters";
 
 // ── Section data from prototype ──────────────────────────────────────────────
 type SectionStatus = "done" | "in-progress" | "todo";
@@ -21,49 +23,6 @@ interface WillSection {
   sub: string;
   progress: number;  // 0–100
 }
-
-const SECTIONS: WillSection[] = [
-  {
-    status: "done",
-    icon: "✓",
-    title: "Beneficiaries",
-    pct: "100%",
-    sub: "Maya R. Hayes · Lila M. Hayes · The Hayes Family Trust",
-    progress: 100,
-  },
-  {
-    status: "done",
-    icon: "✓",
-    title: "Letter of Intent",
-    pct: "100%",
-    sub: "Plain-English wishes for Maya · auto-includes sealed Future Letters",
-    progress: 100,
-  },
-  {
-    status: "in-progress",
-    icon: "●",
-    title: "Health Directive",
-    pct: "60%",
-    sub: "3 of 5 questions · 4 minutes left · review with Naomi if you like",
-    progress: 60,
-  },
-  {
-    status: "todo",
-    icon: "○",
-    title: "Executor Access",
-    pct: "0%",
-    sub: "Name 1 trusted person · they unlock only when needed",
-    progress: 0,
-  },
-  {
-    status: "todo",
-    icon: "○",
-    title: "Notary & Witnesses",
-    pct: "Ready",
-    sub: "e-Notary via Naomi · 2 witnesses on file · 8 min appointment",
-    progress: 30,
-  },
-];
 
 // ── Icon color helper ─────────────────────────────────────────────────────────
 function iconColor(status: SectionStatus): string {
@@ -88,6 +47,57 @@ export default function Will() {
   const router    = useRouter();
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
+
+  const { data: documents = [] } = useDocuments();
+  const { data: letters = [] } = useLetters();
+
+  const hasWill = documents.some((d) => d.category === "will");
+  const hasDnr = documents.some((d) => d.category === "dnr");
+  const hasFuneral = documents.some((d) => d.category === "funeral_plan");
+  const letterCount = letters.length;
+
+  const sections: WillSection[] = [
+    {
+      status: hasWill ? "done" : "todo",
+      icon: hasWill ? "✓" : "○",
+      title: "Beneficiaries & Will",
+      pct: hasWill ? "100%" : "0%",
+      sub: hasWill ? "Document uploaded to vault" : "Upload your will to the vault",
+      progress: hasWill ? 100 : 0,
+    },
+    {
+      status: letterCount > 0 ? "done" : "todo",
+      icon: letterCount > 0 ? "✓" : "○",
+      title: "Letter of Intent",
+      pct: letterCount > 0 ? "100%" : "0%",
+      sub: letterCount > 0 ? `${letterCount} future letter${letterCount > 1 ? "s" : ""} sealed` : "Write your first future letter",
+      progress: letterCount > 0 ? 100 : 0,
+    },
+    {
+      status: hasDnr ? "done" : "todo",
+      icon: hasDnr ? "✓" : "○",
+      title: "Health Directive",
+      pct: hasDnr ? "100%" : "0%",
+      sub: hasDnr ? "DNR / advance directive on file" : "Upload your advance directive",
+      progress: hasDnr ? 100 : 0,
+    },
+    {
+      status: "todo" as const,
+      icon: "○",
+      title: "Executor Access",
+      pct: "0%",
+      sub: "Name a trusted person · they unlock only when needed",
+      progress: 0,
+    },
+    {
+      status: hasFuneral ? "done" : "todo",
+      icon: hasFuneral ? "✓" : "○",
+      title: "Funeral & Final Wishes",
+      pct: hasFuneral ? "100%" : "0%",
+      sub: hasFuneral ? "Funeral plan on file" : "Upload your funeral plan",
+      progress: hasFuneral ? 100 : 0,
+    },
+  ];
 
   useEffect(() => {
     Animated.parallel([
@@ -153,7 +163,7 @@ export default function Will() {
               textAlign: "right",
             }}
           >
-            3 of 5 done
+            {sections.filter(s => s.status === "done").length} of {sections.length} done
           </Text>
         </View>
 
@@ -207,7 +217,7 @@ export default function Will() {
           </Text>
 
           {/* ── Section list ──────────────────────────────────────────── */}
-          {SECTIONS.map((section, i) => (
+          {sections.map((section, i) => (
             <View
               key={i}
               style={{
@@ -362,7 +372,7 @@ export default function Will() {
           {/* ── CTA buttons ───────────────────────────────────────────── */}
           {/* Primary: Continue Health Directive */}
           <Pressable
-            onPress={() => router.push("/record")}
+            onPress={() => router.push("/(tabs)/vault" as any)}
             style={({ pressed }) => ({
               backgroundColor: Colors.ink,
               borderRadius: 26,
@@ -384,6 +394,7 @@ export default function Will() {
 
           {/* Ghost: Talk to Naomi first */}
           <Pressable
+            onPress={() => router.push("/(tabs)/concierge" as any)}
             style={({ pressed }) => ({
               borderWidth: 1,
               borderColor: "rgba(74,47,24,0.2)",

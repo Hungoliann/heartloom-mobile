@@ -9,30 +9,26 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Colors } from "../src/constants/colors";
-
-const PROMPT_LOG = [
-  {
-    day: "TUE",
-    done: true,
-    prompt: '"The first time you knew you were home."',
-    meta: "Sealed · 1:42 voice · added to Story Archive",
-  },
-  {
-    day: "MON",
-    done: true,
-    prompt: '"Advice you\'d give your 22-year-old self."',
-    meta: "Sealed · 84 words · for Maya",
-  },
-  {
-    day: "SUN",
-    done: false,
-    prompt: '"A recipe that means something."',
-    meta: "Skipped · we'll bring it back",
-  },
-];
+import { useLetters } from "../src/hooks/useLetters";
 
 export default function DailyPromptScreen() {
   const router = useRouter();
+  const { data: letters = [] } = useLetters();
+  // Show last 3 letters as the "week log"
+  const recentLetters = letters.slice(0, 3).map((l) => ({
+    day: new Date(l.created_at!).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase().slice(0, 3),
+    done: true,
+    prompt: l.title,
+    meta: l.delivered_at
+      ? `Delivered · ${new Date(l.delivered_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+      : l.deliver_at
+      ? `Sealed · opens ${new Date(l.deliver_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+      : "Draft",
+  }));
+  const promptLog =
+    recentLetters.length > 0
+      ? recentLetters
+      : [{ day: "—", done: false, prompt: "Your first prompt is waiting.", meta: "Tap Begin to start." }];
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(20)).current;
 
@@ -223,6 +219,7 @@ export default function DailyPromptScreen() {
                   </Pressable>
 
                   <Pressable
+                    onPress={() => router.push("/record" as any)}
                     style={({ pressed }) => ({
                       borderRadius: 26,
                       paddingVertical: 10,
@@ -262,7 +259,7 @@ export default function DailyPromptScreen() {
             </Text>
 
             <View style={{ gap: 0 }}>
-              {PROMPT_LOG.map((item, index) => (
+              {promptLog.map((item, index) => (
                 <View
                   key={index}
                   style={{
@@ -270,7 +267,7 @@ export default function DailyPromptScreen() {
                     alignItems: "flex-start",
                     gap: 12,
                     paddingVertical: 14,
-                    borderBottomWidth: index < PROMPT_LOG.length - 1 ? 1 : 0,
+                    borderBottomWidth: index < promptLog.length - 1 ? 1 : 0,
                     borderBottomColor: Colors.rule,
                   }}
                 >

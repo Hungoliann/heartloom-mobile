@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,56 +9,68 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Colors } from "../src/constants/colors";
+import { useLetters } from "../src/hooks/useLetters";
 
-// ── Bar chart data ────────────────────────────────────────────────────────────
-const BARS = [
-  { pct: 38, accent: false },
-  { pct: 52, accent: false },
-  { pct: 24, accent: false },
-  { pct: 60, accent: false },
-  { pct: 46, accent: false },
-  { pct: 78, accent: true  },
-  { pct: 88, accent: true  },
-  { pct: 96, accent: true  },
-];
 const BAR_H = 80; // container height in px
-
-// ── Trigger rows ─────────────────────────────────────────────────────────────
-const TRIGGERS = [
-  {
-    month: "JUN",
-    day: "14",
-    title: "Maya's 30th birthday",
-    sub: "2 letters waiting · suggest: childhood photo · 5 min",
-    soft: false,
-  },
-  {
-    month: "AUG",
-    day: "22",
-    title: "Anniversary · 31 years",
-    sub: "Suggest: how you met, in 90 seconds · voice",
-    soft: false,
-  },
-  {
-    month: "SEP",
-    day: "09",
-    title: "College send-off · Maya",
-    sub: "Suggest: the apartment recipe · 1 page · letter",
-    soft: false,
-  },
-  {
-    month: "OCT",
-    day: "—",
-    title: "A quieter month",
-    sub: "Rest is part of the record, too.",
-    soft: true,
-  },
-];
 
 export default function Planner() {
   const router = useRouter();
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
+
+  const { data: letters = [] } = useLetters();
+
+  const weeklyBars = useMemo(() => {
+    // Build 8-week letter counts (most recent week last)
+    const counts = Array(8).fill(0);
+    const now = new Date();
+    for (const letter of letters) {
+      const created = new Date(letter.created_at!);
+      const weeksAgo = Math.floor((now.getTime() - created.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      if (weeksAgo < 8) counts[7 - weeksAgo]++;
+    }
+    const max = Math.max(...counts, 1);
+    return counts.map((c, i) => ({
+      pct: Math.round((c / max) * 100) || 8, // minimum 8% so bar is visible
+      accent: i >= 5, // last 3 weeks are "accent" colored
+    }));
+  }, [letters]);
+
+  const thisMonthCount = letters.filter((l) => {
+    const d = new Date(l.created_at!);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  const deltaText = thisMonthCount > 0
+    ? `${thisMonthCount} letter${thisMonthCount > 1 ? "s" : ""} this month`
+    : "No letters yet this month";
+
+  const upcomingTriggers = useMemo(() => {
+    const triggers = letters
+      .filter((l) => l.deliver_at && !l.delivered_at && new Date(l.deliver_at) > new Date())
+      .sort((a, b) => new Date(a.deliver_at!).getTime() - new Date(b.deliver_at!).getTime())
+      .slice(0, 3)
+      .map((l) => {
+        const d = new Date(l.deliver_at!);
+        return {
+          month: d.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
+          day: String(d.getDate()),
+          title: l.title,
+          sub: l.recipient_name ? `For ${l.recipient_name} · sealed letter` : "Sealed letter",
+          soft: false,
+        };
+      });
+    if (triggers.length === 0) {
+      triggers.push({
+        month: "—",
+        day: "—",
+        title: "No upcoming deliveries",
+        sub: "Write a future letter to create one.",
+        soft: true,
+      });
+    }
+    return triggers;
+  }, [letters]);
 
   useEffect(() => {
     Animated.parallel([
@@ -208,7 +220,7 @@ export default function Planner() {
                 marginBottom: 8,
               }}
             >
-              {BARS.map((bar, i) => (
+              {weeklyBars.map((bar, i) => (
                 <View
                   key={i}
                   style={{
@@ -245,9 +257,8 @@ export default function Planner() {
                   paddingVertical: 3,
                 }}
               >
-                <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.sageDark }}>↑ 3× this month</Text>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.sageDark }}>{deltaText}</Text>
               </View>
-              <Text style={{ fontSize: 12, color: Colors.inkSoft }}>Mom's birthday is coming up.</Text>
             </View>
           </View>
 
@@ -266,7 +277,7 @@ export default function Planner() {
           </Text>
 
           {/* ── Trigger rows ──────────────────────────────────────── */}
-          {TRIGGERS.map((item, i) => (
+          {upcomingTriggers.map((item, i) => (
             <View
               key={i}
               style={{
@@ -345,7 +356,7 @@ export default function Planner() {
               {/* Begin button (only for non-soft rows) */}
               {!item.soft && (
                 <Pressable
-                  onPress={() => router.push("/record")}
+                  onPress={() => router.push("/record" as any)}
                   style={({ pressed }) => ({
                     backgroundColor: Colors.ink,
                     borderRadius: 20,

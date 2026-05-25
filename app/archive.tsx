@@ -9,6 +9,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Colors } from "../src/constants/colors";
+import { useLetters } from "../src/hooks/useLetters";
+import { useFamily } from "../src/hooks/useFamily";
 
 // Thumbnail accent colors from prototype data-tone attributes
 const THUMB_COLORS = [
@@ -23,6 +25,13 @@ export default function Archive() {
   const router = useRouter();
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
+
+  const { data: letters = [] } = useLetters();
+  const { data: members = [] } = useFamily();
+
+  const audioLetters = letters.filter((l) => l.media_type === "audio");
+  const totalStories = letters.length;
+  const totalVoices = members.length || 1;
 
   useEffect(() => {
     Animated.parallel([
@@ -88,7 +97,7 @@ export default function Archive() {
               textAlign: "right",
             }}
           >
-            33 stories
+            {totalStories} stories
           </Text>
         </View>
 
@@ -119,7 +128,7 @@ export default function Archive() {
             <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.inkMuted, textTransform: "uppercase", letterSpacing: 0.8 }}>
               Gallery
             </Text>
-            <Pressable>
+            <Pressable onPress={() => router.push("/stories" as any)}>
               <Text style={{ fontSize: 13, color: Colors.amberDeep, fontWeight: "600" }}>See all ›</Text>
             </Pressable>
           </View>
@@ -300,9 +309,9 @@ export default function Archive() {
             }}
           >
             {[
-              { n: "33",  label: "stories\ncontributed" },
-              { n: "7",   label: "voices\nin the choir" },
-              { n: "12h", label: "total\noral history" },
+              { n: String(totalStories), label: "stories\ncontributed" },
+              { n: String(totalVoices),  label: "voices\nin the choir" },
+              { n: "12h",               label: "total\noral history" },
             ].map((stat, i) => (
               <View
                 key={i}
@@ -389,6 +398,7 @@ export default function Archive() {
               A guided five-question prompt set. Everyone plays. Everyone keeps.
             </Text>
             <Pressable
+              onPress={() => router.push("/daily-prompt" as any)}
               style={({ pressed }) => ({
                 backgroundColor: Colors.ink,
                 borderRadius: 24,

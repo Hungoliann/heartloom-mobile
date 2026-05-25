@@ -1,6 +1,6 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
 import { Colors } from "../src/constants/colors";
 
@@ -36,6 +36,11 @@ function BloomArt() {
 
 export default function DoneScreen() {
   const router = useRouter();
+  const { recipientName, opensAt, certNo } = useLocalSearchParams<{
+    recipientName?: string;
+    opensAt?: string;
+    certNo?: string;
+  }>();
 
   return (
     <View
@@ -103,7 +108,7 @@ export default function DoneScreen() {
               lineHeight: 21,
             }}
           >
-            One Future Letter, sealed for Maya.{"\n"}Your{" "}
+            One Future Letter, sealed for {recipientName ?? "your family"}.{"\n"}Your{" "}
             <Text style={{ fontStyle: "italic" }}>Certificate of Legacy</Text> is in your inbox.
           </Text>
 
@@ -120,10 +125,18 @@ export default function DoneScreen() {
             }}
           >
             {[
-              { label: "For", value: "Maya" },
-              { label: "Length", value: "5 min 48 sec" },
-              { label: "Opens", value: "June 14, 2034" },
-              { label: "Certificate", value: "№ HL-2026-04417" },
+              { label: "For", value: recipientName ?? "Your family" },
+              {
+                label: "Opens",
+                value: opensAt
+                  ? new Date(opensAt).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : "Whenever the time is right",
+              },
+              { label: "Certificate", value: certNo ?? "HL-2026-—" },
             ].map((row) => (
               <View
                 key={row.label}

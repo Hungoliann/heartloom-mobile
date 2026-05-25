@@ -670,9 +670,14 @@ export default function RecordScreen() {
                 certScale={certScale}
                 certOpacity={certOpacity}
                 onDone={() =>
-                  user
-                    ? router.replace("/(tabs)")
-                    : router.replace("/(auth)/sign-up")
+                  router.replace({
+                    pathname: "/done",
+                    params: {
+                      recipientName: recipient,
+                      opensAt: getDeliverAt(deliveryOption) ?? "",
+                      certNo,
+                    },
+                  } as any)
                 }
                 isAuthenticated={!!user}
               />
