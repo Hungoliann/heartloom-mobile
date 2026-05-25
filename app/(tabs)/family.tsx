@@ -116,12 +116,10 @@ export default function FamilyScreen() {
       return;
     }
     const inviteCode = generateInviteCode();
-    const link = `https://heartloom.com/join?family=${familyId}&invite=${inviteCode}`;
 
     try {
       await Share.share({
-        message: `Join my family on Heartloom — a place to preserve memories and letters for the people we love.\n\n${link}`,
-        url: link,
+        message: `I'd like you to join my family circle on Heartloom — a place to preserve memories and letters for the people we love.\n\nDownload Heartloom, then tap "Join a family" and enter this code:\n\n${inviteCode}`,
         title: "Join my Heartloom family",
       });
     } catch {

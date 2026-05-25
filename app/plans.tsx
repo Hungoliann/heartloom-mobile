@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Colors } from "../src/constants/colors";
@@ -389,7 +389,7 @@ export default function PlansScreen() {
           <View style={{ gap: 6, marginTop: 6 }}>
             {/* Primary */}
             <Pressable
-              onPress={() => router.push("/(auth)/sign-up" as any)}
+              onPress={() => Linking.openURL(`https://heartloom.com/checkout?plan=${selected}`)}
               style={({ pressed }) => ({
                 width: "100%",
                 minHeight: 50,

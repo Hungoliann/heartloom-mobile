@@ -228,6 +228,7 @@ export default function LetterScreen() {
           {/* Actions */}
           <View style={{ marginTop: 18, gap: 10 }}>
             <Pressable
+              onPress={() => router.push({ pathname: "/record", params: { editLetterId: letter.id } } as any)}
               style={({ pressed }) => ({
                 backgroundColor: "#4A2F18",
                 borderRadius: 13,

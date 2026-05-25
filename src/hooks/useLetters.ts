@@ -79,3 +79,26 @@ export function useCreateLetter() {
     },
   });
 }
+
+export function useUpdateLetter() {
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+
+  return useMutation({
+    mutationFn: async ({ id, ...fields }: Partial<LetterInsert> & { id: string }) => {
+      if (!user?.id) throw new Error("Not authenticated");
+      const { data, error } = await supabase
+        .from("letters")
+        .update(fields)
+        .eq("id", id)
+        .eq("author_id", user.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Letter;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["letters"] });
+    },
+  });
+}

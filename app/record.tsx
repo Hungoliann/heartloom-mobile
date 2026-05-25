@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Svg, { Rect, Path, Circle, G, Text as SvgText, Defs, RadialGradient, LinearGradient, Stop } from "react-native-svg";
 import { useAuthStore } from "../src/store/auth.store";
 import WaveformBars from "../src/components/shared/WaveformBars";
@@ -19,7 +19,8 @@ import useStepTransition from "../src/components/ui/useStepTransition";
 import { useAudioRecorder } from "../src/hooks/useAudioRecorder";
 import { useAudioPlayer } from "../src/hooks/useAudioPlayer";
 import { Colors } from "../src/constants/colors";
-import { useCreateLetter } from "../src/hooks/useLetters";
+import { useQuery } from "@tanstack/react-query";
+import { useCreateLetter, useUpdateLetter } from "../src/hooks/useLetters";
 import { supabase } from "../src/lib/supabase";
 import {
   useAudioRecorder as useExpoAudioRecorder,
@@ -263,6 +264,24 @@ export default function RecordScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const createLetter = useCreateLetter();
+  const updateLetter = useUpdateLetter();
+
+  const { editLetterId } = useLocalSearchParams<{ editLetterId?: string }>();
+
+  const { data: existingLetter } = useQuery({
+    queryKey: ["letter", editLetterId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("letters")
+        .select("*")
+        .eq("id", editLetterId!)
+        .eq("author_id", user?.id!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!editLetterId && !!user?.id,
+  });
 
   const [step, setStep] = useState(0);
 
@@ -367,6 +386,18 @@ export default function RecordScreen() {
     ]).start();
   }, [step]);
 
+  // Pre-fill form state when editing an existing letter
+  useEffect(() => {
+    if (!existingLetter) return;
+    if (existingLetter.recipient_name) setRecipient(existingLetter.recipient_name);
+    // Map deliver_at back to a delivery option
+    if (!existingLetter.deliver_at) {
+      setDeliveryOption("now");
+    } else {
+      setDeliveryOption("date");
+    }
+  }, [existingLetter?.id]);
+
   function formatTime(s: number) {
     const m = Math.floor(s / 60)
       .toString()
@@ -388,17 +419,26 @@ export default function RecordScreen() {
             ? await uploadAudio(recordingUri, user.id)
             : null;
 
-        const promptText = PROMPTS[promptIdx];
-        const title = `A letter for ${recipient.trim() || "my family"}`;
+        if (editLetterId) {
+          await updateLetter.mutateAsync({
+            id: editLetterId,
+            recipient_name: recipient.trim() || null,
+            deliver_at: getDeliverAt(deliveryOption),
+            ...(mediaUrl ? { media_type: "audio" as const, media_url: mediaUrl } : {}),
+          });
+        } else {
+          const promptText = PROMPTS[promptIdx];
+          const title = `A letter for ${recipient.trim() || "my family"}`;
 
-        await createLetter.mutateAsync({
-          title,
-          body: `${promptText.line1} ${promptText.line2} ${promptText.line3}`.replace(/{name}/g, recipient),
-          recipient_name: recipient.trim() || null,
-          deliver_at: getDeliverAt(deliveryOption),
-          media_type: mediaUrl ? "audio" : null,
-          media_url: mediaUrl,
-        });
+          await createLetter.mutateAsync({
+            title,
+            body: `${promptText.line1} ${promptText.line2} ${promptText.line3}`.replace(/{name}/g, recipient),
+            recipient_name: recipient.trim() || null,
+            deliver_at: getDeliverAt(deliveryOption),
+            media_type: mediaUrl ? "audio" : null,
+            media_url: mediaUrl,
+          });
+        }
         transitionForward(() => setStep(7));
       } catch {
         Alert.alert("Couldn't save letter", "Please try again.");
