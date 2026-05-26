@@ -23,37 +23,6 @@ function getGreeting() {
   return "Good evening";
 }
 
-const UTILITY_SUGGESTIONS = [
-  {
-    id: "1",
-    icon: "⊞",
-    title: "Medicare Benefit Optimization",
-    sub: "Review Parts A–D · we flagged 2 unused benefits",
-    route: "/(tabs)/concierge" as const,
-  },
-  {
-    id: "2",
-    icon: "§",
-    title: "Digital Will Integration",
-    sub: "Notarized in 12 states · 18 minutes to draft",
-    route: "/(tabs)/concierge" as const,
-  },
-  {
-    id: "3",
-    icon: "⚶",
-    title: "Estate Executor Access",
-    sub: "Name 1 person · they unlock only when needed",
-    route: "/(tabs)/concierge" as const,
-  },
-  {
-    id: "4",
-    icon: "✤",
-    title: "Hospice Benefits Review",
-    sub: "Eligibility + paperwork walkthrough · with a real human",
-    route: "/(tabs)/concierge" as const,
-  },
-];
-
 const SOFT_SUGGESTIONS = [
   {
     id: "5",
@@ -423,35 +392,6 @@ export default function HomeScreen() {
                   Connect
                 </Text>
               </Pressable>
-            </View>
-
-            {/* ── Concierge Dashboard section ── */}
-            <View style={{ paddingHorizontal: 22 }}>
-              <Text
-                style={{
-                  fontSize: 10,
-                  letterSpacing: 2.2,
-                  fontWeight: "600",
-                  color: Colors.inkMuted,
-                  marginBottom: 8,
-                  marginTop: 8,
-                }}
-              >
-                Concierge Dashboard
-              </Text>
-
-              <View style={{ gap: 6 }}>
-                {UTILITY_SUGGESTIONS.map((item) => (
-                  <SuggestRow
-                    key={item.id}
-                    icon={item.icon}
-                    title={item.title}
-                    sub={item.sub}
-                    onPress={() => router.push(item.route as any)}
-                    variant="utility"
-                  />
-                ))}
-              </View>
             </View>
 
             {/* ── Gentle next steps section ── */}

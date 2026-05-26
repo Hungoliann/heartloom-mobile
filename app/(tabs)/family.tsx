@@ -8,13 +8,19 @@ import {
   Animated,
   Share,
   Alert,
-  Platform,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useFamily } from "../../src/hooks/useFamily";
+import * as Clipboard from "expo-clipboard";
+import {
+  useFamily,
+  useMyFamily,
+  useCreateFamily,
+  useCreateInvite,
+  useAcceptInvite,
+} from "../../src/hooks/useFamily";
 import { useAuthStore } from "../../src/store/auth.store";
-import { supabase } from "../../src/lib/supabase";
 import { Colors } from "../../src/constants/colors";
 
 const AVATAR_COLORS = ["#D27F14", "#6F8564", "#B86241", "#4A3D2E", "#8A7A66"];
@@ -25,10 +31,6 @@ function getInitials(fullName: string | null): string {
   const parts = fullName.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "?";
   return ((parts[0][0] ?? "") + (parts[parts.length - 1][0] ?? "")).toUpperCase();
-}
-
-function generateInviteCode() {
-  return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
 function SkeletonRow() {
@@ -51,6 +53,77 @@ function SkeletonRow() {
         <View style={{ height: 12, borderRadius: 6, backgroundColor: "#F5EDD6", width: "35%" }} />
       </View>
     </View>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Text
+      style={{
+        fontSize: 11,
+        letterSpacing: 2,
+        textTransform: "uppercase",
+        color: Colors.inkMuted,
+        marginBottom: 10,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
+function PrimaryButton({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => ({
+        backgroundColor: "#2D4530",
+        borderRadius: 12,
+        paddingVertical: 13,
+        paddingHorizontal: 20,
+        alignItems: "center",
+        opacity: pressed || disabled ? 0.7 : 1,
+      })}
+    >
+      <Text style={{ color: Colors.white, fontSize: 14, fontWeight: "600" }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function SecondaryButton({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => ({
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: Colors.rule,
+        paddingVertical: 13,
+        paddingHorizontal: 20,
+        alignItems: "center",
+        opacity: pressed || disabled ? 0.6 : 1,
+      })}
+    >
+      <Text style={{ fontSize: 14, color: Colors.inkSoft, fontWeight: "500" }}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -96,13 +169,292 @@ function InviteCard({ onPress }: { onPress: () => void }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  No-family onboarding panel                                         */
+/* ------------------------------------------------------------------ */
+
+function NoFamilyPanel() {
+  const [mode, setMode] = useState<"idle" | "create" | "join">("idle");
+  const [familyName, setFamilyName] = useState("");
+  const [code, setCode] = useState("");
+
+  const createFamily = useCreateFamily();
+  const acceptInvite = useAcceptInvite();
+
+  async function handleCreate() {
+    try {
+      await createFamily.mutateAsync(familyName);
+      setFamilyName("");
+      setMode("idle");
+    } catch (e: any) {
+      Alert.alert("Could not create family", e?.message ?? "Please try again.");
+    }
+  }
+
+  async function handleJoin() {
+    try {
+      await acceptInvite.mutateAsync(code);
+      setCode("");
+      setMode("idle");
+      Alert.alert("Joined!", "You've been added to the family circle.");
+    } catch (e: any) {
+      Alert.alert("Invalid code", e?.message ?? "Please check the code and try again.");
+    }
+  }
+
+  return (
+    <View style={{ marginHorizontal: 20, marginTop: 12, gap: 14 }}>
+      <View
+        style={{
+          backgroundColor: Colors.white,
+          borderRadius: 18,
+          padding: 20,
+          borderWidth: 1,
+          borderColor: "#EDE4D4",
+          gap: 12,
+        }}
+      >
+        <Text style={{ fontFamily: SERIF, fontSize: 20, color: Colors.ink }}>
+          Start your family circle
+        </Text>
+        <Text style={{ fontSize: 14, color: Colors.inkMuted, lineHeight: 20 }}>
+          You're not part of a family yet. Create one to begin, or join one with an invite code.
+        </Text>
+
+        {mode === "idle" && (
+          <View style={{ gap: 10, marginTop: 4 }}>
+            <PrimaryButton label="Create a family" onPress={() => setMode("create")} />
+            <SecondaryButton label="Join with an invite code" onPress={() => setMode("join")} />
+          </View>
+        )}
+
+        {mode === "create" && (
+          <View style={{ gap: 10, marginTop: 4 }}>
+            <Text style={{ fontSize: 13, color: Colors.inkSoft, fontWeight: "500" }}>
+              Family name
+            </Text>
+            <TextInput
+              value={familyName}
+              onChangeText={setFamilyName}
+              placeholder="e.g. The Smiths"
+              placeholderTextColor={Colors.inkMuted}
+              autoCapitalize="words"
+              autoCorrect={false}
+              style={{
+                borderWidth: 1,
+                borderColor: Colors.rule,
+                borderRadius: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                fontSize: 15,
+                color: Colors.ink,
+                backgroundColor: Colors.cream,
+              }}
+            />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <SecondaryButton
+                  label="Cancel"
+                  onPress={() => {
+                    setMode("idle");
+                    setFamilyName("");
+                  }}
+                  disabled={createFamily.isPending}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <PrimaryButton
+                  label={createFamily.isPending ? "Creating…" : "Create"}
+                  onPress={handleCreate}
+                  disabled={createFamily.isPending || !familyName.trim()}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {mode === "join" && (
+          <View style={{ gap: 10, marginTop: 4 }}>
+            <Text style={{ fontSize: 13, color: Colors.inkSoft, fontWeight: "500" }}>
+              Invite code
+            </Text>
+            <TextInput
+              value={code}
+              onChangeText={(t) => setCode(t.toUpperCase())}
+              placeholder="ABC123"
+              placeholderTextColor={Colors.inkMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={6}
+              style={{
+                borderWidth: 1,
+                borderColor: Colors.rule,
+                borderRadius: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                fontSize: 18,
+                letterSpacing: 4,
+                textAlign: "center",
+                color: Colors.ink,
+                backgroundColor: Colors.cream,
+                fontWeight: "600",
+              }}
+            />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <SecondaryButton
+                  label="Cancel"
+                  onPress={() => {
+                    setMode("idle");
+                    setCode("");
+                  }}
+                  disabled={acceptInvite.isPending}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <PrimaryButton
+                  label={acceptInvite.isPending ? "Joining…" : "Join"}
+                  onPress={handleJoin}
+                  disabled={acceptInvite.isPending || code.trim().length < 4}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Owner invite-code section                                          */
+/* ------------------------------------------------------------------ */
+
+function InviteCodePanel({ familyId }: { familyId: string }) {
+  const createInvite = useCreateInvite();
+  const [currentCode, setCurrentCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handleGenerate() {
+    try {
+      const invite = await createInvite.mutateAsync(familyId);
+      setCurrentCode(invite.invite_code);
+      setCopied(false);
+    } catch (e: any) {
+      Alert.alert("Could not generate code", e?.message ?? "Please try again.");
+    }
+  }
+
+  async function handleCopy() {
+    if (!currentCode) return;
+    await Clipboard.setStringAsync(currentCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleShareCode() {
+    if (!currentCode) return;
+    try {
+      await Share.share({
+        message: `Join my family on Heartloom — open the app, tap "Join a family" and enter this code:\n\n${currentCode}`,
+        title: "Join my Heartloom family",
+      });
+    } catch {}
+  }
+
+  return (
+    <View
+      style={{
+        marginHorizontal: 20,
+        marginTop: 8,
+        padding: 18,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#EDE4D4",
+        backgroundColor: Colors.white,
+        gap: 12,
+      }}
+    >
+      <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.ink }}>
+        Invite codes
+      </Text>
+      <Text style={{ fontSize: 13, color: Colors.inkMuted, lineHeight: 19 }}>
+        Generate a 6-character code valid for 7 days. Share it with someone you want to add to your family.
+      </Text>
+
+      {currentCode ? (
+        <View style={{ gap: 10 }}>
+          <Pressable
+            onPress={handleCopy}
+            style={({ pressed }) => ({
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: Colors.rule,
+              backgroundColor: Colors.cream,
+              paddingVertical: 16,
+              alignItems: "center",
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text
+              style={{
+                fontSize: 26,
+                letterSpacing: 8,
+                fontWeight: "700",
+                color: Colors.ink,
+                fontVariant: ["tabular-nums"],
+              }}
+            >
+              {currentCode}
+            </Text>
+            <Text style={{ marginTop: 6, fontSize: 12, color: Colors.inkMuted }}>
+              {copied ? "Copied!" : "Tap to copy"}
+            </Text>
+          </Pressable>
+
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <SecondaryButton label="Share…" onPress={handleShareCode} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <PrimaryButton
+                label={createInvite.isPending ? "…" : "New code"}
+                onPress={handleGenerate}
+                disabled={createInvite.isPending}
+              />
+            </View>
+          </View>
+        </View>
+      ) : (
+        <PrimaryButton
+          label={createInvite.isPending ? "Generating…" : "Generate invite code"}
+          onPress={handleGenerate}
+          disabled={createInvite.isPending}
+        />
+      )}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Join with code (when already lacking permission etc. — kept for     */
+/*  members who haven't created a family but here we render inside the  */
+/*  has-family flow only as a leave action area).                       */
+/* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/*  Main screen                                                        */
+/* ------------------------------------------------------------------ */
+
 export default function FamilyScreen() {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
-  const { data: members = [], isLoading } = useFamily();
+  const { data: members = [], isLoading: membersLoading } = useFamily();
+  const { data: myFamily, isLoading: familyLoading } = useMyFamily();
   const user = useAuthStore((s) => s.user);
-  const [familyId, setFamilyId] = useState<string | null>(null);
-  const [isJoining, setIsJoining] = useState(false);
+
+  const isOwner = !!(myFamily && user && myFamily.owner_id === user.id);
+  const isLoading = familyLoading || membersLoading;
 
   useEffect(() => {
     Animated.parallel([
@@ -111,79 +463,70 @@ export default function FamilyScreen() {
     ]).start();
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("family_id")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => setFamilyId(data?.family_id ?? null));
-  }, [user?.id]);
-
-  async function handleInvite() {
-    if (!familyId) {
-      Alert.alert("Not ready", "Family data is still loading.");
-      return;
-    }
-    const inviteCode = generateInviteCode();
-
-    // Store invite code in database so it can be validated.
-    // Cast to any until `supabase gen types` is re-run after applying the migration.
-    await (supabase as any)
-      .from("family_invites")
-      .insert({
-        family_id: familyId,
-        invite_code: inviteCode,
-        created_by: user?.id ?? "",
-      });
-
-    try {
-      await Share.share({
-        message: `I'd like you to join my family circle on Heartloom — a place to preserve memories and letters for the people we love.\n\nDownload Heartloom, then tap "Join a family" and enter this code:\n\n${inviteCode}`,
-        title: "Join my Heartloom family",
-      });
-    } catch {
-      // User dismissed share sheet — no action needed
-    }
+  async function handleShareInvite() {
+    if (!myFamily) return;
+    // Share button on the crest just routes to the InviteCodePanel area —
+    // but for owners we can quickly create + share in one go via Share sheet.
+    Alert.alert(
+      "Invite a loved one",
+      "Scroll down to the 'Invite codes' section to generate a code you can share."
+    );
   }
 
-  async function redeemCode(code: string) {
-    setIsJoining(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("join-family", {
-        body: { invite_code: code.toUpperCase() },
-      });
-      if (error || data?.error) {
-        Alert.alert("Invalid code", data?.error ?? "Could not join. Check the code and try again.");
-      } else {
-        Alert.alert("Joined!", "You've been added to the family circle.");
-      }
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    } finally {
-      setIsJoining(false);
-    }
+  // --- Loading state -------------------------------------------------
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.cream }}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+            <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
+              <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: Colors.inkMuted, marginBottom: 6 }}>
+                Your circle
+              </Text>
+              <Text style={{ fontFamily: SERIF, fontSize: 28, color: Colors.ink, lineHeight: 34, marginBottom: 4 }}>
+                The Family
+              </Text>
+              <Text style={{ fontSize: 14, color: Colors.inkMuted }}>Loading…</Text>
+            </View>
+            <View style={{ paddingHorizontal: 20, marginTop: 20, gap: 10 }}>
+              <SkeletonRow />
+              <SkeletonRow />
+              <SkeletonRow />
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
   }
 
-  function handleJoinWithCode() {
-    if (Platform.OS === "ios") {
-      Alert.prompt(
-        "Join a family",
-        "Enter the invite code you received:",
-        async (code) => {
-          if (code?.trim()) await redeemCode(code.trim());
-        },
-        "plain-text"
-      );
-    } else {
-      // On Android, Alert.prompt is not available — guide user to contact family owner
-      Alert.alert(
-        "Join a family",
-        "Ask the family owner to share their invite code, then paste it here. Android code entry coming soon."
-      );
-    }
+  // --- No family -----------------------------------------------------
+  if (!myFamily) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.cream }}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+            <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+              <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
+                <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: Colors.inkMuted, marginBottom: 6 }}>
+                  Your circle
+                </Text>
+                <Text style={{ fontFamily: SERIF, fontSize: 28, color: Colors.ink, lineHeight: 34, marginBottom: 4 }}>
+                  The Family
+                </Text>
+                <Text style={{ fontSize: 14, color: Colors.inkMuted }}>
+                  Begin by creating or joining a family
+                </Text>
+              </View>
+              <NoFamilyPanel />
+            </Animated.View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
   }
+
+  // --- Has a family --------------------------------------------------
+  const familyName = myFamily.name ?? "The Family";
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.cream }}>
@@ -196,10 +539,10 @@ export default function FamilyScreen() {
                 Your circle
               </Text>
               <Text style={{ fontFamily: SERIF, fontSize: 28, color: Colors.ink, lineHeight: 34, marginBottom: 4 }}>
-                The Family
+                {familyName}
               </Text>
               <Text style={{ fontSize: 14, color: Colors.inkMuted }}>
-                {isLoading ? "Loading…" : `${members.length} member${members.length !== 1 ? "s" : ""} · Private family`}
+                {`${members.length} member${members.length !== 1 ? "s" : ""} · ${isOwner ? "Owner" : "Member"}`}
               </Text>
             </View>
 
@@ -218,9 +561,8 @@ export default function FamilyScreen() {
                   elevation: 8,
                 }}
               >
-                {/* Avatar cluster */}
                 <View style={{ flexDirection: "row", marginBottom: 16 }}>
-                  {(isLoading ? Array.from({ length: 3 }) : members).map((member, i) => {
+                  {(members.length ? members : [null, null, null]).map((member, i) => {
                     const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
                     const initials = member
                       ? getInitials((member as { full_name: string | null }).full_name)
@@ -249,56 +591,43 @@ export default function FamilyScreen() {
                 </View>
 
                 <Text style={{ fontFamily: SERIF, fontSize: 20, color: Colors.white, marginBottom: 4 }}>
-                  The Family
+                  {familyName}
                 </Text>
                 <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>
                   Sharing memories together
                 </Text>
 
-                <Pressable
-                  onPress={handleInvite}
-                  style={({ pressed }) => ({
-                    marginTop: 20,
-                    backgroundColor: "rgba(255,255,255,0.12)",
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    paddingHorizontal: 24,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                    opacity: pressed ? 0.8 : 1,
-                  })}
-                >
-                  <Feather name="user-plus" size={16} color={Colors.white} />
-                  <Text style={{ color: Colors.white, fontSize: 14, fontWeight: "500" }}>Invite a loved one</Text>
-                </Pressable>
+                {isOwner && (
+                  <Pressable
+                    onPress={handleShareInvite}
+                    style={({ pressed }) => ({
+                      marginTop: 20,
+                      backgroundColor: "rgba(255,255,255,0.12)",
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      paddingHorizontal: 24,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      opacity: pressed ? 0.8 : 1,
+                    })}
+                  >
+                    <Feather name="user-plus" size={16} color={Colors.white} />
+                    <Text style={{ color: Colors.white, fontSize: 14, fontWeight: "500" }}>Invite a loved one</Text>
+                  </Pressable>
+                )}
               </View>
             </View>
 
-            {/* Join with code */}
-            <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
-              <Pressable
-                onPress={handleJoinWithCode}
-                disabled={isJoining}
-                style={({ pressed }) => ({
-                  borderRadius: 14,
-                  borderWidth: 1,
-                  borderColor: Colors.rule,
-                  paddingVertical: 13,
-                  paddingHorizontal: 20,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  opacity: pressed || isJoining ? 0.6 : 1,
-                })}
-              >
-                <Feather name="log-in" size={15} color={Colors.inkSoft} />
-                <Text style={{ fontSize: 14, color: Colors.inkSoft, fontWeight: "500" }}>
-                  {isJoining ? "Joining…" : "Have an invite code? Join a family →"}
-                </Text>
-              </Pressable>
-            </View>
+            {/* Owner-only invite code panel */}
+            {isOwner && (
+              <View style={{ marginBottom: 24 }}>
+                <View style={{ paddingHorizontal: 24 }}>
+                  <SectionLabel>Share access</SectionLabel>
+                </View>
+                <InviteCodePanel familyId={myFamily.id} />
+              </View>
+            )}
 
             {/* Members */}
             <View style={{ paddingHorizontal: 24, marginBottom: 24 }}>
@@ -306,14 +635,10 @@ export default function FamilyScreen() {
                 Members
               </Text>
 
-              {isLoading ? (
-                <View style={{ gap: 10 }}>
-                  <SkeletonRow />
-                  <SkeletonRow />
-                  <SkeletonRow />
-                </View>
-              ) : members.length === 0 ? (
-                <InviteCard onPress={handleInvite} />
+              {members.length === 0 ? (
+                <Text style={{ fontSize: 14, color: Colors.inkMuted }}>
+                  No members yet.
+                </Text>
               ) : (
                 <View style={{ gap: 10 }}>
                   {members.map((member, i) => {
@@ -321,6 +646,7 @@ export default function FamilyScreen() {
                     const bg    = AVATAR_BGS[i % AVATAR_BGS.length];
                     const name  = member.full_name ?? "Family Member";
                     const initials = getInitials(member.full_name);
+                    const memberIsOwner = member.id === myFamily.owner_id;
                     return (
                       <Pressable
                         key={member.id}
@@ -361,7 +687,9 @@ export default function FamilyScreen() {
                           <Text style={{ fontSize: 15, color: Colors.ink, fontWeight: "600", marginBottom: 2 }}>
                             {name}
                           </Text>
-                          <Text style={{ fontSize: 13, color: Colors.inkMuted }}>Family member</Text>
+                          <Text style={{ fontSize: 13, color: Colors.inkMuted }}>
+                            {memberIsOwner ? "Owner" : "Family member"}
+                          </Text>
                         </View>
                         <Feather name="chevron-right" size={16} color="#C4B8A6" />
                       </Pressable>
@@ -371,8 +699,8 @@ export default function FamilyScreen() {
               )}
             </View>
 
-            {/* Invite card (shown below members when there are members) */}
-            {!isLoading && members.length > 0 && <InviteCard onPress={handleInvite} />}
+            {/* Invite card below members for owners */}
+            {isOwner && members.length > 0 && <InviteCard onPress={handleShareInvite} />}
           </Animated.View>
         </ScrollView>
       </SafeAreaView>

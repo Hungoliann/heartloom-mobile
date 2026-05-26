@@ -6,6 +6,7 @@ import {
   Text,
   Animated,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -14,11 +15,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Colors } from "../src/constants/colors";
 import { supabase } from "../src/lib/supabase";
 import { useAuthStore } from "../src/store/auth.store";
+import { useDeleteLetter } from "../src/hooks/useLetters";
 
 export default function LetterScreen() {
   const router = useRouter();
   const { letterId } = useLocalSearchParams<{ letterId?: string }>();
   const user = useAuthStore((s) => s.user);
+  const deleteLetter = useDeleteLetter();
 
   const waxScale = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -252,20 +255,42 @@ export default function LetterScreen() {
               <Text style={{ fontSize: 14.5, fontWeight: "600", color: "#FBF2DD" }}>Edit Letter</Text>
             </Pressable>
             <Pressable
+              disabled={deleteLetter.isPending}
+              onPress={() => {
+                Alert.alert(
+                  "Delete this letter?",
+                  "This can't be undone.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: () => {
+                        deleteLetter.mutate(
+                          { id: letter.id, mediaUrl: (letter as any).media_url ?? null },
+                          { onSuccess: () => router.back() },
+                        );
+                      },
+                    },
+                  ],
+                );
+              }}
               style={({ pressed }) => ({
                 borderRadius: 13,
-                paddingVertical: 14,
+                paddingVertical: 12,
                 alignItems: "center",
                 borderWidth: 1,
-                borderColor: "rgba(45,36,26,0.14)",
-                opacity: pressed ? 0.75 : 1,
+                borderColor: "rgba(168,42,42,0.25)",
+                opacity: deleteLetter.isPending ? 0.5 : pressed ? 0.7 : 1,
                 flexDirection: "row",
                 justifyContent: "center",
                 gap: 7,
               })}
             >
-              <Feather name="download" size={14} color={Colors.inkSoft} />
-              <Text style={{ fontSize: 14, color: Colors.inkSoft }}>Download PDF</Text>
+              <Feather name="trash-2" size={13} color="#A82A2A" />
+              <Text style={{ fontSize: 13, color: "#A82A2A" }}>
+                {deleteLetter.isPending ? "Deleting…" : "Delete letter"}
+              </Text>
             </Pressable>
           </View>
         </Animated.ScrollView>

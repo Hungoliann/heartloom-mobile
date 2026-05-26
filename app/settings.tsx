@@ -53,6 +53,41 @@ export default function SettingsScreen() {
     );
   }
 
+  async function performDeleteAccount() {
+    try {
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) {
+        Alert.alert(
+          "Could not delete account",
+          error.message ?? "Please try again or contact support."
+        );
+        return;
+      }
+      await signOut();
+      router.replace("/(auth)/sign-in");
+    } catch (err: any) {
+      Alert.alert(
+        "Could not delete account",
+        err?.message ?? "Please try again or contact support."
+      );
+    }
+  }
+
+  function handleDeleteAccount() {
+    Alert.alert(
+      "Delete account?",
+      "This permanently erases your profile, future letters, and vault documents. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete forever",
+          style: "destructive",
+          onPress: performDeleteAccount,
+        },
+      ]
+    );
+  }
+
   const initial = (user?.name ?? "E").charAt(0).toUpperCase();
 
   return (
@@ -163,6 +198,29 @@ export default function SettingsScreen() {
               <Text style={{ fontSize: 14, color: Colors.terra, fontWeight: "500" }}>Sign out</Text>
             </Pressable>
             <Text style={{ fontSize: 11, color: Colors.inkMuted }}>Heartloom v1.0.0</Text>
+
+            {/* Delete account (destructive, last item) */}
+            <Pressable
+              onPress={handleDeleteAccount}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                paddingVertical: 14,
+                marginTop: 24,
+                borderTopWidth: 1,
+                borderTopColor: "rgba(45,36,26,0.07)",
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Feather name="trash-2" size={16} color="#B83A2C" />
+              <Text style={{ fontSize: 14, color: "#B83A2C", fontWeight: "600" }}>
+                Delete account
+              </Text>
+            </Pressable>
+            <Text style={{ fontSize: 11, color: Colors.inkMuted, marginTop: 2 }}>
+              Permanently erases your profile, letters, and vault. This cannot be undone.
+            </Text>
           </View>
         </Animated.ScrollView>
       </SafeAreaView>

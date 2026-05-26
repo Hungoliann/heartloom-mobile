@@ -6,11 +6,12 @@ import {
   Text,
   ScrollView,
   Animated,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import { useLetters } from "../../src/hooks/useLetters";
+import { useLetters, useDeleteLetter } from "../../src/hooks/useLetters";
 
 const LETTER_COLORS = ["#D27F14", "#6F8564", "#B86241", "#4A3D2E", "#8A7A66"];
 const LETTER_EMOJIS = ["✉", "★", "♡", "✦", "◆"];
@@ -20,6 +21,22 @@ export default function LegacyScreen() {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
   const { data: letters = [], isLoading } = useLetters();
+  const deleteLetter = useDeleteLetter();
+
+  const confirmDelete = (id: string, mediaUrl: string | null) => {
+    Alert.alert(
+      "Delete this letter?",
+      "This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteLetter.mutate({ id, mediaUrl }),
+        },
+      ],
+    );
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -33,6 +50,7 @@ export default function LegacyScreen() {
 
   const mappedLetters = letters.map((l, i) => ({
     id: l.id,
+    mediaUrl: (l as any).media_url ?? null,
     for: l.recipient_name ?? "Family",
     title: l.title,
     status: l.delivered_at ? "delivered" : "sealed",
@@ -117,20 +135,24 @@ export default function LegacyScreen() {
             )}
 
             {/* Letter cards */}
-            {!isLoading && mappedLetters.map((letter) => (
+            {!isLoading && mappedLetters.map((letter) => {
+              const isDeleting = deleteLetter.isPending && deleteLetter.variables?.id === letter.id;
+              return (
               <Animated.View
                 key={letter.id}
                 style={{ opacity, transform: [{ translateY }] }}
               >
                 <Pressable
                   onPress={() => router.push({ pathname: "/letter", params: { letterId: letter.id } })}
+                  onLongPress={() => confirmDelete(letter.id, letter.mediaUrl)}
+                  disabled={isDeleting}
                   style={({ pressed }) => ({
                     backgroundColor: "#FFFFFF",
                     borderRadius: 20,
                     padding: 20,
                     borderWidth: 1.5,
                     borderColor: "#EDE4D4",
-                    opacity: pressed ? 0.88 : 1,
+                    opacity: isDeleting ? 0.4 : pressed ? 0.88 : 1,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                     shadowColor: "#2C1F0E",
                     shadowOffset: { width: 0, height: 3 },
@@ -182,7 +204,8 @@ export default function LegacyScreen() {
                   </View>
                 </Pressable>
               </Animated.View>
-            ))}
+              );
+            })}
           </ScrollView>
         </Animated.View>
 

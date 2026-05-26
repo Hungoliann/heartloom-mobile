@@ -153,23 +153,11 @@ export default function RootLayout() {
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
         <Stack.Screen
-          name="stories"
-          options={{ presentation: "modal", animation: "slide_from_bottom" }}
-        />
-        <Stack.Screen
           name="letter"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
         <Stack.Screen
           name="settings"
-          options={{ presentation: "modal", animation: "slide_from_bottom" }}
-        />
-        <Stack.Screen
-          name="memory"
-          options={{ presentation: "modal", animation: "slide_from_bottom" }}
-        />
-        <Stack.Screen
-          name="plans"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
         <Stack.Screen
@@ -184,9 +172,6 @@ export default function RootLayout() {
           name="letter-preview"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
-        <Stack.Screen name="daily-prompt" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="planner" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="archive" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="will" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="privacy" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="terms" options={{ animation: "slide_from_right" }} />

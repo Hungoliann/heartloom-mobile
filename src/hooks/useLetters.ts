@@ -81,6 +81,37 @@ export function useCreateLetter() {
   });
 }
 
+export function useDeleteLetter() {
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+
+  return useMutation({
+    mutationFn: async ({ id, mediaUrl }: { id: string; mediaUrl: string | null }) => {
+      if (!user?.id) throw new Error("Not authenticated");
+      const { error } = await supabase
+        .from("letters")
+        .delete()
+        .eq("id", id)
+        .eq("author_id", user.id);
+      if (error) throw error;
+
+      if (mediaUrl) {
+        const { error: storageError } = await supabase.storage
+          .from("voice-memos")
+          .remove([mediaUrl]);
+        if (storageError) {
+          console.warn("Failed to delete media from storage:", storageError);
+        }
+      }
+      return { id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["letters"] });
+      queryClient.invalidateQueries({ queryKey: ["pinned-letter"] });
+    },
+  });
+}
+
 export function useUpdateLetter() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
