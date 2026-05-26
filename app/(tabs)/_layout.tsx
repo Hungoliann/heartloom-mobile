@@ -44,17 +44,17 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="legacy"
+        options={{
+          title: "Letters",
+          tabBarIcon: ({ color }) => <Feather name="mail" size={20} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="timeline"
         options={{
           title: "Timeline",
           tabBarIcon: ({ color }) => <Feather name="book-open" size={20} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="concierge"
-        options={{
-          title: "Concierge",
-          tabBarIcon: ({ color }) => <Feather name="compass" size={20} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -71,9 +71,9 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <Feather name="user" size={20} color={color} />,
         }}
       />
+      <Tabs.Screen name="concierge" options={{ href: null }} />
       <Tabs.Screen name="vault" options={{ href: null }} />
       <Tabs.Screen name="family" options={{ href: null }} />
-      <Tabs.Screen name="legacy" options={{ href: null }} />
     </Tabs>
   );
 }

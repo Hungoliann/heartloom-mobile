@@ -41,3 +41,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# pnpm regenerates this file from build-script prompts with placeholder text
+# that breaks CI ("packages field missing"). Actual config lives in package.json.
+pnpm-workspace.yaml
