@@ -292,6 +292,7 @@ export default function RecordScreen() {
 
   // Step 1 – Seed
   const [promptIdx, setPromptIdx] = useState(0);
+  const [customPrompt, setCustomPrompt] = useState<string | null>(null);
 
   // Step 3 – Recording (real audio)
   const {
@@ -428,12 +429,21 @@ export default function RecordScreen() {
             ...(mediaUrl ? { media_type: "audio" as const, media_url: mediaUrl } : {}),
           });
         } else {
-          const promptText = PROMPTS[promptIdx];
           const title = `A letter for ${recipient.trim() || "my family"}`;
+          const body =
+            customPrompt && customPrompt.trim().length > 0
+              ? customPrompt.trim()
+              : (() => {
+                  const p = PROMPTS[promptIdx];
+                  return `${p.line1} ${p.line2} ${p.line3}`.replace(
+                    /{name}/g,
+                    recipient
+                  );
+                })();
 
           await createLetter.mutateAsync({
             title,
-            body: `${promptText.line1} ${promptText.line2} ${promptText.line3}`.replace(/{name}/g, recipient),
+            body,
             recipient_name: recipient.trim() || null,
             deliver_at: getDeliverAt(deliveryOption),
             media_type: mediaUrl ? "audio" : null,
@@ -441,8 +451,9 @@ export default function RecordScreen() {
           });
         }
         transitionForward(() => setStep(7));
-      } catch {
-        Alert.alert("Couldn't save letter", "Please try again.");
+      } catch (e: any) {
+        console.error("save letter failed:", e);
+        Alert.alert("Couldn't save letter", e?.message ?? "Please try again.");
       } finally {
         setIsSaving(false);
       }
@@ -483,13 +494,13 @@ export default function RecordScreen() {
 
   const STEP_HEADERS: Array<{ title: string; step: string }> = [
     { title: "Who is this for?", step: "2 / 9" },
-    { title: "The Seed · 0–2 min", step: "3 / 9" },
+    { title: "The Seed", step: "3 / 9" },
     { title: "A quick mic check", step: "4 / 9" },
-    { title: "Recording · 2–8 min", step: "5 / 9" },
+    { title: "Recording", step: "5 / 9" },
     { title: "A gentle review", step: "6 / 9" },
-    { title: "The Seal · minute 9", step: "7 / 9" },
+    { title: "The Seal", step: "7 / 9" },
     { title: "When does this open?", step: "8 / 9" },
-    { title: "Minute 10 · Your Certificate", step: "9 / 9" },
+    { title: "Your Certificate", step: "9 / 9" },
   ];
 
   const header = STEP_HEADERS[Math.min(step, STEP_HEADERS.length - 1)];
@@ -582,7 +593,13 @@ export default function RecordScreen() {
                 name={name}
                 prompt={prompt}
                 promptIdx={promptIdx}
-                onShuffle={() => setPromptIdx((i) => (i + 1) % PROMPTS.length)}
+                customPrompt={customPrompt}
+                onShuffle={() => {
+                  setCustomPrompt(null);
+                  setPromptIdx((i) => (i + 1) % PROMPTS.length);
+                }}
+                onWriteOwn={() => setCustomPrompt(customPrompt ?? "")}
+                onChangeCustomPrompt={setCustomPrompt}
                 onNext={goNext}
               />
             )}
@@ -825,16 +842,23 @@ function StepSeed({
   name,
   prompt,
   promptIdx,
+  customPrompt,
   onShuffle,
+  onWriteOwn,
+  onChangeCustomPrompt,
   onNext,
 }: {
   name: string;
   prompt: (typeof PROMPTS)[0];
   promptIdx: number;
+  customPrompt: string | null;
   onShuffle: () => void;
+  onWriteOwn: () => void;
+  onChangeCustomPrompt: (text: string) => void;
   onNext: () => void;
 }) {
   const line3 = prompt.line3.replace("{name}", name);
+  const isCustom = customPrompt !== null;
   return (
     <View>
       <Text
@@ -865,42 +889,64 @@ function StepSeed({
           borderColor: RULE,
         }}
       >
-        <Text
-          style={{
-            fontFamily: SERIF,
-            fontSize: 15,
-            color: Colors.inkMuted,
-            lineHeight: 22,
-            textAlign: "center",
-            marginBottom: 2,
-          }}
-        >
-          {prompt.line1}
-        </Text>
-        <Text
-          style={{
-            fontFamily: SERIF,
-            fontSize: 22,
-            fontWeight: "600",
-            color: Colors.ink,
-            lineHeight: 30,
-            textAlign: "center",
-            marginBottom: 2,
-          }}
-        >
-          {prompt.line2}
-        </Text>
-        <Text
-          style={{
-            fontFamily: SERIF,
-            fontSize: 15,
-            color: Colors.inkMuted,
-            lineHeight: 22,
-            textAlign: "center",
-          }}
-        >
-          {line3}
-        </Text>
+        {isCustom ? (
+          <TextInput
+            value={customPrompt ?? ""}
+            onChangeText={onChangeCustomPrompt}
+            placeholder="Write your own prompt…"
+            placeholderTextColor={Colors.inkMuted}
+            multiline
+            autoFocus
+            style={{
+              fontFamily: SERIF,
+              fontSize: 18,
+              color: Colors.ink,
+              lineHeight: 26,
+              textAlign: "center",
+              minHeight: 90,
+              width: "100%",
+            }}
+          />
+        ) : (
+          <>
+            <Text
+              style={{
+                fontFamily: SERIF,
+                fontSize: 15,
+                color: Colors.inkMuted,
+                lineHeight: 22,
+                textAlign: "center",
+                marginBottom: 2,
+              }}
+            >
+              {prompt.line1}
+            </Text>
+            <Text
+              style={{
+                fontFamily: SERIF,
+                fontSize: 22,
+                fontWeight: "600",
+                color: Colors.ink,
+                lineHeight: 30,
+                textAlign: "center",
+                marginBottom: 2,
+              }}
+            >
+              {prompt.line2}
+            </Text>
+            <Text
+              style={{
+                fontFamily: SERIF,
+                fontSize: 15,
+                color: Colors.inkMuted,
+                lineHeight: 22,
+                textAlign: "center",
+              }}
+            >
+              {line3}
+            </Text>
+          </>
+        )}
       </View>
 
       <Text
@@ -918,7 +964,10 @@ function StepSeed({
 
       <View style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
         <GhostBtn label="⤿  Shuffle prompt" onPress={onShuffle} />
-        <GhostBtn label="✏  Write my own" />
+        <GhostBtn
+          label={isCustom ? "✕  Use a prompt" : "✏  Write my own"}
+          onPress={isCustom ? onShuffle : onWriteOwn}
+        />
       </View>
 
       <PrimaryBtn label="I'm ready to record" onPress={onNext} />

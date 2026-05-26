@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import { useAuthStore } from "../../src/store/auth.store";
 import { usePinnedLetter } from "../../src/hooks/useLetters";
 import { Colors } from "../../src/constants/colors";
+import { HeartloomLogo } from "../../src/components/ui/HeartloomLogo";
 
 
 function getGreeting() {
@@ -233,7 +234,7 @@ export default function HomeScreen() {
                   opacity: pressed ? 0.6 : 1,
                 })}
               >
-                <Text style={{ fontSize: 18, color: Colors.inkSoft }}>♡</Text>
+                <HeartloomLogo size={22} />
               </Pressable>
             </View>
 

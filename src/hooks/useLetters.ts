@@ -54,20 +54,21 @@ export function useCreateLetter() {
     mutationFn: async (letter: LetterInsert & { family_id?: string }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
-      // Get family_id from profile if not provided
-      let familyId = letter.family_id;
+      // Get family_id from profile if not provided. May be null for solo users.
+      let familyId: string | null = letter.family_id ?? null;
       if (!familyId) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("family_id")
           .eq("id", user.id)
           .single();
-        familyId = profile?.family_id ?? "";
+        familyId = profile?.family_id ?? null;
       }
 
       const { data, error } = await supabase
         .from("letters")
-        .insert({ ...letter, author_id: user.id, family_id: familyId ?? "" })
+        // family_id is nullable in the schema; generated types haven't been refreshed yet.
+        .insert({ ...letter, author_id: user.id, family_id: familyId as string })
         .select()
         .single();
       if (error) throw error;

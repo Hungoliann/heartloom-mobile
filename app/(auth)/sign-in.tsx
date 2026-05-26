@@ -166,21 +166,23 @@ export default function SignInScreen() {
                 </Text>
               </Pressable>
 
-              <Pressable
-                onPress={() => router.back()}
-                style={({ pressed }) => ({
-                  borderRadius: 999,
-                  paddingVertical: 11,
-                  paddingHorizontal: 24,
-                  alignItems: "center",
-                  opacity: pressed ? 0.6 : 1,
-                  borderWidth: 1,
-                  borderColor: "rgba(250,243,226,0.12)",
-                  backgroundColor: "rgba(250,243,226,0.04)",
-                })}
-              >
-                <Text style={{ fontSize: 13, color: "rgba(250,243,226,0.4)" }}>‹ Go back</Text>
-              </Pressable>
+              {router.canGoBack() && (
+                <Pressable
+                  onPress={() => router.back()}
+                  style={({ pressed }) => ({
+                    borderRadius: 999,
+                    paddingVertical: 11,
+                    paddingHorizontal: 24,
+                    alignItems: "center",
+                    opacity: pressed ? 0.6 : 1,
+                    borderWidth: 1,
+                    borderColor: "rgba(250,243,226,0.12)",
+                    backgroundColor: "rgba(250,243,226,0.04)",
+                  })}
+                >
+                  <Text style={{ fontSize: 13, color: "rgba(250,243,226,0.4)" }}>‹ Go back</Text>
+                </Pressable>
+              )}
             </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
