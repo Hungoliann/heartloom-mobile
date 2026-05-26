@@ -3,5 +3,5 @@
   "compilerOptions": {
     "strict": true
   },
-  "exclude": ["node_modules", "server", "supabase/functions", "inngest"]
+  "exclude": ["node_modules", "server", "supabase/functions"]
 }

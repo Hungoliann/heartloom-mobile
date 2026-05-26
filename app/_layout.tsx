@@ -82,9 +82,34 @@ function PushNotificationBootstrap() {
         projectId: "57073d2b-8afb-4356-813a-17d8185b4689",
       });
 
-      await supabase.auth.updateUser({
-        data: { push_token: tokenData.data },
-      });
+      // Write the token to BOTH locations:
+      //  - profiles.push_token: preferred by the delivery worker (no admin API needed)
+      //  - auth.users.user_metadata.push_token: kept as a backup fallback
+      try {
+        if (user?.id) {
+          const { error: profileErr } = await supabase
+            .from("profiles")
+            // push_token column added via SETUP.sql; generated types haven't been refreshed yet.
+            .update({ push_token: tokenData.data } as never)
+            .eq("id", user.id);
+          if (profileErr) {
+            console.warn("[push] failed to write profiles.push_token:", profileErr.message);
+          }
+        }
+      } catch (e) {
+        console.warn("[push] profiles.push_token update threw:", e);
+      }
+
+      try {
+        const { error: authErr } = await supabase.auth.updateUser({
+          data: { push_token: tokenData.data },
+        });
+        if (authErr) {
+          console.warn("[push] failed to write auth user_metadata.push_token:", authErr.message);
+        }
+      } catch (e) {
+        console.warn("[push] auth.updateUser threw:", e);
+      }
     }
 
     registerToken();

@@ -325,6 +325,9 @@ export default function RecordScreen() {
   const sealProgress = useRef(new Animated.Value(0)).current;
   const sealScale = useRef(new Animated.Value(1)).current;
 
+  // Step 4 – Review/Compose (text body of the letter)
+  const [letterBody, setLetterBody] = useState("");
+
   // Step 6 – Deliver
   const [deliveryOption, setDeliveryOption] = useState("date");
   const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
@@ -394,6 +397,7 @@ export default function RecordScreen() {
   useEffect(() => {
     if (!existingLetter) return;
     if (existingLetter.recipient_name) setRecipient(existingLetter.recipient_name);
+    if (existingLetter.body) setLetterBody(existingLetter.body);
     // Map deliver_at back to a delivery option
     if (!existingLetter.deliver_at) {
       setDeliveryOption("now");
@@ -401,6 +405,25 @@ export default function RecordScreen() {
       setDeliveryOption("date");
     }
   }, [existingLetter?.id]);
+
+  // When the user lands on Review (step 4) for the first time, seed letterBody
+  // with the prompt-derived default so they have something to edit. If they've
+  // already typed something, leave it alone.
+  useEffect(() => {
+    if (step !== 4) return;
+    if (letterBody.length > 0) return;
+    const seeded =
+      customPrompt && customPrompt.trim().length > 0
+        ? customPrompt.trim()
+        : (() => {
+            const p = PROMPTS[promptIdx];
+            return `${p.line1} ${p.line2} ${p.line3}`.replace(
+              /{name}/g,
+              recipient
+            );
+          })();
+    setLetterBody(seeded);
+  }, [step]);
 
   function formatTime(s: number) {
     const m = Math.floor(s / 60)
@@ -428,11 +451,12 @@ export default function RecordScreen() {
             id: editLetterId,
             recipient_name: recipient.trim() || null,
             deliver_at: getDeliverAt(deliveryOption, deliveryDate),
+            ...(letterBody.trim().length > 0 ? { body: letterBody.trim() } : {}),
             ...(mediaUrl ? { media_type: "audio" as const, media_url: mediaUrl } : {}),
           });
         } else {
           const title = `A letter for ${recipient.trim() || "my family"}`;
-          const body =
+          const fallbackBody =
             customPrompt && customPrompt.trim().length > 0
               ? customPrompt.trim()
               : (() => {
@@ -442,6 +466,7 @@ export default function RecordScreen() {
                     recipient
                   );
                 })();
+          const body = letterBody.trim().length > 0 ? letterBody.trim() : fallbackBody;
 
           await createLetter.mutateAsync({
             title,
@@ -652,6 +677,8 @@ export default function RecordScreen() {
                 formatTime={formatTime}
                 onPlay={play}
                 onPause={pause}
+                letterBody={letterBody}
+                setLetterBody={setLetterBody}
                 onReRecord={async () => {
                   await stopRecording();
                   setHasRecording(false);
@@ -1474,6 +1501,8 @@ function StepReview({
   formatTime,
   onPlay,
   onPause,
+  letterBody,
+  setLetterBody,
   onReRecord,
   onNext,
 }: {
@@ -1486,6 +1515,8 @@ function StepReview({
   formatTime: (s: number) => string;
   onPlay: () => Promise<void>;
   onPause: () => Promise<void>;
+  letterBody: string;
+  setLetterBody: (v: string) => void;
   onReRecord: () => Promise<void>;
   onNext: () => void;
 }) {
@@ -1646,6 +1677,55 @@ function StepReview({
             Read full transcript
           </Text>
         </Pressable>
+      </View>
+
+      {/* Compose: the actual letter text */}
+      <Text
+        style={{
+          fontSize: 10,
+          fontWeight: "700",
+          letterSpacing: 1.8,
+          color: Colors.inkMuted,
+          textTransform: "uppercase",
+          marginBottom: 8,
+        }}
+      >
+        Your message
+      </Text>
+      <View
+        style={{
+          backgroundColor: CARD_BG,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: RULE,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          marginBottom: 20,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.04,
+          shadowRadius: 4,
+          elevation: 1,
+        }}
+      >
+        <TextInput
+          value={letterBody}
+          onChangeText={setLetterBody}
+          placeholder="Write the letter you want them to read…"
+          placeholderTextColor="rgba(74,61,46,0.32)"
+          multiline
+          textAlignVertical="top"
+          scrollEnabled={false}
+          style={{
+            fontFamily: SERIF,
+            fontSize: 16,
+            color: Colors.ink,
+            lineHeight: 24,
+            minHeight: 140,
+            paddingTop: 0,
+            paddingBottom: 0,
+          }}
+        />
       </View>
 
       {/* Actions */}
