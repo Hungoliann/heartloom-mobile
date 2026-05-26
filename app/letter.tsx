@@ -16,6 +16,14 @@ import { Colors } from "../src/constants/colors";
 import { supabase } from "../src/lib/supabase";
 import { useAuthStore } from "../src/store/auth.store";
 import { useDeleteLetter } from "../src/hooks/useLetters";
+import { useAudioPlayer } from "../src/hooks/useAudioPlayer";
+
+function formatMs(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = String(Math.floor(total / 60)).padStart(2, "0");
+  const s = String(total % 60).padStart(2, "0");
+  return `${m}:${s}`;
+}
 
 export default function LetterScreen() {
   const router = useRouter();
@@ -41,6 +49,22 @@ export default function LetterScreen() {
     },
     enabled: !!letterId,
   });
+
+  // voice-memos is a private bucket, so we need a short-lived signed URL.
+  const { data: signedAudioUrl } = useQuery({
+    queryKey: ["letter-audio", letter?.media_url],
+    queryFn: async () => {
+      if (!letter?.media_url) return null;
+      const { data, error } = await supabase.storage
+        .from("voice-memos")
+        .createSignedUrl(letter.media_url, 60 * 60);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+    enabled: !!letter?.media_url,
+  });
+
+  const audio = useAudioPlayer(signedAudioUrl ?? null);
 
   useEffect(() => {
     Animated.parallel([
@@ -199,6 +223,88 @@ export default function LetterScreen() {
             <Text style={{ fontFamily: SERIF, fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 20 }}>
               {letter.body ?? "(No content)"}
             </Text>
+
+            {/* Audio player — only if this letter has a recording */}
+            {letter.media_url ? (
+              <View
+                style={{
+                  marginBottom: 20,
+                  padding: 14,
+                  backgroundColor: "rgba(74,47,24,0.05)",
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(74,47,24,0.12)",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <Pressable
+                  onPress={() => (audio.isPlaying ? audio.pause() : audio.play())}
+                  disabled={!signedAudioUrl}
+                  style={({ pressed }) => ({
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: "#8A3A0E",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: !signedAudioUrl ? 0.4 : pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Feather
+                    name={audio.isPlaying ? "pause" : "play"}
+                    size={18}
+                    color="#F3C896"
+                    style={!audio.isPlaying ? { marginLeft: 2 } : undefined}
+                  />
+                </Pressable>
+
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: SERIF_ITALIC,
+                      fontStyle: "italic",
+                      fontSize: 11,
+                      color: "rgba(74,47,24,0.6)",
+                      marginBottom: 6,
+                    }}
+                  >
+                    {signedAudioUrl
+                      ? audio.isPlaying
+                        ? "Playing your voice"
+                        : "Your voice, recorded"
+                      : "Loading audio…"}
+                  </Text>
+                  <View
+                    style={{
+                      height: 4,
+                      borderRadius: 2,
+                      backgroundColor: "rgba(74,47,24,0.12)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${Math.min(100, Math.max(0, audio.progress * 100))}%`,
+                        height: "100%",
+                        backgroundColor: "#8A3A0E",
+                      }}
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 10.5,
+                      color: "rgba(74,47,24,0.55)",
+                      marginTop: 6,
+                      fontVariant: ["tabular-nums"],
+                    }}
+                  >
+                    {formatMs(audio.positionMs)} / {formatMs(audio.durationMs)}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
 
             {/* Sign line */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(169,95,10,0.15)" }}>
