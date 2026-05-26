@@ -1,7 +1,8 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import {
   View,
   Text,
-  Pressable,
   ScrollView,
   Alert,
   ActivityIndicator,
@@ -219,7 +220,7 @@ export default function VaultScreen() {
             style={{
               flex: 1,
               textAlign: "center",
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 14,
               color: Colors.inkSoft,
@@ -255,7 +256,7 @@ export default function VaultScreen() {
           {/* Display heading */}
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 26,
               fontWeight: "500",
               lineHeight: 31,
@@ -313,7 +314,7 @@ export default function VaultScreen() {
                       </Text>
                       <Text
                         style={{
-                          fontFamily: "Georgia",
+                          fontFamily: SERIF,
                           fontSize: 13.5,
                           fontWeight: "500",
                           color: Colors.cream,
@@ -369,7 +370,7 @@ export default function VaultScreen() {
                     )}
                     <Text
                       style={{
-                        fontFamily: "Georgia",
+                        fontFamily: SERIF,
                         fontSize: 13.5,
                         fontWeight: "500",
                         color: Colors.ink,
@@ -422,7 +423,7 @@ export default function VaultScreen() {
             <View style={{ flex: 1, gap: 2 }}>
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF,
                   fontSize: 13.5,
                   color: Colors.ink,
                   fontWeight: "500",
@@ -447,7 +448,7 @@ export default function VaultScreen() {
           <Text
             style={{
               textAlign: "center",
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 12,
               color: Colors.inkSoft,

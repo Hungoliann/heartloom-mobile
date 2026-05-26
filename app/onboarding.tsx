@@ -1,8 +1,9 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
 import { useState } from "react";
 import {
   View,
   Text,
-  Pressable,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -10,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../src/store/auth.store";
 import { Colors } from "../src/constants/colors";
 
@@ -58,7 +60,7 @@ export default function OnboardingScreen() {
             <View style={{ width: "100%", alignItems: "center", paddingTop: 20, paddingBottom: 0 }}>
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF,
                   fontSize: 13,
                   fontWeight: "400",
                   letterSpacing: 4.5,
@@ -74,7 +76,7 @@ export default function OnboardingScreen() {
             <View style={{ width: "100%", marginTop: 20, marginBottom: 0 }}>
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF,
                   fontSize: 28,
                   fontWeight: "500",
                   lineHeight: 33,
@@ -98,7 +100,7 @@ export default function OnboardingScreen() {
             {/* ── Subtext ────────────────────────────────────────────────── */}
             <Text
               style={{
-                fontFamily: "Georgia",
+                fontFamily: SERIF,
                 fontSize: 15,
                 lineHeight: 23,
                 color: Colors.inkSoft,
@@ -139,7 +141,7 @@ export default function OnboardingScreen() {
                   multiline
                   textAlignVertical="top"
                   style={{
-                    fontFamily: "Georgia",
+                    fontFamily: SERIF_ITALIC,
                     fontStyle: "italic",
                     fontSize: 19,
                     lineHeight: 28,
@@ -188,16 +190,12 @@ export default function OnboardingScreen() {
                   marginBottom: 8,
                 })}
               >
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: "500",
-                    color: Colors.cream,
-                    marginRight: 2,
-                  }}
-                >
-                  {"✎ "}
-                </Text>
+                <Ionicons
+                  name="create-outline"
+                  size={17}
+                  color={Colors.cream}
+                  style={{ marginRight: 8 }}
+                />
                 <Text
                   style={{
                     fontSize: 15,
@@ -228,16 +226,15 @@ export default function OnboardingScreen() {
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Text
+                <View
                   style={{
-                    fontSize: 13,
-                    fontWeight: "500",
-                    color: Colors.ink,
-                    marginRight: 2,
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: Colors.ink,
+                    marginRight: 8,
                   }}
-                >
-                  {"● "}
-                </Text>
+                />
                 <Text
                   style={{
                     fontSize: 13,
@@ -253,7 +250,7 @@ export default function OnboardingScreen() {
             {/* ── Footer ─────────────────────────────────────────────────── */}
             <Text
               style={{
-                fontFamily: "Georgia",
+                fontFamily: SERIF_ITALIC,
                 fontStyle: "italic",
                 fontSize: 12,
                 color: Colors.inkMuted,

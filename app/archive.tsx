@@ -1,9 +1,10 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
 import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
-  Pressable,
   Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -78,7 +79,7 @@ export default function Archive() {
             style={{
               flex: 1,
               textAlign: "center",
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 14,
               color: Colors.inkSoft,
@@ -110,7 +111,7 @@ export default function Archive() {
           {/* Display heading */}
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 24,
               fontWeight: "500",
               color: Colors.ink,
@@ -227,7 +228,7 @@ export default function Archive() {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 8, color: "#8B6039" }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 8, color: "#8B6039" }}>
                 for Maya
               </Text>
             </View>
@@ -327,7 +328,7 @@ export default function Archive() {
               >
                 <Text
                   style={{
-                    fontFamily: "Georgia",
+                    fontFamily: SERIF,
                     fontSize: 22,
                     fontWeight: "600",
                     color: Colors.amberDeep,
@@ -377,7 +378,7 @@ export default function Archive() {
             </Text>
             <Text
               style={{
-                fontFamily: "Georgia",
+                fontFamily: SERIF_ITALIC,
                 fontStyle: "italic",
                 fontSize: 16,
                 color: Colors.ink,

@@ -1,5 +1,12 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF } from "../src/constants/fonts";
 import { useRef, useEffect } from "react";
-import { View, Text, Pressable, Animated, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Animated,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -37,7 +44,7 @@ export default function StoriesScreen() {
             <Feather name="chevron-left" size={22} color={Colors.inkSoft} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 17, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>Saved Stories</Text>
+            <Text style={{ fontSize: 17, fontFamily: SERIF, fontWeight: "600", color: Colors.ink }}>Saved Stories</Text>
             <Text style={{ fontSize: 10, color: Colors.inkMuted, marginTop: 1 }}>{audioLetters.length} recordings</Text>
           </View>
           <Pressable
@@ -65,7 +72,7 @@ export default function StoriesScreen() {
         >
           {audioLetters.length === 0 ? (
             <View style={{ alignItems: "center", paddingVertical: 48, paddingHorizontal: 32 }}>
-              <Text style={{ fontFamily: "Georgia", fontSize: 17, color: Colors.ink, textAlign: "center", marginBottom: 8 }}>No recordings yet</Text>
+              <Text style={{ fontFamily: SERIF, fontSize: 17, color: Colors.ink, textAlign: "center", marginBottom: 8 }}>No recordings yet</Text>
               <Text style={{ fontSize: 13, color: Colors.inkMuted, textAlign: "center", lineHeight: 20 }}>Voice memories you record will appear here.</Text>
             </View>
           ) : (
@@ -115,7 +122,7 @@ export default function StoriesScreen() {
                     </Pressable>
 
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 13.5, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink, marginBottom: 2 }}>
+                      <Text style={{ fontSize: 13.5, fontFamily: SERIF, fontWeight: "600", color: Colors.ink, marginBottom: 2 }}>
                         {title}
                       </Text>
                       <Text style={{ fontSize: 10.5, color: Colors.inkMuted }}>{person} · {duration}</Text>

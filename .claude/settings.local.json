@@ -5,7 +5,20 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git stash *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Get-Content \"C:\\\\Users\\\\hungl\\\\Documents\\\\GitHub\\\\heartloom-mobile\\\\app\\\\done.tsx\")",
+      "Bash(Select-Object -First 15)",
+      "Bash(Write-Host \"---\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\hungl\\\\Documents\\\\GitHub\\\\heartloom-mobile\\\\app\\\\will.tsx\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\hungl\\\\Documents\\\\GitHub\\\\heartloom-mobile\\\\app\\\\plans.tsx\")",
+      "Bash(npx supabase *)",
+      "Bash(git push *)",
+      "Bash(npm install *)",
+      "Bash(npx expo *)",
+      "mcp__vexp__run_pipeline",
+      "Bash(pnpm install *)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" kill-server; & \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" start-server; Start-Sleep -Seconds 3; & \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" devices)",
+      "Bash(grep -n \"props.style\\\\|props\\\\\\\\[.style.\\\\\\\\]\\\\|'style'\\\\|\\\\\"style\\\\\"\" node_modules/react-native-css-interop/src/runtime/native/render-component.tsx)"
     ]
   }
 }

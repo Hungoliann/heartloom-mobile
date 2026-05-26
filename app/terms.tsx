@@ -1,4 +1,10 @@
-import { Linking, View, Text, Pressable } from "react-native";
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF } from "../src/constants/fonts";
+import {
+  Linking,
+  View,
+  Text,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -30,7 +36,7 @@ export default function TermsScreen() {
           >
             <Feather name="chevron-left" size={22} color={Colors.inkSoft} />
           </Pressable>
-          <Text style={{ fontSize: 17, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>
+          <Text style={{ fontSize: 17, fontFamily: SERIF, fontWeight: "600", color: Colors.ink }}>
             Terms of Service
           </Text>
         </View>
@@ -41,7 +47,7 @@ export default function TermsScreen() {
           <Text
             style={{
               fontSize: 20,
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontWeight: "600",
               color: Colors.ink,
               textAlign: "center",
@@ -71,7 +77,7 @@ export default function TermsScreen() {
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <Text style={{ fontSize: 15, fontWeight: "600", color: Colors.white, fontFamily: "Georgia" }}>
+            <Text style={{ fontSize: 15, fontWeight: "600", color: Colors.white, fontFamily: SERIF }}>
               View full terms
             </Text>
           </Pressable>

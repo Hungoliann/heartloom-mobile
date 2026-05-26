@@ -1,4 +1,10 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
+import {
+  View,
+  Text,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Svg, { Circle, Text as SvgText } from "react-native-svg";
@@ -82,7 +88,7 @@ export default function DoneScreen() {
           {/* Headline */}
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 24,
               fontWeight: "500",
               lineHeight: 29,
@@ -100,7 +106,7 @@ export default function DoneScreen() {
           {/* Sub */}
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 14,
               color: Colors.inkSoft,
@@ -159,7 +165,7 @@ export default function DoneScreen() {
                 </Text>
                 <Text
                   style={{
-                    fontFamily: "Georgia",
+                    fontFamily: SERIF,
                     fontSize: 13.5,
                     color: Colors.ink,
                   }}

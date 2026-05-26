@@ -1,5 +1,12 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import { useRef, useEffect, useState, useMemo } from "react";
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useLetters } from "../../src/hooks/useLetters";
@@ -71,7 +78,7 @@ function YearMarker({ year }: { year: string }) {
     >
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 13,
           fontWeight: "700",
           color: Colors.inkSoft,
@@ -126,7 +133,7 @@ function EntryCard({
       {/* Title */}
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 14,
           fontWeight: "600",
           color: Colors.ink,
@@ -275,7 +282,7 @@ export default function TimelineScreen() {
             style={{
               flex: 1,
               textAlign: "center",
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 14,
               color: Colors.inkSoft,
@@ -307,7 +314,7 @@ export default function TimelineScreen() {
             <View style={{ paddingHorizontal: 22, paddingTop: 20, marginBottom: 4 }}>
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF,
                   fontWeight: "500",
                   fontSize: 26,
                   lineHeight: 32,
@@ -388,7 +395,7 @@ export default function TimelineScreen() {
               >
                 <Text
                   style={{
-                    fontFamily: "Georgia",
+                    fontFamily: SERIF,
                     fontSize: 18,
                     fontWeight: "600",
                     color: Colors.ink,
@@ -420,7 +427,7 @@ export default function TimelineScreen() {
                 >
                   <Text
                     style={{
-                      fontFamily: "Georgia",
+                      fontFamily: SERIF,
                       fontSize: 14,
                       color: Colors.cream,
                       fontWeight: "500",

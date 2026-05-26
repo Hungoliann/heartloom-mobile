@@ -1,5 +1,12 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
 import { useRef, useEffect } from "react";
-import { View, Text, Pressable, Animated, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Animated,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -45,7 +52,7 @@ export default function LetterScreen() {
   if (!letterId) {
     return (
       <View style={{ flex: 1, backgroundColor: "#F5E9D6", justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ fontFamily: "Georgia", fontSize: 16, color: Colors.inkSoft }}>No letter selected</Text>
+        <Text style={{ fontFamily: SERIF, fontSize: 16, color: Colors.inkSoft }}>No letter selected</Text>
       </View>
     );
   }
@@ -61,7 +68,7 @@ export default function LetterScreen() {
   if (!letter) {
     return (
       <View style={{ flex: 1, backgroundColor: "#F5E9D6", justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ fontFamily: "Georgia", fontSize: 16, color: Colors.inkSoft }}>Letter not found</Text>
+        <Text style={{ fontFamily: SERIF, fontSize: 16, color: Colors.inkSoft }}>Letter not found</Text>
       </View>
     );
   }
@@ -106,7 +113,7 @@ export default function LetterScreen() {
           >
             <Feather name="x" size={20} color={Colors.inkSoft} />
           </Pressable>
-          <Text style={{ flex: 1, fontSize: 15, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>{letter.title}</Text>
+          <Text style={{ flex: 1, fontSize: 15, fontFamily: SERIF, fontWeight: "600", color: Colors.ink }}>{letter.title}</Text>
           <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4 })}>
             <Feather name="share-2" size={18} color={Colors.inkSoft} />
           </Pressable>
@@ -167,33 +174,33 @@ export default function LetterScreen() {
                 elevation: 4,
               }}
             >
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontWeight: "700", fontSize: 24, color: "#F3C896" }}>{waxInitial}</Text>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontWeight: "700", fontSize: 24, color: "#F3C896" }}>{waxInitial}</Text>
             </Animated.View>
 
             {/* Document header */}
             <View style={{ alignItems: "center", marginBottom: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.1)", paddingRight: 60 }}>
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: "rgba(74,47,24,0.5)", marginBottom: 4 }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: "rgba(74,47,24,0.5)", marginBottom: 4 }}>
                 A Future Letter
               </Text>
-              <Text style={{ fontFamily: "Georgia", fontSize: 11, color: "rgba(74,47,24,0.65)", fontStyle: "italic" }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontSize: 11, color: "rgba(74,47,24,0.65)", fontStyle: "italic" }}>
                 from{" "}
                 <Text style={{ fontSize: 16, fontStyle: "normal", fontWeight: "600", color: "#4A2F18" }}>{authorName}</Text>
               </Text>
             </View>
 
             {/* Letter body */}
-            <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 11, color: "#4A2F18", marginBottom: 12 }}>
+            <Text style={{ fontFamily: SERIF, fontWeight: "600", fontSize: 11, color: "#4A2F18", marginBottom: 12 }}>
               To {recipientName}
             </Text>
 
-            <Text style={{ fontFamily: "Georgia", fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 20 }}>
+            <Text style={{ fontFamily: SERIF, fontSize: 14.5, lineHeight: 23, color: "#2B2118", fontWeight: "500", marginBottom: 20 }}>
               {letter.body ?? "(No content)"}
             </Text>
 
             {/* Sign line */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(169,95,10,0.15)" }}>
               <View style={{ flex: 1, height: 1, backgroundColor: "rgba(74,47,24,0.25)" }} />
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 8.5, letterSpacing: 1.2, color: "rgba(74,47,24,0.45)", textTransform: "uppercase" }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 8.5, letterSpacing: 1.2, color: "rgba(74,47,24,0.45)", textTransform: "uppercase" }}>
                 {signedDate ? `Signed & sealed · ${signedDate}` : "Signed & sealed"}
               </Text>
             </View>

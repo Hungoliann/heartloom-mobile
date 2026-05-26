@@ -1,5 +1,12 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import { useRef, useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -49,7 +56,7 @@ const UTILITY_SUGGESTIONS = [
 const SOFT_SUGGESTIONS = [
   {
     id: "5",
-    icon: "✎",
+    icon: "✏",
     title: "A recipe to pass down",
     sub: "5 minutes · voice + photo",
     route: "/record" as const,
@@ -116,7 +123,7 @@ function SuggestRow({
         <Text
           style={{
             fontSize: 14,
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             color: Colors.ink,
             marginBottom: 2,
           }}
@@ -209,7 +216,7 @@ export default function HomeScreen() {
                   fontSize: 12,
                   letterSpacing: 4.5,
                   textAlign: "center",
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF,
                   color: Colors.ink,
                 }}
               >
@@ -234,7 +241,7 @@ export default function HomeScreen() {
             <View style={{ paddingHorizontal: 22, paddingTop: 22, gap: 4 }}>
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF_ITALIC,
                   fontStyle: "italic",
                   fontSize: 15,
                   color: Colors.inkSoft,
@@ -244,7 +251,7 @@ export default function HomeScreen() {
               </Text>
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF,
                   fontSize: 30,
                   fontWeight: "500",
                   color: Colors.ink,
@@ -284,10 +291,10 @@ export default function HomeScreen() {
                       justifyContent: "center", flexShrink: 0,
                     }}
                   >
-                    <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontWeight: "700", fontSize: 16, color: "#FFF7E9" }}>H</Text>
+                    <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontWeight: "700", fontSize: 16, color: "#FFF7E9" }}>H</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: "Georgia", fontSize: 15, color: "rgba(250,243,226,1)", marginBottom: 2 }}>
+                    <Text style={{ fontFamily: SERIF_ITALIC, fontSize: 15, color: "rgba(250,243,226,1)", marginBottom: 2 }}>
                       {pinnedLetter.recipient_name ? `For ${pinnedLetter.recipient_name}` : pinnedLetter.title}
                     </Text>
                     <Text style={{ fontSize: 11.5, color: "rgba(250,243,226,0.65)" }}>
@@ -299,7 +306,7 @@ export default function HomeScreen() {
                 {pinnedLetter.body ? (
                   <Text
                     style={{
-                      fontFamily: "Georgia", fontStyle: "italic", fontSize: 13,
+                      fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 13,
                       color: "rgba(250,243,226,0.85)", borderLeftWidth: 2,
                       borderLeftColor: Colors.amber, paddingLeft: 10,
                     }}
@@ -325,8 +332,8 @@ export default function HomeScreen() {
                   opacity: pressed ? 0.8 : 1,
                 })}
               >
-                <Text style={{ fontSize: 20, color: Colors.inkMuted }}>✎</Text>
-                <Text style={{ fontFamily: "Georgia", fontSize: 14, color: Colors.inkSoft, textAlign: "center" }}>
+                <Feather name="edit-3" size={20} color={Colors.inkMuted} />
+                <Text style={{ fontFamily: SERIF, fontSize: 14, color: Colors.inkSoft, textAlign: "center" }}>
                   Create your first Future Letter
                 </Text>
                 <Text style={{ fontSize: 12, color: Colors.inkMuted }}>A message that opens when they need it most.</Text>
@@ -376,7 +383,7 @@ export default function HomeScreen() {
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "Georgia",
+                    fontFamily: SERIF,
                     fontSize: 13.5,
                     color: Colors.ink,
                     marginBottom: 1,

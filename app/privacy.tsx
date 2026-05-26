@@ -1,4 +1,10 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF } from "../src/constants/fonts";
+import {
+  View,
+  Text,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -10,7 +16,7 @@ const CONTACT_EMAIL = "privacy@heartloom.com";
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={{ marginBottom: 24 }}>
-      <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.ink, marginBottom: 8, fontFamily: "Georgia" }}>
+      <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.ink, marginBottom: 8, fontFamily: SERIF }}>
         {title}
       </Text>
       {children}
@@ -60,7 +66,7 @@ export default function PrivacyScreen() {
           >
             <Feather name="chevron-left" size={22} color={Colors.inkSoft} />
           </Pressable>
-          <Text style={{ fontSize: 17, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>
+          <Text style={{ fontSize: 17, fontFamily: SERIF, fontWeight: "600", color: Colors.ink }}>
             Privacy Policy
           </Text>
         </View>

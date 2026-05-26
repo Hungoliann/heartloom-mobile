@@ -1,5 +1,12 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import { useRef, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -45,11 +52,11 @@ export default function ProfileScreen() {
           <Animated.View style={{ opacity, transform: [{ translateY: slideY }] }}>
             {/* Lead question */}
             <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 16, lineHeight: 22, color: "#3A2616", fontWeight: "500" }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 16, lineHeight: 22, color: "#3A2616", fontWeight: "500" }}>
                 What would you leave for{" "}
                 <Text style={{ color: "#A95F0A", borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.4)" }}>the people you love most</Text>?
               </Text>
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 10.5, lineHeight: 15, color: "rgba(74,47,24,0.6)", marginTop: 5 }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 10.5, lineHeight: 15, color: "rgba(74,47,24,0.6)", marginTop: 5 }}>
                 Most families spend 18 months untangling. Yours can open a paragraph instead.
               </Text>
             </View>
@@ -104,23 +111,23 @@ export default function ProfileScreen() {
                     elevation: 4,
                   }}
                 >
-                  <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontWeight: "700", fontSize: 18, color: "#F3C896" }}>H</Text>
+                  <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontWeight: "700", fontSize: 18, color: "#F3C896" }}>H</Text>
                 </Animated.View>
 
                 {/* Document header */}
                 <View style={{ alignItems: "center", marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.12)", paddingRight: 44 }}>
-                  <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: "rgba(74,47,24,0.55)", marginBottom: 3, fontWeight: "500" }}>
+                  <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", color: "rgba(74,47,24,0.55)", marginBottom: 3, fontWeight: "500" }}>
                     Last Will & Testament
                   </Text>
-                  <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 12, color: "rgba(74,47,24,0.7)", fontWeight: "500" }}>
-                    of <Text style={{ fontFamily: "Georgia", fontStyle: "normal", fontSize: 17, color: "#4A2F18", fontWeight: "600" }}>{ownerName}</Text>
+                  <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 12, color: "rgba(74,47,24,0.7)", fontWeight: "500" }}>
+                    of <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "normal", fontSize: 17, color: "#4A2F18", fontWeight: "600" }}>{ownerName}</Text>
                   </Text>
                 </View>
 
                 {/* First entry (complete) */}
                 <View style={{ marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: "rgba(169,95,10,0.08)" }}>
-                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To those I love</Text>
-                  <Text style={{ fontFamily: "Georgia", fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
+                  <Text style={{ fontFamily: SERIF, fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>To those I love</Text>
+                  <Text style={{ fontFamily: SERIF, fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
                     I leave everything that matters — the memories, the lessons, and the letters sealed with care.
                   </Text>
                   {/* Delivery pill */}
@@ -128,14 +135,14 @@ export default function ProfileScreen() {
                     <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: "#A95F0A", alignItems: "center", justifyContent: "center" }}>
                       <Text style={{ fontSize: 7, color: "#FBE7C1" }}>✦</Text>
                     </View>
-                    <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 9.5, color: "#6B3F10" }}>Sealed · opens when the time is right</Text>
+                    <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 9.5, color: "#6B3F10" }}>Sealed · opens when the time is right</Text>
                   </View>
                 </View>
 
                 {/* Second entry (in progress) */}
                 <View style={{ marginBottom: 4 }}>
-                  <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>Your next letter</Text>
-                  <Text style={{ fontFamily: "Georgia", fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
+                  <Text style={{ fontFamily: SERIF, fontWeight: "600", fontSize: 10, color: "#4A2F18", marginBottom: 3 }}>Your next letter</Text>
+                  <Text style={{ fontFamily: SERIF, fontSize: 14, lineHeight: 20, color: "#2B2118", fontWeight: "500" }}>
                     Start writing something meaningful…
                     <Text style={{ color: "#A95F0A" }}>|</Text>
                   </Text>
@@ -144,7 +151,7 @@ export default function ProfileScreen() {
                 {/* Sign line */}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: "rgba(169,95,10,0.2)" }}>
                   <View style={{ flex: 1, height: 1, backgroundColor: "rgba(74,47,24,0.35)" }} />
-                  <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 8, letterSpacing: 1.2, color: "rgba(74,47,24,0.55)", textTransform: "uppercase" }}>
+                  <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 8, letterSpacing: 1.2, color: "rgba(74,47,24,0.55)", textTransform: "uppercase" }}>
                     Signed & notarized · Mar 14
                   </Text>
                 </View>
@@ -157,8 +164,8 @@ export default function ProfileScreen() {
                 <View style={{ height: 5, width: "62%", backgroundColor: Colors.amber, borderRadius: 999 }} />
               </View>
               <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5, marginTop: 5 }}>
-                <Text style={{ fontFamily: "Georgia", fontSize: 9.5, fontWeight: "700", letterSpacing: 0.8, color: "#4A2F18", textTransform: "uppercase" }}>Step 3 of 5</Text>
-                <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 9.5, color: "rgba(74,47,24,0.55)" }}>· about 4 minutes left</Text>
+                <Text style={{ fontFamily: SERIF, fontSize: 9.5, fontWeight: "700", letterSpacing: 0.8, color: "#4A2F18", textTransform: "uppercase" }}>Step 3 of 5</Text>
+                <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 9.5, color: "rgba(74,47,24,0.55)" }}>· about 4 minutes left</Text>
               </View>
             </View>
 
@@ -183,7 +190,7 @@ export default function ProfileScreen() {
                   elevation: 5,
                 })}
               >
-                <Text style={{ fontFamily: "Georgia", fontWeight: "600", fontSize: 13, color: "#FBF2DD", letterSpacing: 0.2 }}>Continue where I left off</Text>
+                <Text style={{ fontFamily: SERIF, fontWeight: "600", fontSize: 13, color: "#FBF2DD", letterSpacing: 0.2 }}>Continue where I left off</Text>
                 <Text style={{ fontSize: 13, color: Colors.amber }}>→</Text>
               </Pressable>
             </View>
@@ -191,7 +198,7 @@ export default function ProfileScreen() {
             {/* Trust line */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingHorizontal: 20, marginBottom: 28 }}>
               <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#6F8564", shadowColor: "#6F8564", shadowRadius: 4, shadowOpacity: 0.4 }} />
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 9.5, color: "rgba(74,47,24,0.62)", textAlign: "center", lineHeight: 14 }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 9.5, color: "rgba(74,47,24,0.62)", textAlign: "center", lineHeight: 14 }}>
                 Reviewed by an estate attorney in California · Notarized in app
               </Text>
             </View>

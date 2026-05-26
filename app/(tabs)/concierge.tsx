@@ -1,8 +1,9 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import { useRef, useEffect } from "react";
 import {
   View,
   Text,
-  Pressable,
   ScrollView,
   Animated,
   Alert,
@@ -131,7 +132,7 @@ function TaskRow({ task }: { task: Task }) {
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             fontSize: 14.5,
             color: Colors.ink,
             lineHeight: 20,
@@ -141,7 +142,7 @@ function TaskRow({ task }: { task: Task }) {
         </Text>
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF_ITALIC,
             fontStyle: "italic",
             fontSize: 12,
             color: Colors.inkSoft,
@@ -241,7 +242,7 @@ export default function ConciergeScreen() {
             style={{
               flex: 1,
               textAlign: "center",
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 14,
               color: Colors.inkSoft,
@@ -309,7 +310,7 @@ export default function ConciergeScreen() {
                   >
                     <Text
                       style={{
-                        fontFamily: "Georgia",
+                        fontFamily: SERIF,
                         fontSize: 22,
                         color: "#FFFFFF",
                         fontWeight: "600",
@@ -339,7 +340,7 @@ export default function ConciergeScreen() {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      fontFamily: "Georgia",
+                      fontFamily: SERIF,
                       fontSize: 16,
                       color: Colors.ink,
                       lineHeight: 21,
@@ -349,7 +350,7 @@ export default function ConciergeScreen() {
                   </Text>
                   <Text
                     style={{
-                      fontFamily: "Georgia",
+                      fontFamily: SERIF_ITALIC,
                       fontStyle: "italic",
                       fontSize: 12,
                       color: Colors.inkMuted,
@@ -553,7 +554,7 @@ export default function ConciergeScreen() {
 
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF_ITALIC,
                   fontStyle: "italic",
                   fontSize: 18,
                   lineHeight: 24,
@@ -567,7 +568,7 @@ export default function ConciergeScreen() {
 
               <Text
                 style={{
-                  fontFamily: "Georgia",
+                  fontFamily: SERIF_ITALIC,
                   fontStyle: "italic",
                   fontSize: 13,
                   color: "rgba(245,224,165,0.78)",

@@ -1,8 +1,9 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
-  Pressable,
   TextInput,
   ScrollView,
   Animated,
@@ -707,7 +708,7 @@ function StepRecipient({
     <View>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 30,
           color: Colors.ink,
           lineHeight: 40,
@@ -749,7 +750,7 @@ function StepRecipient({
           placeholder="Maya"
           placeholderTextColor="rgba(74,61,46,0.28)"
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             fontSize: 20,
             color: Colors.ink,
             borderBottomWidth: 1.5,
@@ -838,7 +839,7 @@ function StepSeed({
     <View>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 28,
           color: Colors.ink,
           lineHeight: 36,
@@ -866,7 +867,7 @@ function StepSeed({
       >
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             fontSize: 15,
             color: Colors.inkMuted,
             lineHeight: 22,
@@ -878,7 +879,7 @@ function StepSeed({
         </Text>
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             fontSize: 22,
             fontWeight: "600",
             color: Colors.ink,
@@ -891,7 +892,7 @@ function StepSeed({
         </Text>
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             fontSize: 15,
             color: Colors.inkMuted,
             lineHeight: 22,
@@ -917,7 +918,7 @@ function StepSeed({
 
       <View style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
         <GhostBtn label="⤿  Shuffle prompt" onPress={onShuffle} />
-        <GhostBtn label="✎  Write my own" />
+        <GhostBtn label="✏  Write my own" />
       </View>
 
       <PrimaryBtn label="I'm ready to record" onPress={onNext} />
@@ -990,7 +991,7 @@ function StepMicCheck({
     <View style={{ alignItems: "center" }}>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 26,
           color: Colors.ink,
           lineHeight: 36,
@@ -1218,7 +1219,7 @@ function StepRecording({
         <WaveformBars active={isRecording && !isPaused} meteringLevel={meteringLevel} />
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             fontSize: 44,
             color: isRecording ? Colors.amber : Colors.inkMuted,
             fontWeight: "300",
@@ -1261,7 +1262,7 @@ function StepRecording({
       >
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF_ITALIC,
             fontStyle: "italic",
             fontSize: 14,
             color: Colors.inkMuted,
@@ -1417,7 +1418,7 @@ function StepReview({
     <View>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 28,
           color: Colors.ink,
           lineHeight: 38,
@@ -1454,7 +1455,7 @@ function StepReview({
         >
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 28,
               fontWeight: "300",
               color: Colors.ink,
@@ -1545,7 +1546,7 @@ function StepReview({
         {/* Transcript snippet */}
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF_ITALIC,
             fontStyle: "italic",
             fontSize: 13.5,
             color: Colors.inkSoft,
@@ -1607,7 +1608,7 @@ function StepSeal({
     <View>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 28,
           color: Colors.ink,
           lineHeight: 38,
@@ -1653,7 +1654,7 @@ function StepSeal({
           placeholder="Your full name"
           placeholderTextColor="rgba(74,61,46,0.28)"
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF,
             fontSize: 22,
             color: Colors.ink,
             borderBottomWidth: 1.5,
@@ -1676,7 +1677,7 @@ function StepSeal({
         {!isSealed && (
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 12,
               color: Colors.inkMuted,
@@ -1769,7 +1770,7 @@ function StepDeliver({
     <View>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 28,
           color: Colors.ink,
           lineHeight: 38,
@@ -1868,7 +1869,7 @@ function StepCertificate({
     <View>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF,
           fontSize: 27,
           color: Colors.ink,
           lineHeight: 36,
@@ -1956,7 +1957,7 @@ function StepCertificate({
           </Text>
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 15,
               color: "rgba(45,36,26,0.8)",
@@ -1987,7 +1988,7 @@ function StepCertificate({
           </Text>
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 20,
               fontWeight: "600",
               color: Colors.ink,
@@ -2009,7 +2010,7 @@ function StepCertificate({
           </Text>
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 19,
               fontWeight: "600",
               color: Colors.amberDeep,

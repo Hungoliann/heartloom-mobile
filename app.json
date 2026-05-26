@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Heartloom uses the camera to capture photos for your memory archive.",
         "NSPhotoLibraryUsageDescription": "Heartloom accesses your photo library to attach images to memories.",
-        "NSMicrophoneUsageDescription": "Heartloom needs microphone access to record voice memories for your family."
+        "NSMicrophoneUsageDescription": "Heartloom needs microphone access to record voice memories for your family.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -45,7 +46,8 @@
           "microphonePermission": "Heartloom needs microphone access to record voice memories."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ],
     "scheme": "heartloom",
     "extra": {

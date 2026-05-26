@@ -5,6 +5,13 @@ import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import {
+  useFonts,
+  Lora_400Regular,
+  Lora_400Regular_Italic,
+  Lora_500Medium,
+  Lora_500Medium_Italic,
+} from "@expo-google-fonts/lora";
 import { useAuthStore } from "../src/store/auth.store";
 import { supabase } from "../src/lib/supabase";
 import "../global.css";
@@ -97,6 +104,15 @@ function PushNotificationBootstrap() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Lora_400Regular,
+    Lora_400Regular_Italic,
+    Lora_500Medium,
+    Lora_500Medium_Italic,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <ErrorBoundary>
     <QueryClientProvider client={queryClient}>

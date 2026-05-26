@@ -1,9 +1,10 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
 import React, { useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
   ScrollView,
-  Pressable,
   Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -117,7 +118,7 @@ export default function Planner() {
             style={{
               flex: 1,
               textAlign: "center",
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 14,
               color: Colors.inkSoft,
@@ -162,7 +163,7 @@ export default function Planner() {
           {/* Display heading */}
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 24,
               fontWeight: "500",
               color: Colors.ink,

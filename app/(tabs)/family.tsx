@@ -1,5 +1,15 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import { useRef, useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Animated, Share, Alert, Platform } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+  Share,
+  Alert,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useFamily } from "../../src/hooks/useFamily";
@@ -61,7 +71,7 @@ function InviteCard({ onPress }: { onPress: () => void }) {
     >
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF_ITALIC,
           fontStyle: "italic",
           fontSize: 14,
           color: Colors.inkMuted,
@@ -185,7 +195,7 @@ export default function FamilyScreen() {
               <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: Colors.inkMuted, marginBottom: 6 }}>
                 Your circle
               </Text>
-              <Text style={{ fontFamily: "Georgia", fontSize: 28, color: Colors.ink, lineHeight: 34, marginBottom: 4 }}>
+              <Text style={{ fontFamily: SERIF, fontSize: 28, color: Colors.ink, lineHeight: 34, marginBottom: 4 }}>
                 The Family
               </Text>
               <Text style={{ fontSize: 14, color: Colors.inkMuted }}>
@@ -238,7 +248,7 @@ export default function FamilyScreen() {
                   })}
                 </View>
 
-                <Text style={{ fontFamily: "Georgia", fontSize: 20, color: Colors.white, marginBottom: 4 }}>
+                <Text style={{ fontFamily: SERIF, fontSize: 20, color: Colors.white, marginBottom: 4 }}>
                   The Family
                 </Text>
                 <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>

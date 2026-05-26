@@ -1,3 +1,4 @@
+import { SERIF } from "../constants/fonts";
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { Colors } from "../constants/colors";
@@ -22,7 +23,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
 
     return (
       <View style={{ flex: 1, backgroundColor: Colors.cream, alignItems: "center", justifyContent: "center", padding: 32 }}>
-        <Text style={{ fontFamily: "Georgia", fontSize: 22, fontWeight: "600", color: Colors.ink, textAlign: "center", marginBottom: 12 }}>
+        <Text style={{ fontFamily: SERIF, fontSize: 22, fontWeight: "600", color: Colors.ink, textAlign: "center", marginBottom: 12 }}>
           Something went wrong.
         </Text>
         <Text style={{ fontSize: 13, color: Colors.inkMuted, textAlign: "center", lineHeight: 20, marginBottom: 28 }}>

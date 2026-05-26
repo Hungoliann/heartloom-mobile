@@ -1,8 +1,9 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
-  Pressable,
   ScrollView,
   Animated,
   TextInput,
@@ -118,7 +119,7 @@ function AudioCard({ audio }: { audio: AudioAttach }) {
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            fontFamily: "Georgia",
+            fontFamily: SERIF_ITALIC,
             fontStyle: "italic",
             fontSize: 13,
             color: Colors.ink,
@@ -202,7 +203,7 @@ function ScheduledMsg({ msg }: { msg: Msg }) {
       </Text>
       <Text
         style={{
-          fontFamily: "Georgia",
+          fontFamily: SERIF_ITALIC,
           fontStyle: "italic",
           fontSize: 12.5,
           color: Colors.inkSoft,
@@ -483,7 +484,7 @@ export default function ChatScreen() {
               >
                 <Text
                   style={{
-                    fontFamily: "Georgia",
+                    fontFamily: SERIF,
                     fontSize: 14,
                     color: Colors.white,
                     fontWeight: "600",
@@ -496,7 +497,7 @@ export default function ChatScreen() {
               <View style={{ flexShrink: 1 }}>
                 <Text
                   style={{
-                    fontFamily: "Georgia",
+                    fontFamily: SERIF,
                     fontSize: 14.5,
                     color: Colors.ink,
                     lineHeight: 18,

@@ -1,5 +1,14 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
 import { useRef, useEffect, useState } from "react";
-import { View, Text, Pressable, Animated, Switch, Linking, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Animated,
+  Switch,
+  Linking,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -57,7 +66,7 @@ export default function SettingsScreen() {
           >
             <Feather name="chevron-left" size={22} color={Colors.inkSoft} />
           </Pressable>
-          <Text style={{ fontSize: 17, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>Settings</Text>
+          <Text style={{ fontSize: 17, fontFamily: SERIF, fontWeight: "600", color: Colors.ink }}>Settings</Text>
         </View>
 
         <Animated.ScrollView
@@ -83,12 +92,12 @@ export default function SettingsScreen() {
             }}
           >
             <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.amber, alignItems: "center", justifyContent: "center", shadowColor: Colors.amber, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 6, elevation: 3 }}>
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontWeight: "700", fontSize: 22, color: Colors.white }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontWeight: "700", fontSize: 22, color: Colors.white }}>
                 {initial}
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 16, fontFamily: "Georgia", fontWeight: "600", color: Colors.ink }}>{user?.name ?? "Eleanor M. Hayes"}</Text>
+              <Text style={{ fontSize: 16, fontFamily: SERIF, fontWeight: "600", color: Colors.ink }}>{user?.name ?? "Eleanor M. Hayes"}</Text>
               <Text style={{ fontSize: 12, color: Colors.inkMuted, marginTop: 2 }}>{user?.email ?? "eleanor@example.com"}</Text>
             </View>
             <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, padding: 4 })}>

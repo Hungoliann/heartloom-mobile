@@ -1,8 +1,9 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF } from "../../src/constants/fonts";
 import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
-  Pressable,
   TextInput,
   Animated,
   KeyboardAvoidingView,
@@ -113,10 +114,10 @@ export default function SignUpScreen() {
             <Animated.View style={{ opacity, transform: [{ translateY }] }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 28, marginTop: 8 }}>
                 <View style={{ width: 18, height: 18, backgroundColor: AMBER, transform: [{ rotate: "45deg" }], borderRadius: 3 }} />
-                <Text style={{ fontFamily: "Georgia", fontSize: 22, color: INK, letterSpacing: 1 }}>Heartloom</Text>
+                <Text style={{ fontFamily: SERIF, fontSize: 22, color: INK, letterSpacing: 1 }}>Heartloom</Text>
               </View>
 
-              <Text style={{ fontFamily: "Georgia", fontSize: 28, lineHeight: 38, color: INK, marginBottom: 8 }}>
+              <Text style={{ fontFamily: SERIF, fontSize: 28, lineHeight: 38, color: INK, marginBottom: 8 }}>
                 Begin your{"\n"}legacy.
               </Text>
               <Text style={{ fontSize: 15, lineHeight: 24, color: MUTED, marginBottom: 32 }}>

@@ -1,5 +1,12 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView, Linking } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Linking,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Colors } from "../src/constants/colors";
@@ -103,7 +110,7 @@ export default function PlansScreen() {
             style={{
               flex: 1,
               textAlign: "center",
-              fontFamily: "Georgia",
+              fontFamily: SERIF_ITALIC,
               fontStyle: "italic",
               fontSize: 14,
               color: Colors.inkSoft,
@@ -138,7 +145,7 @@ export default function PlansScreen() {
           {/* Heading */}
           <Text
             style={{
-              fontFamily: "Georgia",
+              fontFamily: SERIF,
               fontSize: 24,
               fontWeight: "500",
               lineHeight: 29,
@@ -260,7 +267,7 @@ export default function PlansScreen() {
                   >
                     <Text
                       style={{
-                        fontFamily: "Georgia",
+                        fontFamily: SERIF,
                         fontSize: 17,
                         fontWeight: "500",
                         color: isAnchor ? Colors.cream : Colors.ink,
@@ -278,7 +285,7 @@ export default function PlansScreen() {
                     >
                       <Text
                         style={{
-                          fontFamily: "Georgia",
+                          fontFamily: SERIF,
                           fontSize: 22,
                           fontWeight: "500",
                           color: isAnchor ? Colors.cream : Colors.ink,

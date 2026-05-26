@@ -1,5 +1,12 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
 import { useRef, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, Animated } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Animated,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -48,7 +55,7 @@ export default function LegacyScreen() {
             <Text style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "#8C7B65", marginBottom: 6 }}>
               Your archive
             </Text>
-            <Text style={{ fontFamily: "Georgia", fontSize: 28, color: "#2C1F0E", lineHeight: 34 }}>
+            <Text style={{ fontFamily: SERIF, fontSize: 28, color: "#2C1F0E", lineHeight: 34 }}>
               Future Letters
             </Text>
             <Text style={{ fontSize: 14, color: "#8C7B65", marginTop: 6 }}>
@@ -67,7 +74,7 @@ export default function LegacyScreen() {
                 key={stat.label}
                 style={{ flex: 1, backgroundColor: "#FFFFFF", borderRadius: 14, padding: 14, alignItems: "center", borderWidth: 1, borderColor: "#EDE4D4" }}
               >
-                <Text style={{ fontFamily: "Georgia", fontSize: 22, color: stat.color, fontWeight: "600" }}>{stat.value}</Text>
+                <Text style={{ fontFamily: SERIF, fontSize: 22, color: stat.color, fontWeight: "600" }}>{stat.value}</Text>
                 <Text style={{ fontSize: 11, color: "#8C7B65", marginTop: 2, letterSpacing: 0.5 }}>{stat.label}</Text>
               </View>
             ))}
@@ -87,7 +94,7 @@ export default function LegacyScreen() {
             {!isLoading && letters.length === 0 && (
               <View style={{ alignItems: "center", paddingVertical: 48, gap: 12 }}>
                 <Text style={{ fontSize: 32 }}>✉</Text>
-                <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 20, color: "#2C1F0E", textAlign: "center" }}>
+                <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 20, color: "#2C1F0E", textAlign: "center" }}>
                   No letters yet.
                 </Text>
                 <Text style={{ fontSize: 14, color: "#8C7B65", textAlign: "center", paddingHorizontal: 32 }}>
@@ -157,7 +164,7 @@ export default function LegacyScreen() {
                   </View>
 
                   {/* Title */}
-                  <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 17, color: "#2C1F0E", lineHeight: 24, marginBottom: 8 }}>
+                  <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 17, color: "#2C1F0E", lineHeight: 24, marginBottom: 8 }}>
                     "{letter.title}"
                   </Text>
 

@@ -1,9 +1,10 @@
+import { Pressable } from "../../src/components/ui/Pressable";
+import { SERIF_ITALIC } from "../../src/constants/fonts";
 import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
-  Pressable,
   Animated,
   KeyboardAvoidingView,
   Platform,
@@ -77,7 +78,7 @@ export default function SignInScreen() {
                 </Text>
               </View>
 
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 26, lineHeight: 34, color: Colors.cream, textAlign: "center", marginBottom: 8, fontWeight: "500" }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 26, lineHeight: 34, color: Colors.cream, textAlign: "center", marginBottom: 8, fontWeight: "500" }}>
                 Welcome back.{"\n"}
                 <Text style={{ color: Colors.amber }}>Your letters are waiting.</Text>
               </Text>
@@ -122,10 +123,12 @@ export default function SignInScreen() {
                 onPress={handleSignIn}
                 disabled={!canContinue || isSubmitting}
                 style={({ pressed }) => ({
-                  backgroundColor: canContinue ? Colors.amber : "rgba(210,127,20,0.28)",
+                  backgroundColor: canContinue ? Colors.amber : "rgba(210,127,20,0.55)",
                   borderRadius: 14,
                   paddingVertical: 16,
                   alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: canContinue ? "transparent" : "rgba(210,127,20,0.7)",
                   opacity: pressed ? 0.85 : 1,
                   marginBottom: 12,
                   shadowColor: Colors.amber,
@@ -138,7 +141,7 @@ export default function SignInScreen() {
                 {isSubmitting ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={{ fontSize: 15, fontWeight: "600", color: canContinue ? "#FFFFFF" : "rgba(250,243,226,0.4)" }}>
+                  <Text style={{ fontSize: 15, fontWeight: "600", color: canContinue ? "#FFFFFF" : "rgba(250,243,226,0.85)" }}>
                     Sign in
                   </Text>
                 )}

@@ -1,7 +1,18 @@
+import { Pressable } from "../src/components/ui/Pressable";
+import { SERIF_ITALIC } from "../src/constants/fonts";
 import { useState, useRef, useEffect } from "react";
-import { View, Text, TextInput, Pressable, Animated, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/constants/colors";
 
 const BG = "#1A1108";
@@ -58,11 +69,11 @@ export default function OnboardingFormScreen() {
                 </Text>
               </View>
 
-              <Text style={{ fontFamily: "Georgia", fontStyle: "italic", fontSize: 27, lineHeight: 36, color: Colors.cream, textAlign: "center", marginBottom: 10, fontWeight: "500" }}>
+              <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 27, lineHeight: 36, color: Colors.cream, textAlign: "center", marginBottom: 10, fontWeight: "500" }}>
                 What is one thing{"\n"}you want them{"\n"}to{" "}
                 <Text style={{ color: Colors.amber, fontStyle: "italic" }}>know forever?</Text>
               </Text>
-              <Text style={{ fontSize: 13.5, color: CREAM_DIM, textAlign: "center", lineHeight: 20, marginBottom: 34, fontFamily: "Georgia" }}>
+              <Text style={{ fontSize: 13.5, color: CREAM_DIM, textAlign: "center", lineHeight: 20, marginBottom: 34, fontFamily: SERIF_ITALIC }}>
                 A sentence is enough. We'll thread it into something that lasts.
               </Text>
 
@@ -102,6 +113,11 @@ export default function OnboardingFormScreen() {
                   elevation: canContinue ? 6 : 0,
                 })}
               >
+                <Ionicons
+                  name="create-outline"
+                  size={17}
+                  color={canContinue ? "#FFFFFF" : "rgba(250,243,226,0.4)"}
+                />
                 <Text style={{ fontSize: 15, fontWeight: "600", color: canContinue ? "#FFFFFF" : "rgba(250,243,226,0.4)" }}>
                   Draft Your First Future Letter
                 </Text>
