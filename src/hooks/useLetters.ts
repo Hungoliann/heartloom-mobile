@@ -67,8 +67,7 @@ export function useCreateLetter() {
 
       const { data, error } = await supabase
         .from("letters")
-        // family_id is nullable in the schema; generated types haven't been refreshed yet.
-        .insert({ ...letter, author_id: user.id, family_id: familyId as string })
+        .insert({ ...letter, author_id: user.id, family_id: familyId })
         .select()
         .single();
       if (error) throw error;

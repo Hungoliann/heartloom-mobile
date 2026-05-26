@@ -120,6 +120,32 @@ export default function SignInScreen() {
               ) : null}
 
               <Pressable
+                onPress={async () => {
+                  const target = email.trim().toLowerCase();
+                  if (!target) {
+                    setError("Type your email above first.");
+                    return;
+                  }
+                  setError("");
+                  const { error: e } = await supabase.auth.resetPasswordForEmail(
+                    target,
+                    { redirectTo: "heartloom://reset-password" }
+                  );
+                  if (e) setError(e.message);
+                  else setError("Check your email for a reset link.");
+                }}
+                style={({ pressed }) => ({
+                  alignSelf: "flex-end",
+                  paddingVertical: 6,
+                  paddingHorizontal: 4,
+                  marginBottom: 6,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <Text style={{ fontSize: 12, color: CREAM_DIM }}>Forgot password?</Text>
+              </Pressable>
+
+              <Pressable
                 onPress={handleSignIn}
                 disabled={!canContinue || isSubmitting}
                 style={({ pressed }) => ({

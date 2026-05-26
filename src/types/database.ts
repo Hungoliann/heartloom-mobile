@@ -117,6 +117,47 @@ export type Database = {
         }
         Relationships: []
       }
+      family_invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          family_id: string
+          id: string
+          invite_code: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          family_id: string
+          id?: string
+          invite_code: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          family_id?: string
+          id?: string
+          invite_code?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_invites_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       letters: {
         Row: {
           author_id: string
@@ -124,7 +165,7 @@ export type Database = {
           created_at: string | null
           deliver_at: string | null
           delivered_at: string | null
-          family_id: string
+          family_id: string | null
           id: string
           media_type: string | null
           media_url: string | null
@@ -138,7 +179,7 @@ export type Database = {
           created_at?: string | null
           deliver_at?: string | null
           delivered_at?: string | null
-          family_id: string
+          family_id?: string | null
           id?: string
           media_type?: string | null
           media_url?: string | null
@@ -152,7 +193,7 @@ export type Database = {
           created_at?: string | null
           deliver_at?: string | null
           delivered_at?: string | null
-          family_id?: string
+          family_id?: string | null
           id?: string
           media_type?: string | null
           media_url?: string | null
@@ -237,6 +278,7 @@ export type Database = {
           family_id: string | null
           full_name: string | null
           id: string
+          push_token: string | null
           updated_at: string | null
         }
         Insert: {
@@ -245,6 +287,7 @@ export type Database = {
           family_id?: string | null
           full_name?: string | null
           id: string
+          push_token?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -253,6 +296,7 @@ export type Database = {
           family_id?: string | null
           full_name?: string | null
           id?: string
+          push_token?: string | null
           updated_at?: string | null
         }
         Relationships: []

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 import { Stack, useRouter, SplashScreen } from "expo-router";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -63,7 +63,21 @@ function PushNotificationBootstrap() {
         await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
-      if (existingStatus !== "granted") {
+      // First-time ask: show our own rationale BEFORE the OS prompt.
+      // Apple App Store reviewers flag apps that show the system prompt cold.
+      if (existingStatus === "undetermined") {
+        const consented = await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            "Stay connected to your letters",
+            "We'll send a quiet notification on the day each letter you've written is meant to open — and nothing else.",
+            [
+              { text: "Not now", style: "cancel", onPress: () => resolve(false) },
+              { text: "Allow notifications", onPress: () => resolve(true) },
+            ],
+            { cancelable: false }
+          );
+        });
+        if (!consented) return;
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
       }
@@ -89,8 +103,7 @@ function PushNotificationBootstrap() {
         if (user?.id) {
           const { error: profileErr } = await supabase
             .from("profiles")
-            // push_token column added via SETUP.sql; generated types haven't been refreshed yet.
-            .update({ push_token: tokenData.data } as never)
+            .update({ push_token: tokenData.data })
             .eq("id", user.id);
           if (profileErr) {
             console.warn("[push] failed to write profiles.push_token:", profileErr.message);
