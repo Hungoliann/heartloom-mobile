@@ -30,6 +30,7 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
 } from "expo-audio";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 // ─── Design tokens (light / parchment theme matching prototype) ───────────────
 const RULE = "rgba(74,61,46,0.18)";
@@ -114,22 +115,22 @@ function WaxSeal({ size = 140 }: { size?: number }) {
         <Circle cx={70} cy={114} r={1.4} />
         <Circle cx={26} cy={70} r={1.4} />
       </G>
-      <G transform="translate(70, 70)">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <SvgText
-          textAnchor="middle"
-          {...({ dominantBaseline: "central" } as any)}
-          fontFamily="Georgia, serif"
-          fontStyle="italic"
-          fontWeight="500"
-          fontSize={56}
-          fill="#fff1d4"
-          stroke="rgba(54,22,5,0.45)"
-          strokeWidth={0.6}
-        >
-          H
-        </SvgText>
-      </G>
+      {/* Manually offset y so the visual center of the capital lands at 70, since
+          React Native SVG ignores dominantBaseline on Android. */}
+      <SvgText
+        x={70}
+        y={89}
+        textAnchor="middle"
+        fontFamily="Georgia, serif"
+        fontStyle="italic"
+        fontWeight="500"
+        fontSize={56}
+        fill="#fff1d4"
+        stroke="rgba(54,22,5,0.45)"
+        strokeWidth={0.6}
+      >
+        H
+      </SvgText>
     </Svg>
   );
 }
@@ -150,12 +151,10 @@ function SmallWaxSeal({ size = 80 }: { size?: number }) {
       <Circle cx={40} cy={40} r={32} fill="url(#certWax)" />
       <Circle cx={40} cy={40} r={27} fill="none" stroke="rgba(255,228,180,0.35)" strokeWidth={0.5} />
       <Circle cx={40} cy={40} r={24} fill="none" stroke="rgba(60,24,6,0.45)" strokeWidth={0.4} strokeDasharray="1.4 2.2" />
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <SvgText
         x={40}
-        y={40}
+        y={52}
         textAnchor="middle"
-        {...({ dominantBaseline: "central" } as any)}
         fontFamily="Georgia, serif"
         fontStyle="italic"
         fontSize={34}
@@ -250,9 +249,10 @@ async function uploadAudio(uri: string, userId: string): Promise<string | null> 
 }
 
 // ─── Delivery date helper ─────────────────────────────────────────────────────
-function getDeliverAt(option: string): string | null {
+function getDeliverAt(option: string, customDate?: Date | null): string | null {
   if (option === "now") return new Date().toISOString();
   if (option === "date") {
+    if (customDate) return customDate.toISOString();
     const d = new Date();
     d.setFullYear(d.getFullYear() + 1);
     return d.toISOString();
@@ -327,6 +327,8 @@ export default function RecordScreen() {
 
   // Step 6 – Deliver
   const [deliveryOption, setDeliveryOption] = useState("date");
+  const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Step 7 – Certificate
@@ -425,7 +427,7 @@ export default function RecordScreen() {
           await updateLetter.mutateAsync({
             id: editLetterId,
             recipient_name: recipient.trim() || null,
-            deliver_at: getDeliverAt(deliveryOption),
+            deliver_at: getDeliverAt(deliveryOption, deliveryDate),
             ...(mediaUrl ? { media_type: "audio" as const, media_url: mediaUrl } : {}),
           });
         } else {
@@ -445,7 +447,7 @@ export default function RecordScreen() {
             title,
             body,
             recipient_name: recipient.trim() || null,
-            deliver_at: getDeliverAt(deliveryOption),
+            deliver_at: getDeliverAt(deliveryOption, deliveryDate),
             media_type: mediaUrl ? "audio" : null,
             media_url: mediaUrl,
           });
@@ -675,6 +677,8 @@ export default function RecordScreen() {
                 name={name}
                 deliveryOption={deliveryOption}
                 setDeliveryOption={setDeliveryOption}
+                deliveryDate={deliveryDate}
+                onPickDate={() => setShowDatePicker(true)}
                 onNext={handleGoNext}
                 isSaving={isSaving}
               />
@@ -692,7 +696,7 @@ export default function RecordScreen() {
                     pathname: "/done",
                     params: {
                       recipientName: recipient,
-                      opensAt: getDeliverAt(deliveryOption) ?? "",
+                      opensAt: getDeliverAt(deliveryOption, deliveryDate) ?? "",
                       certNo,
                     },
                   } as any)
@@ -703,6 +707,28 @@ export default function RecordScreen() {
           </ScrollView>
         </Animated.View>
       </SafeAreaView>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={deliveryDate ?? (() => {
+            const d = new Date();
+            d.setFullYear(d.getFullYear() + 1);
+            return d;
+          })()}
+          mode="date"
+          display={Platform.OS === "ios" ? "inline" : "default"}
+          minimumDate={new Date()}
+          onChange={(event, picked) => {
+            // Android closes immediately; iOS keeps it open until user dismisses.
+            if (Platform.OS !== "ios") setShowDatePicker(false);
+            if (event.type === "dismissed") {
+              setShowDatePicker(false);
+              return;
+            }
+            if (picked) setDeliveryDate(picked);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -1806,15 +1832,26 @@ function StepDeliver({
   name,
   deliveryOption,
   setDeliveryOption,
+  deliveryDate,
+  onPickDate,
   onNext,
   isSaving,
 }: {
   name: string;
   deliveryOption: string;
   setDeliveryOption: (v: string) => void;
+  deliveryDate: Date | null;
+  onPickDate: () => void;
   onNext: () => void;
   isSaving?: boolean;
 }) {
+  const formattedDate = deliveryDate
+    ? deliveryDate.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
   return (
     <View>
       <Text
@@ -1837,10 +1874,15 @@ function StepDeliver({
             opt.id === "milestone"
               ? `"When ${name} gets engaged"`
               : opt.sub;
+          const displayValue =
+            opt.id === "date" && formattedDate ? formattedDate : opt.value;
           return (
             <AnimatedPressable
               key={opt.id}
-              onPress={() => setDeliveryOption(opt.id)}
+              onPress={() => {
+                setDeliveryOption(opt.id);
+                if (opt.id === "date") onPickDate();
+              }}
               style={{
                 backgroundColor: on ? CHIP_ON_BG : CARD_BG,
                 borderRadius: 14,
@@ -1869,7 +1911,7 @@ function StepDeliver({
                   {sub}
                 </Text>
               ) : null}
-              {opt.value && on && (
+              {displayValue && on && (
                 <Text
                   style={{
                     fontSize: 13,
@@ -1878,7 +1920,8 @@ function StepDeliver({
                     fontWeight: "500",
                   }}
                 >
-                  {opt.value}
+                  {displayValue}
+                  {opt.id === "date" ? "  ·  tap to change" : ""}
                 </Text>
               )}
             </AnimatedPressable>
