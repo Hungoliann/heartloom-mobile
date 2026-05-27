@@ -378,10 +378,137 @@ app.post("/api/inngest/messages/inserted", async (req, res) => {
   return res.status(200).json({ ok: true });
 });
 
+// ─── Letter audio transcription webhook ──────────────────────────────────────
+app.post("/api/inngest/letters/audio-uploaded", async (req, res) => {
+  const secret = req.headers["x-webhook-secret"];
+  if (secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+
+  const { type, record } = req.body ?? {};
+  if (type !== "INSERT" || !record) {
+    return res.status(200).json({ skipped: true, reason: "not an insert" });
+  }
+
+  if (!record.media_url || record.media_type !== "audio") {
+    console.log(`[transcribe-webhook] letter=${record.id} skipped — no audio`);
+    return res.status(200).json({ skipped: true, reason: "no audio to transcribe" });
+  }
+
+  const letterId = record.id as string;
+  const mediaUrl = record.media_url as string;
+  console.log(`[transcribe-webhook] received letter=${letterId} media=${mediaUrl}`);
+
+  try {
+    await inngest.send({
+      name: "letter/transcribe",
+      data: { letterId, mediaUrl },
+    });
+  } catch (e: any) {
+    console.error(`[transcribe-webhook] inngest.send failed:`, e?.message ?? e);
+    return res.status(500).json({ error: "inngest send failed" });
+  }
+
+  return res.status(200).json({ ok: true });
+});
+
+// ─── Inngest function: Whisper transcription ─────────────────────────────────
+const transcribeLetter = inngest.createFunction(
+  { id: "letter-transcribe", name: "Letter: Whisper Transcribe" },
+  { event: "letter/transcribe" },
+  async ({ event, step }: { event: any; step: any }) => {
+    const { letterId, mediaUrl } = event.data as {
+      letterId: string;
+      mediaUrl: string;
+    };
+
+    // Mark as pending
+    await step.run("mark-pending", async () => {
+      await supabase
+        .from("letters")
+        .update({ transcript_status: "pending" })
+        .eq("id", letterId);
+      console.log(`[transcribe] letter=${letterId} status=pending`);
+    });
+
+    // Get a signed URL for the audio file
+    const signedUrl: string = await step.run("get-signed-url", async () => {
+      const { data, error } = await supabase.storage
+        .from("voice-memos")
+        .createSignedUrl(mediaUrl, 600);
+      if (error) throw error;
+      return data.signedUrl;
+    });
+
+    // Download the audio
+    const audioBuffer: ArrayBuffer = await step.run("download-audio", async () => {
+      const resp = await fetch(signedUrl);
+      if (!resp.ok) throw new Error(`Audio download failed: ${resp.status}`);
+      return resp.arrayBuffer();
+    });
+
+    // Call Whisper API
+    const transcript: string | null = await step.run("whisper-transcribe", async () => {
+      const ext = mediaUrl.split(".").pop() ?? "m4a";
+      const blob = new Blob([audioBuffer], { type: `audio/${ext}` });
+
+      const form = new FormData();
+      form.append("file", blob, `audio.${ext}`);
+      form.append("model", "whisper-1");
+
+      const resp = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: form,
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.error(`[transcribe] whisper error ${resp.status}:`, errText);
+        // Mark as failed — don't throw so Inngest doesn't retry on a permanent error
+        await supabase
+          .from("letters")
+          .update({
+            transcript_status: "failed",
+            transcript_error: `Whisper ${resp.status}: ${errText.slice(0, 500)}`,
+          })
+          .eq("id", letterId);
+        return null;
+      }
+
+      const json = await resp.json();
+      return json.text as string;
+    });
+
+    if (transcript === null) {
+      return { letterId, status: "failed" };
+    }
+
+    // Save transcript
+    await step.run("save-transcript", async () => {
+      await supabase
+        .from("letters")
+        .update({
+          transcript,
+          transcript_status: "done",
+        })
+        .eq("id", letterId);
+      console.log(
+        `[transcribe] letter=${letterId} status=done length=${transcript.length}`
+      );
+    });
+
+    return { letterId, status: "done", length: transcript.length };
+  }
+);
+
 // Inngest webhook handler
 app.use(
   "/api/inngest",
-  serve({ client: inngest, functions: [deliverLetters, messageSent] })
+  serve({
+    client: inngest,
+    functions: [deliverLetters, messageSent, transcribeLetter],
+  })
 );
 
 const PORT = process.env.PORT || 3001;

@@ -1,6 +1,6 @@
 import { Pressable } from "../src/components/ui/Pressable";
 import { SERIF, SERIF_ITALIC } from "../src/constants/fonts";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -48,6 +48,10 @@ export default function LetterScreen() {
       return data;
     },
     enabled: !!letterId,
+    refetchInterval: (q) => {
+      const d = q.state.data as any;
+      return d?.transcript_status === "pending" ? 10000 : false;
+    },
   });
 
   // voice-memos is a private bucket, so we need a short-lived signed URL.
@@ -306,6 +310,9 @@ export default function LetterScreen() {
               </View>
             ) : null}
 
+            {/* Transcript */}
+            <TranscriptBlock letter={letter} />
+
             {/* Sign line */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(169,95,10,0.15)" }}>
               <View style={{ flex: 1, height: 1, backgroundColor: "rgba(74,47,24,0.25)" }} />
@@ -403,4 +410,117 @@ export default function LetterScreen() {
       </SafeAreaView>
     </View>
   );
+}
+
+function TranscriptBlock({ letter }: { letter: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const status = letter.transcript_status as string | null;
+  const transcript = letter.transcript as string | null;
+
+  if (!letter.media_url) return null;
+
+  if (status === "pending" || (status === null && letter.media_url)) {
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 16,
+          padding: 12,
+          backgroundColor: "rgba(74,47,24,0.04)",
+          borderRadius: 10,
+        }}
+      >
+        <ActivityIndicator size="small" color="rgba(74,47,24,0.4)" />
+        <Text
+          style={{
+            fontFamily: SERIF_ITALIC,
+            fontStyle: "italic",
+            fontSize: 12.5,
+            color: "rgba(74,47,24,0.5)",
+          }}
+        >
+          Transcribing… we'll save the words shortly.
+        </Text>
+      </View>
+    );
+  }
+
+  if (status === "done" && transcript) {
+    const truncated = transcript.length > 280 && !expanded;
+    return (
+      <View
+        style={{
+          marginBottom: 16,
+          padding: 14,
+          backgroundColor: "rgba(74,47,24,0.04)",
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: "rgba(169,95,10,0.12)",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 9.5,
+            fontWeight: "700",
+            letterSpacing: 1.8,
+            textTransform: "uppercase",
+            color: "rgba(74,47,24,0.45)",
+            marginBottom: 8,
+          }}
+        >
+          Transcript
+        </Text>
+        <Text
+          style={{
+            fontFamily: SERIF,
+            fontSize: 14,
+            color: "rgba(74,47,24,0.75)",
+            lineHeight: 22,
+          }}
+        >
+          {truncated ? transcript.slice(0, 280) + "…" : transcript}
+        </Text>
+        {transcript.length > 280 && (
+          <Pressable
+            onPress={() => setExpanded(!expanded)}
+            style={({ pressed }) => ({
+              marginTop: 8,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: Colors.amberDeep,
+              }}
+            >
+              {expanded ? "Show less" : "Read more"}
+            </Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
+  if (status === "failed") {
+    return (
+      <View style={{ marginBottom: 16, paddingHorizontal: 4 }}>
+        <Text
+          style={{
+            fontFamily: SERIF_ITALIC,
+            fontStyle: "italic",
+            fontSize: 12,
+            color: "rgba(74,47,24,0.4)",
+          }}
+        >
+          We couldn't transcribe this one — the audio still plays fine.
+        </Text>
+      </View>
+    );
+  }
+
+  return null;
 }

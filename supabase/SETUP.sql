@@ -347,10 +347,19 @@ alter table public.messages
 create index if not exists messages_body_tsv_idx
   on public.messages using gin (body_tsv);
 
+-- ---------------------------------------------------------------------
+-- 8. LETTERS — Whisper transcript columns
+--    mirrors migration 20260527000003_letter_transcripts.sql
+-- ---------------------------------------------------------------------
+alter table public.letters add column if not exists transcript text;
+alter table public.letters add column if not exists transcript_status text;
+alter table public.letters add column if not exists transcript_error text;
+
 -- =====================================================================
 -- NOT covered by this file (configure in the supabase dashboard UI):
 --   - creating the `voice-memos` storage bucket itself
 --   - creating the `chat-images` storage bucket itself
 --   - auth redirect URLs and the email confirmation toggle
 --   - the `message-sent-fanout` Database Webhook — see supabase/CHAT_WEBHOOK.md
+--   - the `letter-audio-uploaded` Database Webhook — see supabase/TRANSCRIBE_WEBHOOK.md
 -- =====================================================================
