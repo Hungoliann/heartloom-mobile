@@ -496,6 +496,21 @@ export default function RecordScreen() {
       router.back();
       return;
     }
+    // The letter has already been saved by the time we reach step 7
+    // (the certificate). Going back from here would let the user re-fire
+    // the save mutation and create a duplicate, plus they'd land on a
+    // sealed seal they can't re-press. Treat step 7 as terminal.
+    if (step === 7) {
+      router.replace("/(tabs)");
+      return;
+    }
+    // If we're leaving the delivery step (6) backwards, we're about to land
+    // on the seal step which auto-advanced when it completed. Reset its
+    // state so the user can re-seal cleanly.
+    if (step === 6) {
+      setIsSealed(false);
+      sealProgress.setValue(0);
+    }
     transitionBack(() => setStep((s) => Math.max(s - 1, 0)));
   }
 
