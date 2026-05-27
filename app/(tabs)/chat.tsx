@@ -530,10 +530,12 @@ function NoFamilyState({ onOpenFamily }: { onOpenFamily: () => void }) {
           borderRadius: 12,
           paddingVertical: 13,
           paddingHorizontal: 28,
+          alignItems: "center",
+          justifyContent: "center",
           opacity: pressed ? 0.8 : 1,
         })}
       >
-        <Text style={{ color: Colors.white, fontWeight: "600", fontSize: 14 }}>
+        <Text style={{ color: Colors.white, fontWeight: "600", fontSize: 14, textAlign: "center" }}>
           Open Family
         </Text>
       </Pressable>

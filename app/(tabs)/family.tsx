@@ -160,10 +160,14 @@ function InviteCard({ onPress }: { onPress: () => void }) {
           borderRadius: 12,
           paddingVertical: 10,
           paddingHorizontal: 20,
+          alignItems: "center",
+          justifyContent: "center",
           opacity: pressed ? 0.8 : 1,
         })}
       >
-        <Text style={{ color: Colors.white, fontSize: 13, fontWeight: "600" }}>Send an invite →</Text>
+        <Text style={{ color: Colors.white, fontSize: 13, fontWeight: "600", textAlign: "center" }}>
+          Send an invite →
+        </Text>
       </Pressable>
     </View>
   );

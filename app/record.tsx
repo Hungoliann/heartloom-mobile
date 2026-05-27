@@ -201,6 +201,7 @@ function PrimaryBtn({
           fontWeight: "600",
           color: disabled ? "rgba(255,255,255,0.45)" : "#FFFFFF",
           letterSpacing: 0.1,
+          textAlign: "center",
         }}
       >
         {label}
@@ -221,10 +222,11 @@ function GhostBtn({ label, onPress }: { label: string; onPress?: () => void }) {
         borderWidth: 1,
         borderColor: RULE,
         alignItems: "center",
+        justifyContent: "center",
         backgroundColor: "transparent",
       }}
     >
-      <Text style={{ fontSize: 13.5, color: Colors.inkSoft }}>{label}</Text>
+      <Text style={{ fontSize: 13.5, color: Colors.inkSoft, textAlign: "center" }}>{label}</Text>
     </AnimatedPressable>
   );
 }

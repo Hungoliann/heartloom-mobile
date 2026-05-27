@@ -252,11 +252,12 @@ export default function ConciergeScreen() {
           </Text>
 
           {/* "Available" badge */}
-          <View style={{ width: 48, alignItems: "flex-end" }}>
+          <View style={{ minWidth: 72, alignItems: "flex-end" }}>
             <Text
+              numberOfLines={1}
               style={{
                 fontSize: 11,
-                letterSpacing: 0.16 * 11,
+                letterSpacing: 1,
                 color: Colors.inkMuted,
               }}
             >
