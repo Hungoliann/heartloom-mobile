@@ -22,6 +22,9 @@ export type MessageReaction = {
   emoji: string;
   user_id: string;
 };
+export type MessageMention = {
+  user_id: string;
+};
 export type MessageWithProfile = Message & {
   // Augmented at runtime — see note above.
   media_url?: string | null;
@@ -31,8 +34,10 @@ export type MessageWithProfile = Message & {
   shared_letter_id?: string | null;
   duration_ms?: number | null;
   edited_at?: string | null;
+  pinned_at?: string | null;
   profiles: { full_name: string | null } | null;
   message_reactions?: MessageReaction[];
+  message_mentions?: MessageMention[];
   /** Optimistic flag — true while the row is local-only awaiting realtime confirmation. */
   pending?: boolean;
 };
@@ -85,7 +90,7 @@ export function useMessages() {
       let query = supabase
         .from("messages")
         .select(
-          "*, profiles(full_name), message_reactions(emoji, user_id)" as any
+          "*, profiles(full_name), message_reactions(emoji, user_id), message_mentions(user_id)" as any
         )
         .eq("family_id", familyId)
         .is("deleted_at" as any, null)
@@ -135,6 +140,20 @@ export function useMessages() {
     fetchNextPage: q.fetchNextPage,
     refetch: q.refetch,
   };
+}
+
+async function insertMentions(messageId: string, userIds: string[] | undefined) {
+  if (!userIds || userIds.length === 0) return;
+  const unique = Array.from(new Set(userIds));
+  const rows = unique.map((user_id) => ({ message_id: messageId, user_id }));
+  const { error } = await (supabase as any)
+    .from("message_mentions")
+    .insert(rows);
+  if (error) {
+    // Best-effort: log and continue. Message already saved.
+    // eslint-disable-next-line no-console
+    console.warn("Failed to insert message_mentions:", error.message);
+  }
 }
 
 async function fetchFamilyId(userId: string): Promise<string> {
@@ -228,9 +247,11 @@ export function useSendTextMessage() {
     mutationFn: async ({
       body,
       replyToId,
+      mentionedUserIds,
     }: {
       body: string;
       replyToId?: string | null;
+      mentionedUserIds?: string[];
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
       const trimmed = body.trim();
@@ -251,6 +272,7 @@ export function useSendTextMessage() {
         .select()
         .single();
       if (error) throw error;
+      await insertMentions((data as any).id, mentionedUserIds);
       return data as Message;
     },
     onMutate: async ({ body, replyToId }) => {
@@ -300,10 +322,12 @@ export function useSendVoiceMessage() {
       uri,
       replyToId,
       durationMs,
+      mentionedUserIds,
     }: {
       uri: string;
       replyToId?: string | null;
       durationMs?: number | null;
+      mentionedUserIds?: string[];
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
       const familyId = await fetchFamilyId(user.id);
@@ -332,6 +356,7 @@ export function useSendVoiceMessage() {
         .select()
         .single();
       if (error) throw error;
+      await insertMentions((data as any).id, mentionedUserIds);
       return data as Message;
     },
     onMutate: async ({ replyToId, durationMs }) => {
@@ -376,9 +401,11 @@ export function useSendSharedLetter() {
     mutationFn: async ({
       letterId,
       replyToId,
+      mentionedUserIds,
     }: {
       letterId: string;
       replyToId?: string | null;
+      mentionedUserIds?: string[];
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
       const familyId = await fetchFamilyId(user.id);
@@ -397,6 +424,7 @@ export function useSendSharedLetter() {
         .select()
         .single();
       if (error) throw error;
+      await insertMentions((data as any).id, mentionedUserIds);
       return data as Message;
     },
     onMutate: async ({ letterId, replyToId }) => {
@@ -443,9 +471,11 @@ export function useSendImageMessage() {
     mutationFn: async ({
       uri,
       replyToId,
+      mentionedUserIds,
     }: {
       uri: string;
       replyToId?: string | null;
+      mentionedUserIds?: string[];
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
       const familyId = await fetchFamilyId(user.id);
@@ -482,6 +512,7 @@ export function useSendImageMessage() {
         .select()
         .single();
       if (error) throw error;
+      await insertMentions((data as any).id, mentionedUserIds);
       return data as Message;
     },
     onMutate: async ({ uri, replyToId }) => {
@@ -786,6 +817,82 @@ export function useChatPresence(familyId: string | null | undefined) {
   }, [typingUserIds, members, user?.id]);
 
   return { typingUsers, startTyping, stopTyping, onlineUserIds };
+}
+
+/**
+ * Full-text search across the user's family messages. Debounced via the
+ * caller (we just gate with `enabled` on a non-empty trimmed query).
+ */
+export function useSearchMessages(
+  familyId: string | null | undefined,
+  query: string
+) {
+  const trimmed = query.trim();
+  return useQuery<MessageWithProfile[]>({
+    queryKey: ["messages-search", familyId, trimmed],
+    queryFn: async () => {
+      if (!familyId || !trimmed) return [];
+      const { data, error } = await (supabase as any)
+        .from("messages")
+        .select("*, profiles(full_name)")
+        .eq("family_id", familyId)
+        .is("deleted_at", null)
+        .textSearch("body_tsv", trimmed, { type: "plain", config: "simple" })
+        .order("created_at", { ascending: false })
+        .limit(40);
+      if (error) throw error;
+      return (data ?? []) as MessageWithProfile[];
+    },
+    enabled: !!familyId && trimmed.length > 0,
+  });
+}
+
+/** Toggles `pinned_at` on a message between null and now(). */
+export function useTogglePin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      currentlyPinned,
+    }: {
+      id: string;
+      currentlyPinned: boolean;
+    }) => {
+      const { error } = await supabase
+        .from("messages")
+        .update({
+          pinned_at: currentlyPinned ? null : new Date().toISOString(),
+        } as any)
+        .eq("id", id);
+      if (error) throw error;
+      return { id };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
+      queryClient.invalidateQueries({ queryKey: ["messages-pinned"] });
+    },
+  });
+}
+
+/** Pinned messages for a family (max 5, newest pin first). */
+export function usePinnedMessages(familyId: string | null | undefined) {
+  return useQuery<MessageWithProfile[]>({
+    queryKey: ["messages-pinned", familyId],
+    queryFn: async () => {
+      if (!familyId) return [];
+      const { data, error } = await (supabase as any)
+        .from("messages")
+        .select("*, profiles(full_name)")
+        .eq("family_id", familyId)
+        .is("deleted_at", null)
+        .not("pinned_at", "is", null)
+        .order("pinned_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return (data ?? []) as MessageWithProfile[];
+    },
+    enabled: !!familyId,
+  });
 }
 
 /**

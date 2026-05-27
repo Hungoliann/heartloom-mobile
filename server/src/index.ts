@@ -231,12 +231,26 @@ const messageSent = inngest.createFunction(
       return (data ?? []).filter((r: any) => typeof r.push_token === "string" && r.push_token.length > 0);
     });
 
+    const mentionedUserIds = await step.run("fetch-mentions", async () => {
+      const { data, error } = await supabase
+        .from("message_mentions")
+        .select("user_id")
+        .eq("message_id", messageId);
+      if (error) {
+        console.warn(`[chat-message-sent] mentions lookup failed message=${messageId}:`, error.message);
+        return [] as string[];
+      }
+      return (data ?? []).map((r: any) => r.user_id as string);
+    });
+    const mentionedIds = new Set<string>(mentionedUserIds);
+
     if (!recipients || recipients.length === 0) {
-      console.log(`[chat-message-sent] no eligible recipients for message=${messageId}`);
-      return { delivered: 0 };
+      console.log(`[chat-message-sent] msg=${messageId} recipients=0 mentions=${mentionedIds.size}`);
+      return { delivered: 0, mentioned: 0 };
     }
 
-    const title = (author?.full_name as string) || "New message";
+    const authorName = (author?.full_name as string) || "Someone";
+    const title = authorName || "New message";
     let body: string;
     if (message.media_type === "voice") {
       body = "Sent a voice message";
@@ -248,36 +262,87 @@ const messageSent = inngest.createFunction(
       body = "Sent a message";
     }
 
-    const delivered = await step.run("send-push", async () => {
-      const tickets = recipients.map((r: any) => ({
-        to: r.push_token,
-        title,
-        body,
-        data: { messageId: message.id, familyId: message.family_id },
-        sound: "default",
-      }));
+    // Build a shorter (~80 char) preview for mention pushes.
+    let mentionBody: string;
+    if (message.media_type === "voice") {
+      mentionBody = "Sent a voice message";
+    } else if (message.media_type === "letter") {
+      mentionBody = "Shared a letter";
+    } else if (typeof message.body === "string" && message.body.trim().length > 0) {
+      mentionBody = message.body.length > 80 ? `${message.body.slice(0, 77)}...` : message.body;
+    } else {
+      mentionBody = "Mentioned you in a message";
+    }
+
+    const regularTickets: any[] = [];
+    const mentionTickets: any[] = [];
+    for (const r of recipients) {
+      if (mentionedIds.has(r.id)) {
+        mentionTickets.push({
+          to: r.push_token,
+          title: `${authorName} mentioned you`,
+          body: mentionBody,
+          data: { messageId: message.id, familyId: message.family_id, mention: true },
+          sound: "default",
+          priority: "high",
+        });
+      } else {
+        regularTickets.push({
+          to: r.push_token,
+          title,
+          body,
+          data: { messageId: message.id, familyId: message.family_id },
+          sound: "default",
+        });
+      }
+    }
+
+    const deliveredRegular = await step.run("send-push-regular", async () => {
+      if (regularTickets.length === 0) return 0;
       try {
         const resp = await fetch("https://exp.host/--/api/v2/push/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tickets),
+          body: JSON.stringify(regularTickets),
         });
         if (!resp.ok) {
           const text = await resp.text().catch(() => "");
-          console.warn(`[chat-message-sent] push send non-200 message=${messageId} status=${resp.status} body=${text}`);
+          console.warn(`[chat-message-sent] regular push non-200 message=${messageId} status=${resp.status} body=${text}`);
           return 0;
         }
         const json: any = await resp.json().catch(() => null);
-        console.log(`[chat-message-sent] push send response message=${messageId}:`, JSON.stringify(json));
-        return tickets.length;
+        console.log(`[chat-message-sent] regular push response message=${messageId}:`, JSON.stringify(json));
+        return regularTickets.length;
       } catch (e: any) {
-        console.warn(`[chat-message-sent] push send threw for message=${messageId}:`, e?.message ?? e);
+        console.warn(`[chat-message-sent] regular push threw for message=${messageId}:`, e?.message ?? e);
         return 0;
       }
     });
 
-    console.log(`[chat-message-sent] delivered=${delivered} message=${messageId}`);
-    return { delivered };
+    const deliveredMentions = await step.run("send-push-mentions", async () => {
+      if (mentionTickets.length === 0) return 0;
+      try {
+        const resp = await fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(mentionTickets),
+        });
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => "");
+          console.warn(`[chat-message-sent] mention push non-200 message=${messageId} status=${resp.status} body=${text}`);
+          return 0;
+        }
+        const json: any = await resp.json().catch(() => null);
+        console.log(`[chat-message-sent] mention push response message=${messageId}:`, JSON.stringify(json));
+        return mentionTickets.length;
+      } catch (e: any) {
+        console.warn(`[chat-message-sent] mention push threw for message=${messageId}:`, e?.message ?? e);
+        return 0;
+      }
+    });
+
+    console.log(`[chat-message-sent] msg=${messageId} recipients=${recipients.length} mentions=${mentionTickets.length} delivered=${deliveredRegular + deliveredMentions}`);
+    return { delivered: deliveredRegular + deliveredMentions, mentioned: deliveredMentions };
   }
 );
 

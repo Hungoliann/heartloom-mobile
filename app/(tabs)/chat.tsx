@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,10 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  Animated,
+  Easing,
+  NativeSyntheticEvent,
+  TextInputSelectionChangeEventData,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -34,6 +38,9 @@ import {
   useChatPresence,
   useMarkAsRead,
   useFamilyReads,
+  useSearchMessages,
+  useTogglePin,
+  usePinnedMessages,
   type MessageWithProfile,
   type FamilyRead,
 } from "../../src/hooks/useMessages";
@@ -48,6 +55,10 @@ import { ImageMessageBubble } from "../../src/components/chat/ImageMessageBubble
 import { ImageViewerModal } from "../../src/components/chat/ImageViewerModal";
 import { TypingIndicator } from "../../src/components/chat/TypingIndicator";
 import { ReadReceiptAvatars } from "../../src/components/chat/ReadReceiptAvatars";
+import { ChatSearchBar } from "../../src/components/chat/ChatSearchBar";
+import { SearchResultsList } from "../../src/components/chat/SearchResultsList";
+import { MentionAutocomplete } from "../../src/components/chat/MentionAutocomplete";
+import { PinnedStrip } from "../../src/components/chat/PinnedStrip";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function fmtClock(iso?: string | null) {
@@ -186,16 +197,78 @@ function VoiceBubble({
   );
 }
 
+// ─── Mention-aware body text ────────────────────────────────────────────────
+function MentionBody({
+  body,
+  mentionNames,
+  isOut,
+}: {
+  body: string;
+  mentionNames: string[];
+  isOut: boolean;
+}) {
+  const color = isOut ? Colors.cream : Colors.ink;
+  if (mentionNames.length === 0 || !body) {
+    return (
+      <Text style={{ fontSize: 14, lineHeight: 20, color }}>{body}</Text>
+    );
+  }
+  // Build segments by splitting body across each `@FullName` occurrence.
+  const tokens = mentionNames
+    .map((n) => `@${n}`)
+    // Longest first so "Anna Mae" wins over "Anna".
+    .sort((a, b) => b.length - a.length);
+  type Seg = { text: string; mention: boolean };
+  let segments: Seg[] = [{ text: body, mention: false }];
+  for (const tok of tokens) {
+    const next: Seg[] = [];
+    for (const s of segments) {
+      if (s.mention) {
+        next.push(s);
+        continue;
+      }
+      let rest = s.text;
+      while (true) {
+        const idx = rest.indexOf(tok);
+        if (idx === -1) {
+          if (rest) next.push({ text: rest, mention: false });
+          break;
+        }
+        if (idx > 0) next.push({ text: rest.slice(0, idx), mention: false });
+        next.push({ text: tok, mention: true });
+        rest = rest.slice(idx + tok.length);
+      }
+    }
+    segments = next;
+  }
+  return (
+    <Text style={{ fontSize: 14, lineHeight: 20, color }}>
+      {segments.map((s, i) =>
+        s.mention ? (
+          <Text key={i} style={{ fontWeight: "700", color: Colors.amber }}>
+            {s.text}
+          </Text>
+        ) : (
+          <Text key={i}>{s.text}</Text>
+        )
+      )}
+    </Text>
+  );
+}
+
 // ─── Message row ────────────────────────────────────────────────────────────
 function MessageRow({
   msg,
   isOut,
   currentUserId,
   parent,
+  mentionNames,
+  highlighted,
   onLongPress,
   onToggleReaction,
   onOpenLetter,
   onOpenImage,
+  onTapReply,
   activeVoiceId,
   setActiveVoiceId,
 }: {
@@ -203,10 +276,13 @@ function MessageRow({
   isOut: boolean;
   currentUserId: string;
   parent: MessageWithProfile | null;
+  mentionNames: string[];
+  highlighted: boolean;
   onLongPress: () => void;
   onToggleReaction: (emoji: string) => void;
   onOpenLetter: (letterId: string) => void;
   onOpenImage: (url: string) => void;
+  onTapReply: (id: string) => void;
   activeVoiceId: string | null;
   setActiveVoiceId: (id: string | null) => void;
 }) {
@@ -243,16 +319,30 @@ function MessageRow({
     ) : isImage ? (
       <ImageMessageBubble mediaUrl={mediaUrl} onOpen={onOpenImage} />
     ) : (
-      <Text
-        style={{
-          fontSize: 14,
-          lineHeight: 20,
-          color: isOut ? Colors.cream : Colors.ink,
-        }}
-      >
-        {msg.body ?? ""}
-      </Text>
+      <MentionBody
+        body={msg.body ?? ""}
+        mentionNames={mentionNames}
+        isOut={isOut}
+      />
     );
+
+  // Animated amber highlight when scrolled-to.
+  const glow = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (highlighted) {
+      glow.setValue(1);
+      Animated.timing(glow, {
+        toValue: 0,
+        duration: 1000,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [highlighted, glow]);
+  const highlightBg = glow.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["rgba(210,127,20,0)", "rgba(210,127,20,0.35)"],
+  });
 
   const bubble = (
     <Pressable
@@ -290,7 +380,9 @@ function MessageRow({
       )}
 
       {parent ? (
-        <ReplyPreview message={parent} inBubble isOut={isOut} />
+        <Pressable onPress={() => onTapReply(parent.id)}>
+          <ReplyPreview message={parent} inBubble isOut={isOut} />
+        </Pressable>
       ) : null}
 
       {inner}
@@ -343,15 +435,30 @@ function MessageRow({
 
   if (isOut) {
     return (
-      <View style={{ alignItems: "flex-end", marginVertical: 4 }}>
+      <Animated.View
+        style={{
+          marginVertical: 4,
+          alignItems: "flex-end",
+          backgroundColor: highlightBg,
+          borderRadius: 18,
+          padding: 2,
+        }}
+      >
         {bubble}
         {chips}
-      </View>
+      </Animated.View>
     );
   }
 
   return (
-    <View style={{ marginVertical: 4 }}>
+    <Animated.View
+      style={{
+        marginVertical: 4,
+        backgroundColor: highlightBg,
+        borderRadius: 18,
+        padding: 2,
+      }}
+    >
       <View
         style={{
           flexDirection: "row",
@@ -376,7 +483,7 @@ function MessageRow({
         {bubble}
       </View>
       {chips}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -502,6 +609,13 @@ function PlusMenu({
 }
 
 // ─── Composer ───────────────────────────────────────────────────────────────
+type MentionState = {
+  active: boolean;
+  query: string;
+  startIdx: number;
+  selectedIds: { id: string; full_name: string }[];
+};
+
 function Composer({
   onSendText,
   onSendVoice,
@@ -512,7 +626,7 @@ function Composer({
   replyingTo,
   onClearReply,
 }: {
-  onSendText: (body: string) => void;
+  onSendText: (body: string, mentionedUserIds: string[]) => void;
   onSendVoice: (uri: string, durationMs: number | null) => void;
   onOpenPlusMenu: () => void;
   onStartTyping: () => void;
@@ -522,6 +636,16 @@ function Composer({
   onClearReply: () => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [selection, setSelection] = useState<{ start: number; end: number }>({
+    start: 0,
+    end: 0,
+  });
+  const [mentionState, setMentionState] = useState<MentionState>({
+    active: false,
+    query: "",
+    startIdx: 0,
+    selectedIds: [],
+  });
   const recorder = useAudioRecorder();
   const { isRecording, seconds, startRecording, stopRecording } = recorder;
   const recordStartedAtRef = useRef<number | null>(null);
@@ -549,9 +673,83 @@ function Composer({
   function send() {
     const text = draft.trim();
     if (!text) return;
-    onSendText(text);
+    // Only keep mentions whose `@FullName` still appears in the final text.
+    const stillMentioned = mentionState.selectedIds.filter((s) =>
+      text.includes(`@${s.full_name}`)
+    );
+    onSendText(
+      text,
+      stillMentioned.map((s) => s.id)
+    );
     setDraft("");
+    setMentionState({
+      active: false,
+      query: "",
+      startIdx: 0,
+      selectedIds: [],
+    });
     onStopTyping();
+  }
+
+  function handleChange(t: string) {
+    setDraft(t);
+    if (t.length > 0) onStartTyping();
+    else onStopTyping();
+
+    // Detect mention token at the cursor position.
+    const cursor = selection.start; // best-effort; selection lags by one event
+    // Re-scan from cursor backward to find the nearest `@` after whitespace.
+    // We can't rely on `cursor` exactly after onChangeText (RN doesn't update
+    // selection synchronously) so use the end of `t` as fallback when cursor
+    // wasn't updated yet.
+    const probe = Math.min(t.length, Math.max(cursor, 0));
+    let atIdx = -1;
+    for (let i = probe - 1; i >= 0; i--) {
+      const ch = t[i];
+      if (ch === "@") {
+        const prev = i === 0 ? " " : t[i - 1];
+        if (prev === " " || prev === "\n" || i === 0) atIdx = i;
+        break;
+      }
+      if (ch === " " || ch === "\n") break;
+    }
+    if (atIdx === -1) {
+      if (mentionState.active) {
+        setMentionState((s) => ({ ...s, active: false, query: "" }));
+      }
+      return;
+    }
+    const query = t.slice(atIdx + 1, probe);
+    setMentionState((s) => ({
+      ...s,
+      active: true,
+      query,
+      startIdx: atIdx,
+    }));
+  }
+
+  function handlePickMention(member: { id: string; full_name: string }) {
+    // Replace `@<query>` slice with `@FullName ` (trailing space).
+    const before = draft.slice(0, mentionState.startIdx);
+    const afterIdx = mentionState.startIdx + 1 + mentionState.query.length;
+    const after = draft.slice(afterIdx);
+    const insertion = `@${member.full_name} `;
+    const next = before + insertion + after;
+    setDraft(next);
+    setMentionState((s) => ({
+      active: false,
+      query: "",
+      startIdx: 0,
+      selectedIds: s.selectedIds.some((x) => x.id === member.id)
+        ? s.selectedIds
+        : [...s.selectedIds, member],
+    }));
+  }
+
+  function handleSelectionChange(
+    e: NativeSyntheticEvent<TextInputSelectionChangeEventData>
+  ) {
+    setSelection(e.nativeEvent.selection);
   }
 
   if (isRecording) {
@@ -619,6 +817,11 @@ function Composer({
 
   return (
     <View style={{ backgroundColor: Colors.bg }}>
+      <MentionAutocomplete
+        visible={mentionState.active}
+        query={mentionState.query}
+        onPick={handlePickMention}
+      />
       {replyingTo ? (
         <View style={{ paddingHorizontal: 14, paddingTop: 8 }}>
           <ReplyPreview message={replyingTo} onClear={onClearReply} />
@@ -666,12 +869,12 @@ function Composer({
         >
           <TextInput
             value={draft}
-            onChangeText={(t) => {
-              setDraft(t);
-              if (t.length > 0) onStartTyping();
-              else onStopTyping();
+            onChangeText={handleChange}
+            onSelectionChange={handleSelectionChange}
+            onBlur={() => {
+              onStopTyping();
+              setMentionState((s) => ({ ...s, active: false }));
             }}
-            onBlur={onStopTyping}
             placeholder="Write to the family…"
             placeholderTextColor={Colors.inkMuted}
             style={{
@@ -746,6 +949,24 @@ export default function ChatScreen() {
   const sendImage = useSendImageMessage();
   const toggleReaction = useToggleReaction();
   const deleteMessage = useDeleteMessage();
+  const togglePin = useTogglePin();
+  const { data: pinnedMessages = [] } = usePinnedMessages(familyId);
+
+  // Search state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 250);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+  const { data: searchResults = [], isFetching: searchLoading } =
+    useSearchMessages(familyId, debouncedSearch);
+
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(
+    null
+  );
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useChatRealtime(familyId, { enabled: !!familyId });
   const { typingUsers, startTyping, stopTyping } = useChatPresence(familyId);
@@ -778,6 +999,51 @@ export default function ChatScreen() {
     for (const msg of messages) m.set(msg.id, msg);
     return m;
   }, [messages]);
+
+  // Map: user_id → full_name (for resolving mention names in bubbles).
+  const memberNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of members ?? []) {
+      if (p.full_name) m.set(p.id, p.full_name);
+    }
+    return m;
+  }, [members]);
+
+  const scrollToMessage = useCallback(
+    (id: string) => {
+      const idx = visible.findIndex((m) => m.id === id);
+      if (idx === -1) {
+        // Not yet loaded; flag the highlight anyway in case it appears later.
+        setHighlightedMessageId(id);
+      } else {
+        try {
+          listRef.current?.scrollToIndex({
+            index: idx,
+            animated: true,
+            viewPosition: 0.3,
+          });
+        } catch {
+          // ignore — scrollToIndexFailed handler covers it
+        }
+        setHighlightedMessageId(id);
+      }
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = setTimeout(() => {
+        setHighlightedMessageId(null);
+        highlightTimerRef.current = null;
+      }, 1100);
+    },
+    // visible/listRef are stable enough at call time
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible]
+  );
+
+  useEffect(
+    () => () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    },
+    []
+  );
 
   // Map: messageId → list of (other) family members whose last_read_at reaches that message.
   // Algorithm: for each other member, find the latest message with created_at <= last_read_at
@@ -820,9 +1086,14 @@ export default function ChatScreen() {
 
   function handleLongPress(msg: MessageWithProfile) {
     const isOut = msg.author_id === user?.id;
+    const currentlyPinned = !!(msg as any).pinned_at;
     const buttons: any[] = [
       { text: "React", onPress: () => setPickerOpenForId(msg.id) },
       { text: "Reply", onPress: () => setReplyingTo(msg) },
+      {
+        text: currentlyPinned ? "Unpin" : "Pin",
+        onPress: () => togglePin.mutate({ id: msg.id, currentlyPinned }),
+      },
     ];
     if (isOut) {
       buttons.push({
@@ -847,8 +1118,12 @@ export default function ChatScreen() {
     Alert.alert("Message", undefined, buttons);
   }
 
-  function handleSendText(body: string) {
-    sendText.mutate({ body, replyToId: replyingTo?.id ?? null });
+  function handleSendText(body: string, mentionedUserIds: string[]) {
+    sendText.mutate({
+      body,
+      replyToId: replyingTo?.id ?? null,
+      mentionedUserIds,
+    });
     setReplyingTo(null);
   }
 
@@ -919,33 +1194,98 @@ export default function ChatScreen() {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           {/* Header */}
-          <View
-            style={{
-              paddingHorizontal: 18,
-              paddingTop: 6,
-              paddingBottom: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: Colors.rule,
-            }}
-          >
-            <Text
+          {searchOpen ? (
+            <View
               style={{
-                fontFamily: SERIF,
-                fontSize: 20,
-                color: Colors.ink,
-                lineHeight: 24,
+                borderBottomWidth: 1,
+                borderBottomColor: Colors.rule,
               }}
-              numberOfLines={1}
             >
-              {family.name}
-            </Text>
-            <Text style={{ fontSize: 11.5, color: Colors.inkMuted, marginTop: 2 }}>
-              {memberCount} {memberCount === 1 ? "member" : "members"}
-            </Text>
-          </View>
+              <ChatSearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onClose={() => {
+                  setSearchOpen(false);
+                  setSearchQuery("");
+                }}
+              />
+            </View>
+          ) : (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 18,
+                paddingTop: 6,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: Colors.rule,
+                gap: 12,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: SERIF,
+                    fontSize: 20,
+                    color: Colors.ink,
+                    lineHeight: 24,
+                  }}
+                  numberOfLines={1}
+                >
+                  {family.name}
+                </Text>
+                <Text
+                  style={{ fontSize: 11.5, color: Colors.inkMuted, marginTop: 2 }}
+                >
+                  {memberCount} {memberCount === 1 ? "member" : "members"}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setSearchOpen(true)}
+                style={({ pressed }) => ({
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <Feather name="search" size={18} color={Colors.amberDeep} />
+              </Pressable>
+            </View>
+          )}
+
+          {/* Pinned strip — hidden while searching */}
+          {searchOpen && debouncedSearch.trim().length > 0 ? null : (
+            <PinnedStrip
+              pinned={pinnedMessages}
+              onTap={(id) => scrollToMessage(id)}
+              onUnpin={(id) =>
+                togglePin.mutate({ id, currentlyPinned: true })
+              }
+            />
+          )}
+
+          {/* Search results overlay */}
+          {searchOpen && debouncedSearch.trim().length > 0 ? (
+            <SearchResultsList
+              results={searchResults}
+              query={debouncedSearch}
+              isLoading={searchLoading}
+              onPick={(id) => {
+                setSearchOpen(false);
+                setSearchQuery("");
+                // Allow the list to mount before scrolling.
+                setTimeout(() => scrollToMessage(id), 50);
+              }}
+            />
+          ) : null}
 
           {/* Messages */}
-          {messagesLoading && messages.length === 0 ? (
+          {searchOpen && debouncedSearch.trim().length > 0 ? null : messagesLoading &&
+            messages.length === 0 ? (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <ActivityIndicator color={Colors.amberDeep} />
             </View>
@@ -981,6 +1321,11 @@ export default function ChatScreen() {
                 const parentId = (item as any).reply_to_id as string | null;
                 const parent = parentId ? byId.get(parentId) ?? null : null;
                 const readers = readersByMessageId.get(item.id) ?? [];
+                const mentionIds =
+                  (item.message_mentions ?? []).map((mm) => mm.user_id) ?? [];
+                const mentionNames = mentionIds
+                  .map((uid) => memberNameById.get(uid))
+                  .filter((n): n is string => !!n);
                 return (
                   <View>
                     <MessageRow
@@ -988,6 +1333,8 @@ export default function ChatScreen() {
                       isOut={item.author_id === user?.id}
                       currentUserId={user?.id ?? ""}
                       parent={parent}
+                      mentionNames={mentionNames}
+                      highlighted={highlightedMessageId === item.id}
                       onLongPress={() => handleLongPress(item)}
                       onToggleReaction={(emoji) =>
                         toggleReaction.mutate({ messageId: item.id, emoji })
@@ -996,6 +1343,7 @@ export default function ChatScreen() {
                         router.push(`/letter?letterId=${letterId}` as any)
                       }
                       onOpenImage={(url) => setViewerUrl(url)}
+                      onTapReply={(id) => scrollToMessage(id)}
                       activeVoiceId={activeVoiceId}
                       setActiveVoiceId={setActiveVoiceId}
                     />
@@ -1006,6 +1354,20 @@ export default function ChatScreen() {
                     ) : null}
                   </View>
                 );
+              }}
+              onScrollToIndexFailed={(info) => {
+                // Item not yet laid out — wait briefly then retry.
+                setTimeout(() => {
+                  try {
+                    listRef.current?.scrollToIndex({
+                      index: info.index,
+                      animated: true,
+                      viewPosition: 0.3,
+                    });
+                  } catch {
+                    // ignore
+                  }
+                }, 120);
               }}
               contentContainerStyle={{
                 paddingHorizontal: 14,
