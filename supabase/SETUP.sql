@@ -2,8 +2,9 @@
 -- heartloom-mobile — one-shot supabase setup
 -- project ref: kttzkpxbqnhmbovalwfs
 --
--- run this AFTER creating the `voice-memos` storage bucket:
+-- run this AFTER creating the storage buckets:
 --   storage -> new bucket -> name=voice-memos, public=OFF
+--   storage -> new bucket -> name=chat-images, public=OFF
 --
 -- paste the whole file into the supabase SQL editor and run.
 -- safe to re-run (all statements are idempotent).
@@ -233,8 +234,57 @@ alter table public.messages
   add column if not exists duration_ms integer;
 
 -- =====================================================================
+-- 6. CHAT phase 3 — image messages storage RLS
+--    mirrors migration 20260527000001_chat_phase3.sql
+--    bucket itself must be created in the dashboard first
+--    path convention: ${user_id}/chat-${timestamp}.jpg
+--
+--    no schema changes needed:
+--      - pagination uses messages_family_created_idx (family_id, created_at desc)
+--      - read receipts reuse message_reads.last_read_at from phase 1
+--      - typing indicators use realtime broadcast (no DB rows)
+-- =====================================================================
+
+drop policy if exists "chat-images: users can read own" on storage.objects;
+create policy "chat-images: users can read own"
+  on storage.objects for select
+  using (
+    bucket_id = 'chat-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "chat-images: users can insert own" on storage.objects;
+create policy "chat-images: users can insert own"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'chat-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "chat-images: users can update own" on storage.objects;
+create policy "chat-images: users can update own"
+  on storage.objects for update
+  using (
+    bucket_id = 'chat-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'chat-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "chat-images: users can delete own" on storage.objects;
+create policy "chat-images: users can delete own"
+  on storage.objects for delete
+  using (
+    bucket_id = 'chat-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- =====================================================================
 -- NOT covered by this file (configure in the supabase dashboard UI):
 --   - creating the `voice-memos` storage bucket itself
+--   - creating the `chat-images` storage bucket itself
 --   - auth redirect URLs and the email confirmation toggle
 --   - the `message-sent-fanout` Database Webhook — see supabase/CHAT_WEBHOOK.md
 -- =====================================================================

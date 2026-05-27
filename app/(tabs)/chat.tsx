@@ -8,11 +8,13 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 
 import { Pressable } from "../../src/components/ui/Pressable";
 import { Colors } from "../../src/constants/colors";
@@ -25,10 +27,15 @@ import {
   useSendTextMessage,
   useSendVoiceMessage,
   useSendSharedLetter,
+  useSendImageMessage,
   useToggleReaction,
   useDeleteMessage,
   useChatRealtime,
+  useChatPresence,
+  useMarkAsRead,
+  useFamilyReads,
   type MessageWithProfile,
+  type FamilyRead,
 } from "../../src/hooks/useMessages";
 import { useAudioRecorder } from "../../src/hooks/useAudioRecorder";
 import { useAudioPlayer } from "../../src/hooks/useAudioPlayer";
@@ -37,6 +44,10 @@ import { ReactionChips } from "../../src/components/chat/ReactionChips";
 import { SharedLetterCard } from "../../src/components/chat/SharedLetterCard";
 import { LetterPickerModal } from "../../src/components/chat/LetterPickerModal";
 import { ReplyPreview } from "../../src/components/chat/ReplyPreview";
+import { ImageMessageBubble } from "../../src/components/chat/ImageMessageBubble";
+import { ImageViewerModal } from "../../src/components/chat/ImageViewerModal";
+import { TypingIndicator } from "../../src/components/chat/TypingIndicator";
+import { ReadReceiptAvatars } from "../../src/components/chat/ReadReceiptAvatars";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function fmtClock(iso?: string | null) {
@@ -87,9 +98,7 @@ function VoiceBubble({
 }: {
   mediaUrl: string | null | undefined;
   isOut: boolean;
-  /** Server-stored duration (from message.duration_ms). Shown before audio loads. */
   storedDurationMs?: number | null;
-  /** True if this is the currently selected/playing bubble. */
   isActivePlayer: boolean;
   onRequestPlay: () => void;
   onRequestPause: () => void;
@@ -98,7 +107,6 @@ function VoiceBubble({
   const { play, pause, isPlaying, positionMs, durationMs, progress } =
     useAudioPlayer(signedUrl ?? null);
 
-  // Coordination: when another bubble becomes active, ensure we pause.
   useEffect(() => {
     if (!isActivePlayer && isPlaying) {
       pause();
@@ -187,6 +195,7 @@ function MessageRow({
   onLongPress,
   onToggleReaction,
   onOpenLetter,
+  onOpenImage,
   activeVoiceId,
   setActiveVoiceId,
 }: {
@@ -197,6 +206,7 @@ function MessageRow({
   onLongPress: () => void;
   onToggleReaction: (emoji: string) => void;
   onOpenLetter: (letterId: string) => void;
+  onOpenImage: (url: string) => void;
   activeVoiceId: string | null;
   setActiveVoiceId: (id: string | null) => void;
 }) {
@@ -204,10 +214,45 @@ function MessageRow({
     (msg as any).media_type ?? (msg as any).message_type ?? "text";
   const isVoice = mediaType === "voice";
   const isSharedLetter = mediaType === "shared_letter";
+  const isImage = mediaType === "image";
   const author = msg.profiles?.full_name ?? "Family";
   const reactions = msg.message_reactions ?? [];
   const sharedLetterId = (msg as any).shared_letter_id as string | null;
+  const mediaUrl = (msg as any).media_url as string | null;
   const pending = (msg as any).pending === true;
+
+  // Image bubble is rendered without a wrapping bubble (looks better).
+  const inner =
+    isSharedLetter && sharedLetterId ? (
+      <SharedLetterCard
+        letterId={sharedLetterId}
+        isOut={isOut}
+        onOpen={() => onOpenLetter(sharedLetterId)}
+      />
+    ) : isVoice ? (
+      <VoiceBubble
+        mediaUrl={mediaUrl}
+        isOut={isOut}
+        storedDurationMs={(msg as any).duration_ms ?? null}
+        isActivePlayer={activeVoiceId === msg.id}
+        onRequestPlay={() => setActiveVoiceId(msg.id)}
+        onRequestPause={() => {
+          if (activeVoiceId === msg.id) setActiveVoiceId(null);
+        }}
+      />
+    ) : isImage ? (
+      <ImageMessageBubble mediaUrl={mediaUrl} onOpen={onOpenImage} />
+    ) : (
+      <Text
+        style={{
+          fontSize: 14,
+          lineHeight: 20,
+          color: isOut ? Colors.cream : Colors.ink,
+        }}
+      >
+        {msg.body ?? ""}
+      </Text>
+    );
 
   const bubble = (
     <Pressable
@@ -215,18 +260,22 @@ function MessageRow({
       delayLongPress={350}
       style={({ pressed }) => ({
         maxWidth: "78%",
-        backgroundColor: isOut ? Colors.amber : "rgba(255,250,232,0.92)",
-        borderWidth: isOut ? 0 : 1,
+        backgroundColor: isImage
+          ? "transparent"
+          : isOut
+            ? Colors.amber
+            : "rgba(255,250,232,0.92)",
+        borderWidth: isImage || isOut ? 0 : 1,
         borderColor: "rgba(184,132,60,0.22)",
         borderRadius: 16,
         borderBottomRightRadius: isOut ? 4 : 16,
         borderBottomLeftRadius: isOut ? 16 : 4,
-        paddingHorizontal: 12,
-        paddingVertical: 9,
+        paddingHorizontal: isImage ? 0 : 12,
+        paddingVertical: isImage ? 0 : 9,
         opacity: (pressed && isOut ? 0.85 : 1) * (pending ? 0.65 : 1),
       })}
     >
-      {!isOut && (
+      {!isOut && !isImage && (
         <Text
           style={{
             fontSize: 10,
@@ -244,65 +293,40 @@ function MessageRow({
         <ReplyPreview message={parent} inBubble isOut={isOut} />
       ) : null}
 
-      {isSharedLetter && sharedLetterId ? (
-        <SharedLetterCard
-          letterId={sharedLetterId}
-          isOut={isOut}
-          onOpen={() => onOpenLetter(sharedLetterId)}
-        />
-      ) : isVoice ? (
-        <VoiceBubble
-          mediaUrl={(msg as any).media_url}
-          isOut={isOut}
-          storedDurationMs={(msg as any).duration_ms ?? null}
-          isActivePlayer={activeVoiceId === msg.id}
-          onRequestPlay={() => setActiveVoiceId(msg.id)}
-          onRequestPause={() => {
-            if (activeVoiceId === msg.id) setActiveVoiceId(null);
-          }}
-        />
-      ) : (
-        <Text
+      {inner}
+
+      {!isImage && (
+        <View
           style={{
-            fontSize: 14,
-            lineHeight: 20,
-            color: isOut ? Colors.cream : Colors.ink,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            marginTop: 4,
+            alignSelf: isOut ? "flex-end" : "flex-start",
           }}
         >
-          {msg.body ?? ""}
-        </Text>
-      )}
-
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 6,
-          marginTop: 4,
-          alignSelf: isOut ? "flex-end" : "flex-start",
-        }}
-      >
-        {pending ? (
+          {pending ? (
+            <Text
+              style={{
+                fontSize: 10,
+                color: isOut ? "rgba(251,244,224,0.7)" : Colors.inkMuted,
+                fontStyle: "italic",
+              }}
+            >
+              sending…
+            </Text>
+          ) : null}
           <Text
             style={{
               fontSize: 10,
               color: isOut ? "rgba(251,244,224,0.7)" : Colors.inkMuted,
-              fontStyle: "italic",
+              letterSpacing: 0.3,
             }}
           >
-            sending…
+            {fmtClock(msg.created_at)}
           </Text>
-        ) : null}
-        <Text
-          style={{
-            fontSize: 10,
-            color: isOut ? "rgba(251,244,224,0.7)" : Colors.inkMuted,
-            letterSpacing: 0.3,
-          }}
-        >
-          {fmtClock(msg.created_at)}
-        </Text>
-      </View>
+        </View>
+      )}
     </Pressable>
   );
 
@@ -410,18 +434,89 @@ function NoFamilyState({ onOpenFamily }: { onOpenFamily: () => void }) {
   );
 }
 
+// ─── Composer "+" menu ──────────────────────────────────────────────────────
+function PlusMenu({
+  visible,
+  onClose,
+  onShareLetter,
+  onPickImage,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onShareLetter: () => void;
+  onPickImage: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.25)" }}>
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          <Pressable
+            onPress={() => {}}
+            style={{
+              backgroundColor: Colors.bg,
+              borderTopLeftRadius: 18,
+              borderTopRightRadius: 18,
+              paddingHorizontal: 18,
+              paddingTop: 20,
+              paddingBottom: 36,
+              gap: 8,
+            }}
+          >
+            <Pressable
+              onPress={() => {
+                onClose();
+                onShareLetter();
+              }}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                paddingVertical: 12,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Feather name="mail" size={20} color={Colors.amberDeep} />
+              <Text style={{ fontSize: 15, color: Colors.ink }}>Share a letter</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                onClose();
+                onPickImage();
+              }}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                paddingVertical: 12,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Feather name="image" size={20} color={Colors.amberDeep} />
+              <Text style={{ fontSize: 15, color: Colors.ink }}>Image</Text>
+            </Pressable>
+          </Pressable>
+        </View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 // ─── Composer ───────────────────────────────────────────────────────────────
 function Composer({
   onSendText,
   onSendVoice,
-  onOpenLetterPicker,
+  onOpenPlusMenu,
+  onStartTyping,
+  onStopTyping,
   sending,
   replyingTo,
   onClearReply,
 }: {
   onSendText: (body: string) => void;
   onSendVoice: (uri: string, durationMs: number | null) => void;
-  onOpenLetterPicker: () => void;
+  onOpenPlusMenu: () => void;
+  onStartTyping: () => void;
+  onStopTyping: () => void;
   sending: boolean;
   replyingTo: MessageWithProfile | null;
   onClearReply: () => void;
@@ -429,7 +524,6 @@ function Composer({
   const [draft, setDraft] = useState("");
   const recorder = useAudioRecorder();
   const { isRecording, seconds, startRecording, stopRecording } = recorder;
-  // Fallback timer if recorder doesn't expose duration after stop.
   const recordStartedAtRef = useRef<number | null>(null);
 
   async function handleMic() {
@@ -440,8 +534,6 @@ function Composer({
   async function handleStop() {
     const startedAt = recordStartedAtRef.current;
     await stopRecording();
-    // expo-audio's `seconds` derives from durationMillis; prefer that if non-zero,
-    // else fall back to wall-clock from when we kicked off recording.
     const recorderMs = seconds * 1000;
     const approxMs =
       recorderMs > 0
@@ -459,6 +551,7 @@ function Composer({
     if (!text) return;
     onSendText(text);
     setDraft("");
+    onStopTyping();
   }
 
   if (isRecording) {
@@ -541,7 +634,7 @@ function Composer({
         }}
       >
         <Pressable
-          onPress={onOpenLetterPicker}
+          onPress={onOpenPlusMenu}
           style={({ pressed }) => ({
             width: 38,
             height: 38,
@@ -573,7 +666,12 @@ function Composer({
         >
           <TextInput
             value={draft}
-            onChangeText={setDraft}
+            onChangeText={(t) => {
+              setDraft(t);
+              if (t.length > 0) onStartTyping();
+              else onStopTyping();
+            }}
+            onBlur={onStopTyping}
             placeholder="Write to the family…"
             placeholderTextColor={Colors.inkMuted}
             style={{
@@ -635,58 +733,96 @@ export default function ChatScreen() {
   const { data: members } = useFamily();
 
   const familyId = family?.id ?? null;
-  const { data: messages = [], isLoading: messagesLoading } = useMessages();
+  const {
+    messages,
+    isLoading: messagesLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMessages();
   const sendText = useSendTextMessage();
   const sendVoice = useSendVoiceMessage();
   const sendSharedLetter = useSendSharedLetter();
+  const sendImage = useSendImageMessage();
   const toggleReaction = useToggleReaction();
   const deleteMessage = useDeleteMessage();
 
   useChatRealtime(familyId, { enabled: !!familyId });
+  const { typingUsers, startTyping, stopTyping } = useChatPresence(familyId);
+  const markAsRead = useMarkAsRead(familyId);
+  const { data: familyReads = [] } = useFamilyReads(familyId);
 
   const listRef = useRef<FlatList<MessageWithProfile>>(null);
   const memberCount = members?.length ?? 0;
 
   const [replyingTo, setReplyingTo] = useState<MessageWithProfile | null>(null);
   const [letterPickerOpen, setLetterPickerOpen] = useState(false);
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
   const [pickerOpenForId, setPickerOpenForId] = useState<string | null>(null);
   const [activeVoiceId, setActiveVoiceId] = useState<string | null>(null);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const nearBottomRef = useRef<boolean>(true);
 
+  // Inverted list — newest at index 0. messages from hook are ASC; flip for display.
   const visible = useMemo(
-    () => messages.filter((m) => !(m as any).deleted_at),
+    () =>
+      [...messages]
+        .filter((m) => !(m as any).deleted_at)
+        .reverse(),
     [messages]
   );
 
-  // Lookup map for reply parents.
+  // Reply parent lookup (use raw, non-reversed array).
   const byId = useMemo(() => {
     const m = new Map<string, MessageWithProfile>();
     for (const msg of messages) m.set(msg.id, msg);
     return m;
   }, [messages]);
 
-  // Scroll to bottom whenever the list changes.
+  // Map: messageId → list of (other) family members whose last_read_at reaches that message.
+  // Algorithm: for each other member, find the latest message with created_at <= last_read_at
+  // and attach them to that message.
+  const readersByMessageId = useMemo(() => {
+    const result = new Map<string, { user_id: string; full_name: string | null }[]>();
+    if (!members || familyReads.length === 0) return result;
+    const ascending = messages; // already ASC
+    for (const r of familyReads as FamilyRead[]) {
+      if (!r.last_read_at || r.user_id === user?.id) continue;
+      const t = new Date(r.last_read_at).getTime();
+      // Walk from newest backward to find first message at-or-before t.
+      let attachTo: string | null = null;
+      for (let i = ascending.length - 1; i >= 0; i--) {
+        const m = ascending[i];
+        // Only attach read receipts to messages from the current user (sent).
+        if (m.author_id !== user?.id) continue;
+        if (new Date(m.created_at ?? 0).getTime() <= t) {
+          attachTo = m.id;
+          break;
+        }
+      }
+      if (!attachTo) continue;
+      const member = members.find((p) => p.id === r.user_id);
+      const existing = result.get(attachTo) ?? [];
+      existing.push({
+        user_id: r.user_id,
+        full_name: member?.full_name ?? null,
+      });
+      result.set(attachTo, existing);
+    }
+    return result;
+  }, [familyReads, members, messages, user?.id]);
+
+  // Mark as read on mount / when new messages arrive while near bottom.
   useEffect(() => {
-    if (visible.length === 0) return;
-    const id = setTimeout(
-      () => listRef.current?.scrollToEnd({ animated: false }),
-      30
-    );
-    return () => clearTimeout(id);
-  }, [visible.length]);
+    if (!familyId) return;
+    if (nearBottomRef.current) markAsRead();
+  }, [familyId, messages.length, markAsRead]);
 
   function handleLongPress(msg: MessageWithProfile) {
     const isOut = msg.author_id === user?.id;
-    // Spec ambiguity resolved: action sheet via Alert.alert with cancellable
-    // buttons. On iOS this renders as a native sheet; on Android it's a dialog.
     const buttons: any[] = [
-      {
-        text: "React",
-        onPress: () => setPickerOpenForId(msg.id),
-      },
-      {
-        text: "Reply",
-        onPress: () => setReplyingTo(msg),
-      },
+      { text: "React", onPress: () => setPickerOpenForId(msg.id) },
+      { text: "Reply", onPress: () => setReplyingTo(msg) },
     ];
     if (isOut) {
       buttons.push({
@@ -717,20 +853,41 @@ export default function ChatScreen() {
   }
 
   function handleSendVoice(uri: string, durationMs: number | null) {
-    sendVoice.mutate({
-      uri,
-      durationMs,
-      replyToId: replyingTo?.id ?? null,
-    });
+    sendVoice.mutate({ uri, durationMs, replyToId: replyingTo?.id ?? null });
     setReplyingTo(null);
   }
 
   function handlePickLetter(letterId: string) {
-    sendSharedLetter.mutate({
-      letterId,
-      replyToId: replyingTo?.id ?? null,
-    });
+    sendSharedLetter.mutate({ letterId, replyToId: replyingTo?.id ?? null });
     setReplyingTo(null);
+  }
+
+  async function handlePickImage() {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          "Permission needed",
+          "Please enable photo library access in Settings to share images.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        // mediaTypes.Images is deprecated but still works in SDK 54;
+        // string literal "images" is the forward-compatible form.
+        mediaTypes: "images" as any,
+        quality: 0.8,
+        allowsMultipleSelection: false,
+      });
+      if (result.canceled) return;
+      const asset = result.assets?.[0];
+      if (!asset?.uri) return;
+      sendImage.mutate({ uri: asset.uri, replyToId: replyingTo?.id ?? null });
+      setReplyingTo(null);
+    } catch (err: any) {
+      Alert.alert("Could not pick image", err?.message ?? "Please try again.");
+    }
   }
 
   // ── Loading state for family lookup ──────────────────────────────────────
@@ -788,11 +945,11 @@ export default function ChatScreen() {
           </View>
 
           {/* Messages */}
-          {messagesLoading ? (
+          {messagesLoading && messages.length === 0 ? (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <ActivityIndicator color={Colors.amberDeep} />
             </View>
-          ) : visible.length === 0 ? (
+          ) : !messagesLoading && visible.length === 0 ? (
             <View
               style={{
                 flex: 1,
@@ -818,26 +975,36 @@ export default function ChatScreen() {
             <FlatList
               ref={listRef}
               data={visible}
+              inverted
               keyExtractor={(m) => m.id}
               renderItem={({ item }) => {
                 const parentId = (item as any).reply_to_id as string | null;
                 const parent = parentId ? byId.get(parentId) ?? null : null;
+                const readers = readersByMessageId.get(item.id) ?? [];
                 return (
-                  <MessageRow
-                    msg={item}
-                    isOut={item.author_id === user?.id}
-                    currentUserId={user?.id ?? ""}
-                    parent={parent}
-                    onLongPress={() => handleLongPress(item)}
-                    onToggleReaction={(emoji) =>
-                      toggleReaction.mutate({ messageId: item.id, emoji })
-                    }
-                    onOpenLetter={(letterId) =>
-                      router.push(`/letter?letterId=${letterId}` as any)
-                    }
-                    activeVoiceId={activeVoiceId}
-                    setActiveVoiceId={setActiveVoiceId}
-                  />
+                  <View>
+                    <MessageRow
+                      msg={item}
+                      isOut={item.author_id === user?.id}
+                      currentUserId={user?.id ?? ""}
+                      parent={parent}
+                      onLongPress={() => handleLongPress(item)}
+                      onToggleReaction={(emoji) =>
+                        toggleReaction.mutate({ messageId: item.id, emoji })
+                      }
+                      onOpenLetter={(letterId) =>
+                        router.push(`/letter?letterId=${letterId}` as any)
+                      }
+                      onOpenImage={(url) => setViewerUrl(url)}
+                      activeVoiceId={activeVoiceId}
+                      setActiveVoiceId={setActiveVoiceId}
+                    />
+                    {readers.length > 0 ? (
+                      <View style={{ alignItems: "flex-end", marginTop: 0 }}>
+                        <ReadReceiptAvatars readers={readers} />
+                      </View>
+                    ) : null}
+                  </View>
                 );
               }}
               contentContainerStyle={{
@@ -845,21 +1012,44 @@ export default function ChatScreen() {
                 paddingTop: 12,
                 paddingBottom: 12,
               }}
-              onContentSizeChange={() =>
-                listRef.current?.scrollToEnd({ animated: false })
+              onScroll={(e) => {
+                const y = e.nativeEvent.contentOffset.y;
+                // Inverted list — top of view (newest msg) is y ≈ 0.
+                nearBottomRef.current = y < 80;
+                if (nearBottomRef.current) markAsRead();
+              }}
+              scrollEventThrottle={250}
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+              }}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <View style={{ paddingVertical: 14 }}>
+                    <ActivityIndicator color={Colors.amberDeep} />
+                  </View>
+                ) : null
               }
             />
           )}
+
+          {/* Typing indicator — placed between the list and composer so it
+              hugs the input. (Spec said either above or below; below the list
+              + above the composer feels most natural alongside the keyboard.) */}
+          <TypingIndicator users={typingUsers} />
 
           {/* Composer */}
           <Composer
             onSendText={handleSendText}
             onSendVoice={handleSendVoice}
-            onOpenLetterPicker={() => setLetterPickerOpen(true)}
+            onOpenPlusMenu={() => setPlusMenuOpen(true)}
+            onStartTyping={startTyping}
+            onStopTyping={stopTyping}
             sending={
               sendText.isPending ||
               sendVoice.isPending ||
-              sendSharedLetter.isPending
+              sendSharedLetter.isPending ||
+              sendImage.isPending
             }
             replyingTo={replyingTo}
             onClearReply={() => setReplyingTo(null)}
@@ -868,6 +1058,14 @@ export default function ChatScreen() {
           <SafeAreaView edges={["bottom"]} />
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* "+" menu overlay */}
+      <PlusMenu
+        visible={plusMenuOpen}
+        onClose={() => setPlusMenuOpen(false)}
+        onShareLetter={() => setLetterPickerOpen(true)}
+        onPickImage={handlePickImage}
+      />
 
       {/* Reaction picker overlay */}
       <ReactionPicker
@@ -886,6 +1084,13 @@ export default function ChatScreen() {
         visible={letterPickerOpen}
         onClose={() => setLetterPickerOpen(false)}
         onSelect={handlePickLetter}
+      />
+
+      {/* Full-screen image viewer */}
+      <ImageViewerModal
+        visible={!!viewerUrl}
+        mediaUrl={viewerUrl}
+        onClose={() => setViewerUrl(null)}
       />
     </View>
   );
