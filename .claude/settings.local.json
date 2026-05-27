@@ -18,7 +18,8 @@
       "mcp__vexp__run_pipeline",
       "Bash(pnpm install *)",
       "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" kill-server; & \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" start-server; Start-Sleep -Seconds 3; & \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" devices)",
-      "Bash(grep -n \"props.style\\\\|props\\\\\\\\[.style.\\\\\\\\]\\\\|'style'\\\\|\\\\\"style\\\\\"\" node_modules/react-native-css-interop/src/runtime/native/render-component.tsx)"
+      "Bash(grep -n \"props.style\\\\|props\\\\\\\\[.style.\\\\\\\\]\\\\|'style'\\\\|\\\\\"style\\\\\"\" node_modules/react-native-css-interop/src/runtime/native/render-component.tsx)",
+      "Bash(grep -v \"node_modules\\\\|\\\\\\\\.git\\\\|legacy\\\\|stories?:\")"
     ]
   }
 }
