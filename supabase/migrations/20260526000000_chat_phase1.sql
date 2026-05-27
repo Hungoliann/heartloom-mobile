@@ -1,77 +1,11 @@
 -- =====================================================================
--- heartloom-mobile — one-shot supabase setup
--- project ref: kttzkpxbqnhmbovalwfs
---
--- run this AFTER creating the `voice-memos` storage bucket:
---   storage -> new bucket -> name=voice-memos, public=OFF
---
--- paste the whole file into the supabase SQL editor and run.
--- safe to re-run (all statements are idempotent).
+-- chat phase 1 — extend messages, add read receipts + reactions, RLS
+-- safe to re-run (idempotent)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- 1. letters.family_id nullable
---    mirrors migration 20260525000002_letters_family_id_nullable.sql
---    so a user can save a letter before they have joined/created a family
+-- 1. extend public.messages
 -- ---------------------------------------------------------------------
-alter table public.letters alter column family_id drop not null;
-
--- ---------------------------------------------------------------------
--- 2. profiles.push_token column
---    expo push token stored on the profile row so the inngest delivery
---    worker can look it up without hitting auth.users metadata
--- ---------------------------------------------------------------------
-alter table public.profiles add column if not exists push_token text;
-
--- ---------------------------------------------------------------------
--- 3. storage RLS policies for the `voice-memos` bucket
---    each user can only touch objects under their own ${auth.uid()}/ prefix
---    bucket itself must be created in the dashboard first
--- ---------------------------------------------------------------------
-
-drop policy if exists "voice-memos: users can read own" on storage.objects;
-create policy "voice-memos: users can read own"
-  on storage.objects for select
-  using (
-    bucket_id = 'voice-memos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-drop policy if exists "voice-memos: users can insert own" on storage.objects;
-create policy "voice-memos: users can insert own"
-  on storage.objects for insert
-  with check (
-    bucket_id = 'voice-memos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-drop policy if exists "voice-memos: users can update own" on storage.objects;
-create policy "voice-memos: users can update own"
-  on storage.objects for update
-  using (
-    bucket_id = 'voice-memos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  )
-  with check (
-    bucket_id = 'voice-memos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-drop policy if exists "voice-memos: users can delete own" on storage.objects;
-create policy "voice-memos: users can delete own"
-  on storage.objects for delete
-  using (
-    bucket_id = 'voice-memos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
--- =====================================================================
--- 4. CHAT phase 1 — extend messages, add read receipts + reactions, RLS
---    mirrors migration 20260526000000_chat_phase1.sql
---    safe to re-run (idempotent)
--- =====================================================================
-
--- 4a. extend public.messages
 alter table public.messages add column if not exists media_url text;
 alter table public.messages add column if not exists media_type text;
 alter table public.messages add column if not exists shared_letter_id uuid references public.letters(id) on delete set null;
@@ -79,7 +13,8 @@ alter table public.messages add column if not exists reply_to_id uuid references
 alter table public.messages add column if not exists edited_at timestamptz;
 alter table public.messages add column if not exists deleted_at timestamptz;
 
--- drop any existing check constraint that references message_type
+-- drop any existing check constraint on messages.message_type so we can
+-- transition to the new media_type column without enum collisions
 do $$
 declare
   c record;
@@ -98,11 +33,19 @@ begin
   end loop;
 end $$;
 
--- 4b. index for family chat history
+-- ---------------------------------------------------------------------
+-- 2. index for family-scoped chat history fetches
+-- ---------------------------------------------------------------------
 create index if not exists messages_family_created_idx
   on public.messages (family_id, created_at desc);
 
--- 4c. my_family_id() helper used by RLS policies
+-- ---------------------------------------------------------------------
+-- 3. helper: my_family_id()
+--    RLS policies cannot subquery profiles cheaply on every row, so we
+--    expose a security definer function that returns the caller's
+--    family_id. it bypasses RLS internally but only reads the caller's
+--    own profile row keyed by auth.uid().
+-- ---------------------------------------------------------------------
 create or replace function public.my_family_id()
 returns uuid
 language sql
@@ -115,16 +58,21 @@ $$;
 
 grant execute on function public.my_family_id() to authenticated;
 
--- 4d. message_reads
+-- ---------------------------------------------------------------------
+-- 4. message_reads — per-user last-read marker per family
+-- ---------------------------------------------------------------------
 create table if not exists public.message_reads (
   family_id uuid not null references public.families(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   last_read_at timestamptz default now() not null,
   primary key (family_id, user_id)
 );
+
 alter table public.message_reads enable row level security;
 
--- 4e. message_reactions
+-- ---------------------------------------------------------------------
+-- 5. message_reactions — emoji reactions on messages
+-- ---------------------------------------------------------------------
 create table if not exists public.message_reactions (
   message_id uuid not null references public.messages(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -132,9 +80,14 @@ create table if not exists public.message_reactions (
   created_at timestamptz default now() not null,
   primary key (message_id, user_id, emoji)
 );
+
 alter table public.message_reactions enable row level security;
 
--- 4f. RLS — messages (family-scoped via my_family_id())
+-- ---------------------------------------------------------------------
+-- 6. RLS policies
+-- ---------------------------------------------------------------------
+
+-- messages: replace any prior policies with family-scoped ones
 drop policy if exists "users: own family messages"    on public.messages;
 drop policy if exists "messages: read in family"      on public.messages;
 drop policy if exists "messages: insert in family"    on public.messages;
@@ -147,8 +100,12 @@ create policy "messages: read in family"
 
 create policy "messages: insert in family"
   on public.messages for insert
-  with check (auth.uid() = author_id and family_id = public.my_family_id());
+  with check (
+    auth.uid() = author_id
+    and family_id = public.my_family_id()
+  );
 
+-- update is used for soft delete (deleted_at) and edits (edited_at)
 create policy "messages: update own"
   on public.messages for update
   using (auth.uid() = author_id and family_id = public.my_family_id())
@@ -158,7 +115,7 @@ create policy "messages: delete own"
   on public.messages for delete
   using (auth.uid() = author_id and family_id = public.my_family_id());
 
--- 4g. RLS — message_reads (own row only)
+-- message_reads
 drop policy if exists "message_reads: select own"   on public.message_reads;
 drop policy if exists "message_reads: insert own"   on public.message_reads;
 drop policy if exists "message_reads: update own"   on public.message_reads;
@@ -181,7 +138,7 @@ create policy "message_reads: delete own"
   on public.message_reads for delete
   using (auth.uid() = user_id and family_id = public.my_family_id());
 
--- 4h. RLS — message_reactions (read all in family, write own)
+-- message_reactions
 drop policy if exists "message_reactions: read in family"   on public.message_reactions;
 drop policy if exists "message_reactions: insert own"       on public.message_reactions;
 drop policy if exists "message_reactions: delete own"       on public.message_reactions;
@@ -190,7 +147,8 @@ create policy "message_reactions: read in family"
   on public.message_reactions for select
   using (
     exists (
-      select 1 from public.messages m
+      select 1
+      from public.messages m
       where m.id = message_reactions.message_id
         and m.family_id = public.my_family_id()
     )
@@ -201,7 +159,8 @@ create policy "message_reactions: insert own"
   with check (
     auth.uid() = user_id
     and exists (
-      select 1 from public.messages m
+      select 1
+      from public.messages m
       where m.id = message_reactions.message_id
         and m.family_id = public.my_family_id()
     )
@@ -211,22 +170,27 @@ create policy "message_reactions: delete own"
   on public.message_reactions for delete
   using (auth.uid() = user_id);
 
--- 4i. enable realtime replication
-do $$ begin
+-- ---------------------------------------------------------------------
+-- 7. realtime replication for messages
+--    wrapped in exception block — re-adding to the publication errors,
+-- ---------------------------------------------------------------------
+do $$
+begin
   alter publication supabase_realtime add table public.messages;
-exception when others then null; end $$;
+exception when others then
+  null;
+end $$;
 
-do $$ begin
+do $$
+begin
   alter publication supabase_realtime add table public.message_reactions;
-exception when others then null; end $$;
+exception when others then
+  null;
+end $$;
 
-do $$ begin
+do $$
+begin
   alter publication supabase_realtime add table public.message_reads;
-exception when others then null; end $$;
-
--- =====================================================================
--- NOT covered by this file (configure in the supabase dashboard UI):
---   - creating the `voice-memos` storage bucket itself
---   - auth redirect URLs and the email confirmation toggle
---   - the `message-sent-fanout` Database Webhook — see supabase/CHAT_WEBHOOK.md
--- =====================================================================
+exception when others then
+  null;
+end $$;

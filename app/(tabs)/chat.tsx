@@ -1,106 +1,230 @@
-import { Pressable } from "../../src/components/ui/Pressable";
-import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
-  Animated,
+  FlatList,
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+
+import { Pressable } from "../../src/components/ui/Pressable";
 import { Colors } from "../../src/constants/colors";
-import { useMessages, useSendMessage } from "../../src/hooks/useMessages";
+import { SERIF, SERIF_ITALIC } from "../../src/constants/fonts";
+import { supabase } from "../../src/lib/supabase";
 import { useAuthStore } from "../../src/store/auth.store";
+import { useFamily, useMyFamily } from "../../src/hooks/useFamily";
+import {
+  useMessages,
+  useSendTextMessage,
+  useSendVoiceMessage,
+  useDeleteMessage,
+  useChatRealtime,
+  type MessageWithProfile,
+} from "../../src/hooks/useMessages";
+import { useAudioRecorder } from "../../src/hooks/useAudioRecorder";
+import { useAudioPlayer } from "../../src/hooks/useAudioPlayer";
 
-// ─── Brand tokens ────────────────────────────────────────────────────────────
-const CREAM_PAPER = "rgba(255,250,232,0.85)";
-const RULE = "rgba(184,132,60,0.22)";
-
-// Avatar background colours matching prototype classes
-const AV_AMBER = Colors.amber;      // default
-const AV_SAGE = "#9CAF88";          // pt-msg__av--sage
-const AV_INK = Colors.ink;          // pt-msg__av--ink (Maya)
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-type MsgType = "in" | "out" | "system" | "scheduled";
-
-interface AudioAttach {
-  quote: string;
-  duration: string;
-  year: string;
-  label: string;
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function fmtClock(iso?: string | null) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+function fmtMmSs(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+function initialOf(name: string | null | undefined) {
+  if (!name) return "?";
+  const c = name.trim()[0];
+  return c ? c.toUpperCase() : "?";
 }
 
-interface Msg {
-  id: string;
-  type: MsgType;
-  who?: string;
-  avInitial?: string;
-  avColor?: string;
-  text?: string;
-  time?: string;
-  audio?: AudioAttach;
-  // system / scheduled specific
-  sysStrong?: string; // bold part inside system message
-  schHead?: string;
-  schBody?: string;
+// ─── Signed-URL hook (per voice message) ────────────────────────────────────
+function useSignedAudioUrl(mediaUrl: string | null | undefined) {
+  return useQuery({
+    queryKey: ["chat-audio", mediaUrl],
+    queryFn: async () => {
+      if (!mediaUrl) return null;
+      const { data, error } = await supabase.storage
+        .from("voice-memos")
+        .createSignedUrl(mediaUrl, 60 * 60);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+    enabled: !!mediaUrl,
+    staleTime: 50 * 60 * 1000,
+  });
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Voice bubble ───────────────────────────────────────────────────────────
+function VoiceBubble({
+  mediaUrl,
+  isOut,
+}: {
+  mediaUrl: string | null | undefined;
+  isOut: boolean;
+}) {
+  const { data: signedUrl } = useSignedAudioUrl(mediaUrl);
+  const { play, pause, isPlaying, positionMs, durationMs, progress } =
+    useAudioPlayer(signedUrl ?? null);
 
-function Avatar({ initial, color }: { initial: string; color: string }) {
-  const isInk = color === AV_INK;
+  const fg = isOut ? Colors.bg : Colors.amberDeep;
+  const trackBg = isOut ? "rgba(251,244,224,0.25)" : "rgba(184,132,60,0.18)";
+
   return (
     <View
       style={{
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: color,
+        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        // subtle inner glow matching prototype
-        shadowColor: Colors.white,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: isInk ? 0 : 0.35,
-        shadowRadius: 0,
+        gap: 10,
+        minWidth: 160,
       }}
     >
-      <Text
-        style={{
-          fontSize: 9,
-          fontWeight: "700",
-          color: isInk ? Colors.bg : Colors.white,
-          letterSpacing: 0.04 * 9,
-        }}
+      <Pressable
+        onPress={() => (isPlaying ? pause() : play())}
+        disabled={!signedUrl}
+        style={({ pressed }) => ({
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: isOut ? "rgba(251,244,224,0.18)" : Colors.amber,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: pressed ? 0.75 : signedUrl ? 1 : 0.5,
+        })}
       >
-        {initial}
-      </Text>
+        <Feather
+          name={isPlaying ? "pause" : "play"}
+          size={14}
+          color={isOut ? Colors.bg : Colors.white}
+          style={{ marginLeft: isPlaying ? 0 : 1 }}
+        />
+      </Pressable>
+
+      <View style={{ flex: 1, gap: 6 }}>
+        <View
+          style={{
+            height: 3,
+            borderRadius: 2,
+            backgroundColor: trackBg,
+            overflow: "hidden",
+          }}
+        >
+          <View
+            style={{
+              width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
+              height: "100%",
+              backgroundColor: fg,
+            }}
+          />
+        </View>
+        <Text style={{ fontSize: 10.5, color: fg, letterSpacing: 0.3 }}>
+          {fmtMmSs(isPlaying || positionMs > 0 ? positionMs : durationMs)}
+        </Text>
+      </View>
     </View>
   );
 }
 
-function AudioCard({ audio }: { audio: AudioAttach }) {
+// ─── Message row ────────────────────────────────────────────────────────────
+function MessageRow({
+  msg,
+  isOut,
+  onLongPress,
+}: {
+  msg: MessageWithProfile;
+  isOut: boolean;
+  onLongPress?: () => void;
+}) {
+  const isVoice =
+    (msg as any).media_type === "voice" || msg.message_type === "voice";
+  const author = msg.profiles?.full_name ?? "Family";
+
+  const bubble = (
+    <Pressable
+      onLongPress={isOut ? onLongPress : undefined}
+      delayLongPress={350}
+      style={({ pressed }) => ({
+        maxWidth: "78%",
+        backgroundColor: isOut ? Colors.amber : "rgba(255,250,232,0.92)",
+        borderWidth: isOut ? 0 : 1,
+        borderColor: "rgba(184,132,60,0.22)",
+        borderRadius: 16,
+        borderBottomRightRadius: isOut ? 4 : 16,
+        borderBottomLeftRadius: isOut ? 16 : 4,
+        paddingHorizontal: 12,
+        paddingVertical: 9,
+        opacity: pressed && isOut ? 0.85 : 1,
+      })}
+    >
+      {!isOut && (
+        <Text
+          style={{
+            fontSize: 10,
+            fontWeight: "700",
+            color: Colors.amberDeep,
+            marginBottom: 3,
+            letterSpacing: 0.3,
+          }}
+        >
+          {author}
+        </Text>
+      )}
+
+      {isVoice ? (
+        <VoiceBubble mediaUrl={(msg as any).media_url} isOut={isOut} />
+      ) : (
+        <Text
+          style={{
+            fontSize: 14,
+            lineHeight: 20,
+            color: isOut ? Colors.cream : Colors.ink,
+          }}
+        >
+          {msg.body ?? ""}
+        </Text>
+      )}
+
+      <Text
+        style={{
+          fontSize: 10,
+          color: isOut ? "rgba(251,244,224,0.7)" : Colors.inkMuted,
+          marginTop: 4,
+          letterSpacing: 0.3,
+          alignSelf: isOut ? "flex-end" : "flex-start",
+        }}
+      >
+        {fmtClock(msg.created_at)}
+      </Text>
+    </Pressable>
+  );
+
+  if (isOut) {
+    return <View style={{ alignItems: "flex-end", marginVertical: 4 }}>{bubble}</View>;
+  }
+
   return (
     <View
       style={{
-        marginTop: 8,
-        backgroundColor: "rgba(210,127,20,0.10)",
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 9,
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "flex-end",
         gap: 8,
+        marginVertical: 4,
       }}
     >
-      {/* Play button */}
       <View
         style={{
           width: 28,
@@ -109,550 +233,401 @@ function AudioCard({ audio }: { audio: AudioAttach }) {
           backgroundColor: Colors.amber,
           alignItems: "center",
           justifyContent: "center",
-          flexShrink: 0,
         }}
       >
-        <Text style={{ color: Colors.white, fontSize: 9, marginLeft: 2 }}>▶</Text>
-      </View>
-
-      {/* Track info */}
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontFamily: SERIF_ITALIC,
-            fontStyle: "italic",
-            fontSize: 13,
-            color: Colors.ink,
-            lineHeight: 18,
-          }}
-        >
-          "{audio.quote}"
-        </Text>
-        <Text
-          style={{
-            fontFamily: "System",
-            fontSize: 10,
-            color: Colors.inkMuted,
-            marginTop: 2,
-            letterSpacing: 0.3,
-            textTransform: "uppercase",
-          }}
-        >
-          {audio.duration} · {audio.year} · {audio.label}
+        <Text style={{ color: Colors.white, fontWeight: "700", fontSize: 11 }}>
+          {initialOf(author)}
         </Text>
       </View>
+      {bubble}
     </View>
   );
 }
 
-function SystemMsg({ msg }: { msg: Msg }) {
-  return (
-    <View style={{ alignItems: "center", marginVertical: 6 }}>
-      <View
-        style={{
-          backgroundColor: "rgba(156,175,136,0.15)",
-          borderRadius: 20,
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-          maxWidth: "80%",
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 12,
-            color: "#4F6940",
-            textAlign: "center",
-            lineHeight: 17,
-          }}
-        >
-          {msg.text}
-          {msg.sysStrong ? (
-            <Text style={{ fontWeight: "700" }}>{msg.sysStrong}</Text>
-          ) : null}
-          {" · opens on her 30th."}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-function ScheduledMsg({ msg }: { msg: Msg }) {
+// ─── No-family empty state ──────────────────────────────────────────────────
+function NoFamilyState({ onOpenFamily }: { onOpenFamily: () => void }) {
   return (
     <View
       style={{
-        marginVertical: 8,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        backgroundColor: "rgba(210,127,20,0.10)",
-        borderWidth: 1,
-        borderStyle: "dashed",
-        borderColor: "rgba(210,127,20,0.5)",
-        borderRadius: 12,
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 28,
+        gap: 12,
       }}
     >
+      <Feather name="users" size={32} color={Colors.amberDeep} />
       <Text
         style={{
-          fontSize: 9.5,
-          fontWeight: "700",
-          color: Colors.amberDeep,
-          letterSpacing: 0.8,
-          marginBottom: 4,
+          fontFamily: SERIF,
+          fontSize: 22,
+          color: Colors.ink,
+          textAlign: "center",
         }}
       >
-        {msg.schHead}
+        You don't have a family yet
       </Text>
       <Text
         style={{
           fontFamily: SERIF_ITALIC,
           fontStyle: "italic",
-          fontSize: 12.5,
-          color: Colors.inkSoft,
-          lineHeight: 18,
+          fontSize: 14.5,
+          color: Colors.inkMuted,
+          textAlign: "center",
+          lineHeight: 21,
         }}
       >
-        {msg.schBody}
+        Create one or join with an invite code to start chatting.
       </Text>
-    </View>
-  );
-}
-
-function InMsg({ msg }: { msg: Msg }) {
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "flex-end",
-        gap: 8,
-      }}
-    >
-      {/* Avatar */}
-      {msg.avInitial ? (
-        <Avatar initial={msg.avInitial} color={msg.avColor ?? AV_AMBER} />
-      ) : (
-        <View style={{ width: 28 }} />
-      )}
-
-      {/* Bubble */}
-      <View style={{ maxWidth: "78%" }}>
-        {msg.who && (
-          <Text
-            style={{
-              fontSize: 9.5,
-              fontWeight: "700",
-              color: Colors.amberDeep,
-              marginBottom: 3,
-              letterSpacing: 0.3,
-            }}
-          >
-            {msg.who}
-          </Text>
-        )}
-        <View
-          style={{
-            backgroundColor: CREAM_PAPER,
-            borderWidth: 1,
-            borderColor: RULE,
-            borderRadius: 16,
-            borderBottomLeftRadius: 4,
-            paddingHorizontal: 12,
-            paddingVertical: 9,
-          }}
-        >
-          {msg.text && (
-            <Text
-              style={{
-                fontSize: 13.5,
-                color: Colors.ink,
-                lineHeight: 19,
-              }}
-            >
-              {msg.text}
-            </Text>
-          )}
-          {msg.audio && <AudioCard audio={msg.audio} />}
-          {msg.time && (
-            <Text
-              style={{
-                fontSize: 10,
-                color: Colors.inkMuted,
-                marginTop: 4,
-                letterSpacing: 0.3,
-              }}
-            >
-              {msg.time}
-            </Text>
-          )}
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function OutMsg({ msg }: { msg: Msg }) {
-  return (
-    <View style={{ alignItems: "flex-end" }}>
-      <View
-        style={{
-          maxWidth: "78%",
-          backgroundColor: Colors.ink,
-          borderRadius: 16,
-          borderBottomRightRadius: 4,
-          paddingHorizontal: 12,
-          paddingVertical: 9,
-        }}
+      <Pressable
+        onPress={onOpenFamily}
+        style={({ pressed }) => ({
+          marginTop: 12,
+          backgroundColor: "#2D4530",
+          borderRadius: 12,
+          paddingVertical: 13,
+          paddingHorizontal: 28,
+          opacity: pressed ? 0.8 : 1,
+        })}
       >
-        {msg.text && (
-          <Text
-            style={{
-              fontSize: 13.5,
-              color: Colors.bg,
-              lineHeight: 19,
-            }}
-          >
-            {msg.text}
-          </Text>
-        )}
-        {msg.time && (
-          <Text
-            style={{
-              fontSize: 10,
-              color: "rgba(251,244,224,0.6)",
-              marginTop: 4,
-              letterSpacing: 0.3,
-            }}
-          >
-            {msg.time} · You
-          </Text>
-        )}
-      </View>
+        <Text style={{ color: Colors.white, fontWeight: "600", fontSize: 14 }}>
+          Open Family
+        </Text>
+      </Pressable>
     </View>
   );
 }
 
-function renderMsg(msg: Msg) {
-  switch (msg.type) {
-    case "in":
-      return <InMsg key={msg.id} msg={msg} />;
-    case "out":
-      return <OutMsg key={msg.id} msg={msg} />;
-    case "system":
-      return <SystemMsg key={msg.id} msg={msg} />;
-    case "scheduled":
-      return <ScheduledMsg key={msg.id} msg={msg} />;
-  }
-}
-
-function fmtTime(d: Date) {
-  return d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
-export default function ChatScreen() {
-  const router = useRouter();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scrollRef = useRef<ScrollView>(null);
+// ─── Composer ───────────────────────────────────────────────────────────────
+function Composer({
+  onSendText,
+  onSendVoice,
+  sending,
+}: {
+  onSendText: (body: string) => void;
+  onSendVoice: (uri: string) => void;
+  sending: boolean;
+}) {
   const [draft, setDraft] = useState("");
+  const recorder = useAudioRecorder();
+  const { isRecording, seconds, startRecording, stopRecording } = recorder;
 
-  const user = useAuthStore((s) => s.user);
-  const { data: dbMessages, isLoading } = useMessages();
-  const sendMessage = useSendMessage();
+  async function handleMic() {
+    await startRecording();
+  }
 
-  const messages: Msg[] = (dbMessages ?? []).map((m) => ({
-    id: m.id,
-    type:
-      m.author_id === user?.id
-        ? "out"
-        : m.message_type === "system"
-        ? "system"
-        : m.message_type === "scheduled"
-        ? "scheduled"
-        : "in",
-    who:
-      m.message_type === "text" && m.author_id !== user?.id
-        ? ((m as any).profiles?.full_name ?? "Family")
-        : undefined,
-    avInitial:
-      m.message_type === "text" && m.author_id !== user?.id
-        ? ((m as any).profiles?.full_name ?? "?").slice(0, 2).toUpperCase()
-        : undefined,
-    avColor: AV_AMBER,
-    text: m.body ?? undefined,
-    time: m.created_at
-      ? new Date(m.created_at).toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-      : undefined,
-    audio: m.audio_quote
-      ? {
-          quote: m.audio_quote,
-          duration: m.audio_duration ?? "",
-          year: m.audio_year ?? "",
-          label: m.audio_label ?? "",
-        }
-      : undefined,
-    schHead: m.scheduled_head ?? undefined,
-    schBody: m.scheduled_body ?? undefined,
-  }));
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 420,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  async function handleStop() {
+    await stopRecording();
+    // recorder.recordingUri updates inside stopRecording — read via a small delay.
+    // expo-audio sets it synchronously after stop() resolves.
+    const uri = recorder.recordingUri;
+    if (uri) onSendVoice(uri);
+  }
 
   function send() {
     const text = draft.trim();
     if (!text) return;
-    sendMessage.mutate({ body: text });
+    onSendText(text);
     setDraft("");
-    setTimeout(
-      () => scrollRef.current?.scrollToEnd({ animated: true }),
-      80
+  }
+
+  if (isRecording) {
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          backgroundColor: Colors.bg,
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            backgroundColor: "rgba(184,98,65,0.10)",
+            borderRadius: 26,
+            borderWidth: 1,
+            borderColor: "rgba(184,98,65,0.35)",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+          }}
+        >
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: Colors.terra,
+            }}
+          />
+          <Text
+            style={{
+              fontSize: 13,
+              color: Colors.terra,
+              fontFamily: SERIF_ITALIC,
+              fontStyle: "italic",
+            }}
+          >
+            Recording… {fmtMmSs(seconds * 1000)}
+          </Text>
+        </View>
+        <Pressable
+          onPress={handleStop}
+          style={({ pressed }) => ({
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: Colors.terra,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.8 : 1,
+          })}
+        >
+          <Feather name="square" size={16} color={Colors.white} />
+        </Pressable>
+      </View>
     );
   }
 
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        backgroundColor: Colors.bg,
+      }}
+    >
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          backgroundColor: "rgba(255,250,232,0.92)",
+          borderRadius: 26,
+          borderWidth: 1,
+          borderColor: "rgba(184,132,60,0.30)",
+          paddingHorizontal: 14,
+          paddingVertical: 6,
+        }}
+      >
+        <TextInput
+          value={draft}
+          onChangeText={setDraft}
+          placeholder="Write to the family…"
+          placeholderTextColor={Colors.inkMuted}
+          style={{
+            flex: 1,
+            fontSize: 14,
+            color: Colors.ink,
+            paddingVertical: 6,
+            maxHeight: 90,
+          }}
+          multiline
+          editable={!sending}
+        />
+      </View>
+
+      {draft.trim() ? (
+        <Pressable
+          onPress={send}
+          disabled={sending}
+          style={({ pressed }) => ({
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: Colors.amber,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed || sending ? 0.7 : 1,
+          })}
+        >
+          <Feather name="arrow-up" size={18} color={Colors.white} />
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={handleMic}
+          style={({ pressed }) => ({
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: "rgba(210,127,20,0.16)",
+            borderWidth: 1,
+            borderColor: "rgba(184,132,60,0.30)",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Feather name="mic" size={18} color={Colors.amberDeep} />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// ─── Screen ─────────────────────────────────────────────────────────────────
+export default function ChatScreen() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const { data: family, isLoading: familyLoading } = useMyFamily();
+  const { data: members } = useFamily();
+
+  const familyId = family?.id ?? null;
+  const { data: messages = [], isLoading: messagesLoading } = useMessages();
+  const sendText = useSendTextMessage();
+  const sendVoice = useSendVoiceMessage();
+  const deleteMessage = useDeleteMessage();
+
+  useChatRealtime(familyId, { enabled: !!familyId });
+
+  const listRef = useRef<FlatList<MessageWithProfile>>(null);
+  const memberCount = members?.length ?? 0;
+
+  const visible = useMemo(
+    () => messages.filter((m) => !(m as any).deleted_at),
+    [messages]
+  );
+
+  // Scroll to bottom whenever the list changes.
+  useEffect(() => {
+    if (visible.length === 0) return;
+    const id = setTimeout(
+      () => listRef.current?.scrollToEnd({ animated: false }),
+      30
+    );
+    return () => clearTimeout(id);
+  }, [visible.length]);
+
+  function handleLongPressOwn(id: string) {
+    Alert.alert("Delete this message?", "It will be removed from everyone's view.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => deleteMessage.mutate({ id }),
+      },
+    ]);
+  }
+
+  // ── Loading state for family lookup ──────────────────────────────────────
+  if (familyLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator color={Colors.amberDeep} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── No family → onboarding prompt ────────────────────────────────────────
+  if (!family) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={["top"]}>
+        <NoFamilyState onOpenFamily={() => router.push("/(tabs)/family")} />
+      </SafeAreaView>
+    );
+  }
+
+  // ── Main chat ────────────────────────────────────────────────────────────
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bg }}>
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={0}
         >
-          {/* ── Header ──────────────────────────────────────────────────── */}
+          {/* Header */}
           <View
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              paddingHorizontal: 14,
-              paddingTop: 8,
+              paddingHorizontal: 18,
+              paddingTop: 6,
               paddingBottom: 12,
-              backgroundColor: Colors.bg,
               borderBottomWidth: 1,
-              borderBottomColor: "rgba(74,47,24,0.14)",
+              borderBottomColor: Colors.rule,
             }}
           >
-            {/* Back */}
-            <Pressable
-              onPress={() => router.back()}
-              style={({ pressed }) => ({
-                width: 34,
-                height: 34,
-                borderRadius: 17,
-                borderWidth: 1,
-                borderColor: "rgba(74,47,24,0.14)",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.6 : 1,
-              })}
+            <Text
+              style={{
+                fontFamily: SERIF,
+                fontSize: 20,
+                color: Colors.ink,
+                lineHeight: 24,
+              }}
+              numberOfLines={1}
             >
-              <Text style={{ fontSize: 22, color: Colors.inkSoft, lineHeight: 26 }}>
-                ‹
-              </Text>
-            </Pressable>
+              {family.name}
+            </Text>
+            <Text style={{ fontSize: 11.5, color: Colors.inkMuted, marginTop: 2 }}>
+              {memberCount} {memberCount === 1 ? "member" : "members"}
+            </Text>
+          </View>
 
-            {/* Group avatar + name */}
+          {/* Messages */}
+          {messagesLoading ? (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator color={Colors.amberDeep} />
+            </View>
+          ) : visible.length === 0 ? (
             <View
               style={{
                 flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                minWidth: 0,
-              }}
-            >
-              {/* Gradient avatar matching prototype: linear-gradient(135deg, amber, ink) */}
-              <View
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 15,
-                  backgroundColor: Colors.amber,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: SERIF,
-                    fontSize: 14,
-                    color: Colors.white,
-                    fontWeight: "600",
-                  }}
-                >
-                  H
-                </Text>
-              </View>
-
-              <View style={{ flexShrink: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: SERIF,
-                    fontSize: 14.5,
-                    color: Colors.ink,
-                    lineHeight: 18,
-                  }}
-                  numberOfLines={1}
-                >
-                  The Hayes
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    color: Colors.inkMuted,
-                    marginTop: 1,
-                  }}
-                  numberOfLines={1}
-                >
-                  Private · 5 members · end-to-end encrypted
-                </Text>
-              </View>
-            </View>
-
-            {/* Options */}
-            <Pressable
-              style={({ pressed }) => ({
-                width: 34,
-                height: 34,
-                borderRadius: 17,
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Text style={{ fontSize: 20, color: Colors.inkSoft, letterSpacing: 1 }}>
-                ⋯
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* ── Message list ────────────────────────────────────────────── */}
-          {isLoading ? (
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ color: Colors.inkMuted, fontSize: 13 }}>Loading messages…</Text>
-            </View>
-          ) : (
-            <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-              <ScrollView
-                ref={scrollRef}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingHorizontal: 14,
-                  paddingTop: 10,
-                  paddingBottom: 16,
-                  gap: 10,
-                }}
-                keyboardShouldPersistTaps="handled"
-                onContentSizeChange={() =>
-                  scrollRef.current?.scrollToEnd({ animated: false })
-                }
-              >
-                {/* Date divider */}
-                <View style={{ alignItems: "center", marginVertical: 8 }}>
-                  <Text
-                    style={{
-                      fontSize: 10,
-                      color: Colors.inkMuted,
-                      letterSpacing: 0.8,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Today
-                  </Text>
-                </View>
-
-                {messages.map(renderMsg)}
-              </ScrollView>
-            </Animated.View>
-          )}
-
-          {/* ── Composer ────────────────────────────────────────────────── */}
-          <View
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 10,
-              // light cream background with amber-tinted border, matching pt-chat__compose
-              backgroundColor: Colors.bg,
-              borderTopWidth: 0,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: "rgba(255,250,232,0.9)",
-                borderRadius: 26,
-                borderWidth: 1,
-                borderColor: "rgba(184,132,60,0.30)",
-                paddingHorizontal: 14,
-                paddingVertical: 6,
-                shadowColor: Colors.ink,
-                shadowOffset: { width: 0, height: -4 },
-                shadowOpacity: 0.07,
-                shadowRadius: 9,
-                elevation: 3,
+                paddingHorizontal: 32,
               }}
             >
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                placeholder="Write to the family…"
-                placeholderTextColor={Colors.inkMuted}
+              <Text
                 style={{
-                  flex: 1,
-                  fontSize: 13.5,
-                  color: Colors.ink,
-                  paddingVertical: 4,
-                  maxHeight: 80,
+                  fontFamily: SERIF_ITALIC,
+                  fontStyle: "italic",
+                  fontSize: 15,
+                  color: Colors.inkMuted,
+                  textAlign: "center",
+                  lineHeight: 22,
                 }}
-                multiline
-                returnKeyType="send"
-                onSubmitEditing={send}
-                blurOnSubmit={false}
-              />
-
-              {/* Send / mic button */}
-              <Pressable
-                onPress={send}
-                style={({ pressed }) => ({
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: draft.trim() ? Colors.amber : "rgba(210,127,20,0.18)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  opacity: pressed ? 0.8 : 1,
-                  flexShrink: 0,
-                })}
               >
-                {draft.trim() ? (
-                  <Text
-                    style={{
-                      color: Colors.white,
-                      fontSize: 14,
-                      lineHeight: 18,
-                      marginBottom: 1,
-                    }}
-                  >
-                    ↑
-                  </Text>
-                ) : (
-                  <Feather name="mic" size={16} color={Colors.amberDeep} />
-                )}
-              </Pressable>
+                Say hello. This is your family's space.
+              </Text>
             </View>
-          </View>
+          ) : (
+            <FlatList
+              ref={listRef}
+              data={visible}
+              keyExtractor={(m) => m.id}
+              renderItem={({ item }) => (
+                <MessageRow
+                  msg={item}
+                  isOut={item.author_id === user?.id}
+                  onLongPress={() => handleLongPressOwn(item.id)}
+                />
+              )}
+              contentContainerStyle={{
+                paddingHorizontal: 14,
+                paddingTop: 12,
+                paddingBottom: 12,
+              }}
+              onContentSizeChange={() =>
+                listRef.current?.scrollToEnd({ animated: false })
+              }
+            />
+          )}
+
+          {/* Composer */}
+          <Composer
+            onSendText={(body) => sendText.mutate({ body })}
+            onSendVoice={(uri) => sendVoice.mutate({ uri })}
+            sending={sendText.isPending || sendVoice.isPending}
+          />
 
           <SafeAreaView edges={["bottom"]} />
         </KeyboardAvoidingView>

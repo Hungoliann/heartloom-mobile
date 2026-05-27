@@ -34,9 +34,31 @@ your server.
      API → `service_role` secret (NOT the anon key — keep this server-only).
    - `INNGEST_EVENT_KEY` — Inngest dashboard → Manage → Event Keys.
    - `INNGEST_SIGNING_KEY` — Inngest dashboard → Manage → Signing Key.
+   - `SUPABASE_WEBHOOK_SECRET` — a long random string you generate yourself
+     (e.g. `openssl rand -hex 32`). The same value must be set as the
+     `x-webhook-secret` header on the Supabase Database Webhook (see
+     `supabase/CHAT_WEBHOOK.md`).
 4. Deploy. Hit `https://<service>.onrender.com/health` and confirm it returns
    `{ status: "ok", pendingLetters: <n> }`.
 5. Finish Option 1 step 3 to register the app with Inngest Cloud.
+
+## Chat fan-out webhook (`chat-message-sent`)
+
+A second Inngest function, `chat-message-sent`, fans out Expo push
+notifications to every family member (except the author) whenever a new row
+is inserted into `public.messages`. It is triggered by an event
+(`chat/message.sent`) which the server emits from the
+`POST /api/inngest/messages/inserted` endpoint when Supabase fires its
+Database Webhook.
+
+1. Generate the shared secret: `openssl rand -hex 32`.
+2. Set it on the Render service as `SUPABASE_WEBHOOK_SECRET`.
+3. Configure the Supabase Database Webhook in the dashboard to POST to
+   `https://<service>.onrender.com/api/inngest/messages/inserted` with header
+   `x-webhook-secret: <same value>`. Full dashboard walk-through lives in
+   `supabase/CHAT_WEBHOOK.md`.
+4. **After redeploying**, re-sync the app in Inngest (Manage → Apps → Sync) so
+   the new `chat-message-sent` function shows up next to `deliver-letters`.
 
 ## Local testing
 

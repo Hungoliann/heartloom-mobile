@@ -176,10 +176,147 @@ const deliverLetters = inngest.createFunction(
   }
 );
 
+// Chat fan-out: triggered when a new row hits public.messages.
+// Fetches recipients (everyone in the family except the author) and sends an
+// Expo push notification to each. Each network call is wrapped in step.run so
+// Inngest retries the steps idempotently.
+const messageSent = inngest.createFunction(
+  { id: "chat-message-sent", name: "Chat: Fan-out Push" },
+  { event: "chat/message.sent" },
+  async ({ event, step }: { event: any; step: any }) => {
+    const { messageId } = event.data as { messageId: string };
+
+    const message = await step.run("fetch-message", async () => {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("id, family_id, author_id, body, media_type")
+        .eq("id", messageId)
+        .maybeSingle();
+      if (error) {
+        console.error(`[chat-message-sent] fetch message ${messageId} failed:`, error.message);
+        return null;
+      }
+      return data;
+    });
+
+    if (!message) {
+      console.warn(`[chat-message-sent] message ${messageId} not found — skipping`);
+      return { delivered: 0 };
+    }
+
+    const author = await step.run("fetch-author", async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", message.author_id)
+        .maybeSingle();
+      if (error) {
+        console.warn(`[chat-message-sent] author lookup failed for ${message.author_id}:`, error.message);
+        return null;
+      }
+      return data;
+    });
+
+    const recipients = await step.run("fetch-recipients", async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, push_token")
+        .eq("family_id", message.family_id)
+        .neq("id", message.author_id)
+        .not("push_token", "is", null);
+      if (error) {
+        console.error(`[chat-message-sent] recipients lookup failed family=${message.family_id}:`, error.message);
+        return [];
+      }
+      return (data ?? []).filter((r: any) => typeof r.push_token === "string" && r.push_token.length > 0);
+    });
+
+    if (!recipients || recipients.length === 0) {
+      console.log(`[chat-message-sent] no eligible recipients for message=${messageId}`);
+      return { delivered: 0 };
+    }
+
+    const title = (author?.full_name as string) || "New message";
+    let body: string;
+    if (message.media_type === "voice") {
+      body = "Sent a voice message";
+    } else if (message.media_type === "letter") {
+      body = "Shared a letter";
+    } else if (typeof message.body === "string" && message.body.trim().length > 0) {
+      body = message.body.length > 140 ? `${message.body.slice(0, 137)}...` : message.body;
+    } else {
+      body = "Sent a message";
+    }
+
+    const delivered = await step.run("send-push", async () => {
+      const tickets = recipients.map((r: any) => ({
+        to: r.push_token,
+        title,
+        body,
+        data: { messageId: message.id, familyId: message.family_id },
+        sound: "default",
+      }));
+      try {
+        const resp = await fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tickets),
+        });
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => "");
+          console.warn(`[chat-message-sent] push send non-200 message=${messageId} status=${resp.status} body=${text}`);
+          return 0;
+        }
+        const json: any = await resp.json().catch(() => null);
+        console.log(`[chat-message-sent] push send response message=${messageId}:`, JSON.stringify(json));
+        return tickets.length;
+      } catch (e: any) {
+        console.warn(`[chat-message-sent] push send threw for message=${messageId}:`, e?.message ?? e);
+        return 0;
+      }
+    });
+
+    console.log(`[chat-message-sent] delivered=${delivered} message=${messageId}`);
+    return { delivered };
+  }
+);
+
+// Supabase Database Webhook receiver — fires on INSERT into public.messages.
+// We don't do work here: we just hand the event to Inngest and 200 fast so the
+// webhook doesn't time out or retry.
+app.post("/api/inngest/messages/inserted", async (req, res) => {
+  const secret = req.header("x-webhook-secret");
+  if (!process.env.SUPABASE_WEBHOOK_SECRET || secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
+    console.warn(`[chat-webhook] rejected: bad or missing x-webhook-secret`);
+    return res.status(401).json({ error: "unauthorized" });
+  }
+
+  const payload = req.body;
+  if (!payload || payload.type !== "INSERT" || !payload.record || !payload.record.id) {
+    console.warn(`[chat-webhook] rejected: unexpected payload shape`);
+    return res.status(400).json({ error: "bad payload" });
+  }
+
+  const messageId = payload.record.id as string;
+  console.log(`[chat-webhook] received message ${messageId}`);
+
+  try {
+    await inngest.send({
+      name: "chat/message.sent",
+      data: { messageId },
+    });
+  } catch (e: any) {
+    console.error(`[chat-webhook] inngest.send failed for message=${messageId}:`, e?.message ?? e);
+    return res.status(500).json({ error: "inngest send failed" });
+  }
+
+  return res.status(200).json({ ok: true });
+});
+
 // Inngest webhook handler
 app.use(
   "/api/inngest",
-  serve({ client: inngest, functions: [deliverLetters] })
+  serve({ client: inngest, functions: [deliverLetters, messageSent] })
 );
 
 const PORT = process.env.PORT || 3001;
