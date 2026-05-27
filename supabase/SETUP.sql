@@ -225,6 +225,14 @@ do $$ begin
 exception when others then null; end $$;
 
 -- =====================================================================
+-- ---------------------------------------------------------------------
+-- 5. CHAT phase 2 — voice duration metadata
+--    so the player can show "0:08" before the user taps play
+-- ---------------------------------------------------------------------
+alter table public.messages
+  add column if not exists duration_ms integer;
+
+-- =====================================================================
 -- NOT covered by this file (configure in the supabase dashboard UI):
 --   - creating the `voice-memos` storage bucket itself
 --   - auth redirect URLs and the email confirmation toggle

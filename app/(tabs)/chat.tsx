@@ -24,12 +24,19 @@ import {
   useMessages,
   useSendTextMessage,
   useSendVoiceMessage,
+  useSendSharedLetter,
+  useToggleReaction,
   useDeleteMessage,
   useChatRealtime,
   type MessageWithProfile,
 } from "../../src/hooks/useMessages";
 import { useAudioRecorder } from "../../src/hooks/useAudioRecorder";
 import { useAudioPlayer } from "../../src/hooks/useAudioPlayer";
+import { ReactionPicker } from "../../src/components/chat/ReactionPicker";
+import { ReactionChips } from "../../src/components/chat/ReactionChips";
+import { SharedLetterCard } from "../../src/components/chat/SharedLetterCard";
+import { LetterPickerModal } from "../../src/components/chat/LetterPickerModal";
+import { ReplyPreview } from "../../src/components/chat/ReplyPreview";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function fmtClock(iso?: string | null) {
@@ -73,16 +80,40 @@ function useSignedAudioUrl(mediaUrl: string | null | undefined) {
 function VoiceBubble({
   mediaUrl,
   isOut,
+  storedDurationMs,
+  isActivePlayer,
+  onRequestPlay,
+  onRequestPause,
 }: {
   mediaUrl: string | null | undefined;
   isOut: boolean;
+  /** Server-stored duration (from message.duration_ms). Shown before audio loads. */
+  storedDurationMs?: number | null;
+  /** True if this is the currently selected/playing bubble. */
+  isActivePlayer: boolean;
+  onRequestPlay: () => void;
+  onRequestPause: () => void;
 }) {
   const { data: signedUrl } = useSignedAudioUrl(mediaUrl);
   const { play, pause, isPlaying, positionMs, durationMs, progress } =
     useAudioPlayer(signedUrl ?? null);
 
+  // Coordination: when another bubble becomes active, ensure we pause.
+  useEffect(() => {
+    if (!isActivePlayer && isPlaying) {
+      pause();
+    }
+  }, [isActivePlayer, isPlaying, pause]);
+
   const fg = isOut ? Colors.bg : Colors.amberDeep;
   const trackBg = isOut ? "rgba(251,244,224,0.25)" : "rgba(184,132,60,0.18)";
+
+  const effectiveDuration =
+    durationMs > 0
+      ? durationMs
+      : storedDurationMs && storedDurationMs > 0
+        ? storedDurationMs
+        : 0;
 
   return (
     <View
@@ -94,7 +125,15 @@ function VoiceBubble({
       }}
     >
       <Pressable
-        onPress={() => (isPlaying ? pause() : play())}
+        onPress={() => {
+          if (isPlaying) {
+            onRequestPause();
+            pause();
+          } else {
+            onRequestPlay();
+            play();
+          }
+        }}
         disabled={!signedUrl}
         style={({ pressed }) => ({
           width: 32,
@@ -132,7 +171,7 @@ function VoiceBubble({
           />
         </View>
         <Text style={{ fontSize: 10.5, color: fg, letterSpacing: 0.3 }}>
-          {fmtMmSs(isPlaying || positionMs > 0 ? positionMs : durationMs)}
+          {fmtMmSs(isPlaying || positionMs > 0 ? positionMs : effectiveDuration)}
         </Text>
       </View>
     </View>
@@ -143,19 +182,36 @@ function VoiceBubble({
 function MessageRow({
   msg,
   isOut,
+  currentUserId,
+  parent,
   onLongPress,
+  onToggleReaction,
+  onOpenLetter,
+  activeVoiceId,
+  setActiveVoiceId,
 }: {
   msg: MessageWithProfile;
   isOut: boolean;
-  onLongPress?: () => void;
+  currentUserId: string;
+  parent: MessageWithProfile | null;
+  onLongPress: () => void;
+  onToggleReaction: (emoji: string) => void;
+  onOpenLetter: (letterId: string) => void;
+  activeVoiceId: string | null;
+  setActiveVoiceId: (id: string | null) => void;
 }) {
-  const isVoice =
-    (msg as any).media_type === "voice" || msg.message_type === "voice";
+  const mediaType =
+    (msg as any).media_type ?? (msg as any).message_type ?? "text";
+  const isVoice = mediaType === "voice";
+  const isSharedLetter = mediaType === "shared_letter";
   const author = msg.profiles?.full_name ?? "Family";
+  const reactions = msg.message_reactions ?? [];
+  const sharedLetterId = (msg as any).shared_letter_id as string | null;
+  const pending = (msg as any).pending === true;
 
   const bubble = (
     <Pressable
-      onLongPress={isOut ? onLongPress : undefined}
+      onLongPress={onLongPress}
       delayLongPress={350}
       style={({ pressed }) => ({
         maxWidth: "78%",
@@ -167,7 +223,7 @@ function MessageRow({
         borderBottomLeftRadius: isOut ? 16 : 4,
         paddingHorizontal: 12,
         paddingVertical: 9,
-        opacity: pressed && isOut ? 0.85 : 1,
+        opacity: (pressed && isOut ? 0.85 : 1) * (pending ? 0.65 : 1),
       })}
     >
       {!isOut && (
@@ -184,8 +240,27 @@ function MessageRow({
         </Text>
       )}
 
-      {isVoice ? (
-        <VoiceBubble mediaUrl={(msg as any).media_url} isOut={isOut} />
+      {parent ? (
+        <ReplyPreview message={parent} inBubble isOut={isOut} />
+      ) : null}
+
+      {isSharedLetter && sharedLetterId ? (
+        <SharedLetterCard
+          letterId={sharedLetterId}
+          isOut={isOut}
+          onOpen={() => onOpenLetter(sharedLetterId)}
+        />
+      ) : isVoice ? (
+        <VoiceBubble
+          mediaUrl={(msg as any).media_url}
+          isOut={isOut}
+          storedDurationMs={(msg as any).duration_ms ?? null}
+          isActivePlayer={activeVoiceId === msg.id}
+          onRequestPlay={() => setActiveVoiceId(msg.id)}
+          onRequestPause={() => {
+            if (activeVoiceId === msg.id) setActiveVoiceId(null);
+          }}
+        />
       ) : (
         <Text
           style={{
@@ -198,48 +273,85 @@ function MessageRow({
         </Text>
       )}
 
-      <Text
+      <View
         style={{
-          fontSize: 10,
-          color: isOut ? "rgba(251,244,224,0.7)" : Colors.inkMuted,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
           marginTop: 4,
-          letterSpacing: 0.3,
           alignSelf: isOut ? "flex-end" : "flex-start",
         }}
       >
-        {fmtClock(msg.created_at)}
-      </Text>
+        {pending ? (
+          <Text
+            style={{
+              fontSize: 10,
+              color: isOut ? "rgba(251,244,224,0.7)" : Colors.inkMuted,
+              fontStyle: "italic",
+            }}
+          >
+            sending…
+          </Text>
+        ) : null}
+        <Text
+          style={{
+            fontSize: 10,
+            color: isOut ? "rgba(251,244,224,0.7)" : Colors.inkMuted,
+            letterSpacing: 0.3,
+          }}
+        >
+          {fmtClock(msg.created_at)}
+        </Text>
+      </View>
     </Pressable>
   );
 
+  const chips =
+    reactions.length > 0 ? (
+      <View style={{ alignItems: isOut ? "flex-end" : "flex-start", paddingHorizontal: isOut ? 0 : 36 }}>
+        <ReactionChips
+          reactions={reactions}
+          currentUserId={currentUserId}
+          onToggle={onToggleReaction}
+        />
+      </View>
+    ) : null;
+
   if (isOut) {
-    return <View style={{ alignItems: "flex-end", marginVertical: 4 }}>{bubble}</View>;
+    return (
+      <View style={{ alignItems: "flex-end", marginVertical: 4 }}>
+        {bubble}
+        {chips}
+      </View>
+    );
   }
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "flex-end",
-        gap: 8,
-        marginVertical: 4,
-      }}
-    >
+    <View style={{ marginVertical: 4 }}>
       <View
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: 14,
-          backgroundColor: Colors.amber,
-          alignItems: "center",
-          justifyContent: "center",
+          flexDirection: "row",
+          alignItems: "flex-end",
+          gap: 8,
         }}
       >
-        <Text style={{ color: Colors.white, fontWeight: "700", fontSize: 11 }}>
-          {initialOf(author)}
-        </Text>
+        <View
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: Colors.amber,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: Colors.white, fontWeight: "700", fontSize: 11 }}>
+            {initialOf(author)}
+          </Text>
+        </View>
+        {bubble}
       </View>
-      {bubble}
+      {chips}
     </View>
   );
 }
@@ -302,26 +414,44 @@ function NoFamilyState({ onOpenFamily }: { onOpenFamily: () => void }) {
 function Composer({
   onSendText,
   onSendVoice,
+  onOpenLetterPicker,
   sending,
+  replyingTo,
+  onClearReply,
 }: {
   onSendText: (body: string) => void;
-  onSendVoice: (uri: string) => void;
+  onSendVoice: (uri: string, durationMs: number | null) => void;
+  onOpenLetterPicker: () => void;
   sending: boolean;
+  replyingTo: MessageWithProfile | null;
+  onClearReply: () => void;
 }) {
   const [draft, setDraft] = useState("");
   const recorder = useAudioRecorder();
   const { isRecording, seconds, startRecording, stopRecording } = recorder;
+  // Fallback timer if recorder doesn't expose duration after stop.
+  const recordStartedAtRef = useRef<number | null>(null);
 
   async function handleMic() {
+    recordStartedAtRef.current = Date.now();
     await startRecording();
   }
 
   async function handleStop() {
+    const startedAt = recordStartedAtRef.current;
     await stopRecording();
-    // recorder.recordingUri updates inside stopRecording — read via a small delay.
-    // expo-audio sets it synchronously after stop() resolves.
+    // expo-audio's `seconds` derives from durationMillis; prefer that if non-zero,
+    // else fall back to wall-clock from when we kicked off recording.
+    const recorderMs = seconds * 1000;
+    const approxMs =
+      recorderMs > 0
+        ? recorderMs
+        : startedAt
+          ? Math.max(0, Date.now() - startedAt)
+          : null;
     const uri = recorder.recordingUri;
-    if (uri) onSendVoice(uri);
+    if (uri) onSendVoice(uri, approxMs);
+    recordStartedAtRef.current = null;
   }
 
   function send() {
@@ -395,70 +525,27 @@ function Composer({
   }
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        backgroundColor: Colors.bg,
-      }}
-    >
+    <View style={{ backgroundColor: Colors.bg }}>
+      {replyingTo ? (
+        <View style={{ paddingHorizontal: 14, paddingTop: 8 }}>
+          <ReplyPreview message={replyingTo} onClear={onClearReply} />
+        </View>
+      ) : null}
       <View
         style={{
-          flex: 1,
           flexDirection: "row",
           alignItems: "center",
           gap: 8,
-          backgroundColor: "rgba(255,250,232,0.92)",
-          borderRadius: 26,
-          borderWidth: 1,
-          borderColor: "rgba(184,132,60,0.30)",
           paddingHorizontal: 14,
-          paddingVertical: 6,
+          paddingVertical: 10,
         }}
       >
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
-          placeholder="Write to the family…"
-          placeholderTextColor={Colors.inkMuted}
-          style={{
-            flex: 1,
-            fontSize: 14,
-            color: Colors.ink,
-            paddingVertical: 6,
-            maxHeight: 90,
-          }}
-          multiline
-          editable={!sending}
-        />
-      </View>
-
-      {draft.trim() ? (
         <Pressable
-          onPress={send}
-          disabled={sending}
+          onPress={onOpenLetterPicker}
           style={({ pressed }) => ({
-            width: 42,
-            height: 42,
-            borderRadius: 21,
-            backgroundColor: Colors.amber,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed || sending ? 0.7 : 1,
-          })}
-        >
-          <Feather name="arrow-up" size={18} color={Colors.white} />
-        </Pressable>
-      ) : (
-        <Pressable
-          onPress={handleMic}
-          style={({ pressed }) => ({
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+            width: 38,
+            height: 38,
+            borderRadius: 19,
             backgroundColor: "rgba(210,127,20,0.16)",
             borderWidth: 1,
             borderColor: "rgba(184,132,60,0.30)",
@@ -467,9 +554,75 @@ function Composer({
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Feather name="mic" size={18} color={Colors.amberDeep} />
+          <Feather name="plus" size={18} color={Colors.amberDeep} />
         </Pressable>
-      )}
+
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            backgroundColor: "rgba(255,250,232,0.92)",
+            borderRadius: 26,
+            borderWidth: 1,
+            borderColor: "rgba(184,132,60,0.30)",
+            paddingHorizontal: 14,
+            paddingVertical: 6,
+          }}
+        >
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            placeholder="Write to the family…"
+            placeholderTextColor={Colors.inkMuted}
+            style={{
+              flex: 1,
+              fontSize: 14,
+              color: Colors.ink,
+              paddingVertical: 6,
+              maxHeight: 90,
+            }}
+            multiline
+            editable={!sending}
+          />
+        </View>
+
+        {draft.trim() ? (
+          <Pressable
+            onPress={send}
+            disabled={sending}
+            style={({ pressed }) => ({
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: Colors.amber,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed || sending ? 0.7 : 1,
+            })}
+          >
+            <Feather name="arrow-up" size={18} color={Colors.white} />
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={handleMic}
+            style={({ pressed }) => ({
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: "rgba(210,127,20,0.16)",
+              borderWidth: 1,
+              borderColor: "rgba(184,132,60,0.30)",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Feather name="mic" size={18} color={Colors.amberDeep} />
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -485,6 +638,8 @@ export default function ChatScreen() {
   const { data: messages = [], isLoading: messagesLoading } = useMessages();
   const sendText = useSendTextMessage();
   const sendVoice = useSendVoiceMessage();
+  const sendSharedLetter = useSendSharedLetter();
+  const toggleReaction = useToggleReaction();
   const deleteMessage = useDeleteMessage();
 
   useChatRealtime(familyId, { enabled: !!familyId });
@@ -492,10 +647,22 @@ export default function ChatScreen() {
   const listRef = useRef<FlatList<MessageWithProfile>>(null);
   const memberCount = members?.length ?? 0;
 
+  const [replyingTo, setReplyingTo] = useState<MessageWithProfile | null>(null);
+  const [letterPickerOpen, setLetterPickerOpen] = useState(false);
+  const [pickerOpenForId, setPickerOpenForId] = useState<string | null>(null);
+  const [activeVoiceId, setActiveVoiceId] = useState<string | null>(null);
+
   const visible = useMemo(
     () => messages.filter((m) => !(m as any).deleted_at),
     [messages]
   );
+
+  // Lookup map for reply parents.
+  const byId = useMemo(() => {
+    const m = new Map<string, MessageWithProfile>();
+    for (const msg of messages) m.set(msg.id, msg);
+    return m;
+  }, [messages]);
 
   // Scroll to bottom whenever the list changes.
   useEffect(() => {
@@ -507,15 +674,63 @@ export default function ChatScreen() {
     return () => clearTimeout(id);
   }, [visible.length]);
 
-  function handleLongPressOwn(id: string) {
-    Alert.alert("Delete this message?", "It will be removed from everyone's view.", [
-      { text: "Cancel", style: "cancel" },
+  function handleLongPress(msg: MessageWithProfile) {
+    const isOut = msg.author_id === user?.id;
+    // Spec ambiguity resolved: action sheet via Alert.alert with cancellable
+    // buttons. On iOS this renders as a native sheet; on Android it's a dialog.
+    const buttons: any[] = [
       {
+        text: "React",
+        onPress: () => setPickerOpenForId(msg.id),
+      },
+      {
+        text: "Reply",
+        onPress: () => setReplyingTo(msg),
+      },
+    ];
+    if (isOut) {
+      buttons.push({
         text: "Delete",
         style: "destructive",
-        onPress: () => deleteMessage.mutate({ id }),
-      },
-    ]);
+        onPress: () =>
+          Alert.alert(
+            "Delete this message?",
+            "It will be removed from everyone's view.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => deleteMessage.mutate({ id: msg.id }),
+              },
+            ]
+          ),
+      });
+    }
+    buttons.push({ text: "Cancel", style: "cancel" });
+    Alert.alert("Message", undefined, buttons);
+  }
+
+  function handleSendText(body: string) {
+    sendText.mutate({ body, replyToId: replyingTo?.id ?? null });
+    setReplyingTo(null);
+  }
+
+  function handleSendVoice(uri: string, durationMs: number | null) {
+    sendVoice.mutate({
+      uri,
+      durationMs,
+      replyToId: replyingTo?.id ?? null,
+    });
+    setReplyingTo(null);
+  }
+
+  function handlePickLetter(letterId: string) {
+    sendSharedLetter.mutate({
+      letterId,
+      replyToId: replyingTo?.id ?? null,
+    });
+    setReplyingTo(null);
   }
 
   // ── Loading state for family lookup ──────────────────────────────────────
@@ -604,13 +819,27 @@ export default function ChatScreen() {
               ref={listRef}
               data={visible}
               keyExtractor={(m) => m.id}
-              renderItem={({ item }) => (
-                <MessageRow
-                  msg={item}
-                  isOut={item.author_id === user?.id}
-                  onLongPress={() => handleLongPressOwn(item.id)}
-                />
-              )}
+              renderItem={({ item }) => {
+                const parentId = (item as any).reply_to_id as string | null;
+                const parent = parentId ? byId.get(parentId) ?? null : null;
+                return (
+                  <MessageRow
+                    msg={item}
+                    isOut={item.author_id === user?.id}
+                    currentUserId={user?.id ?? ""}
+                    parent={parent}
+                    onLongPress={() => handleLongPress(item)}
+                    onToggleReaction={(emoji) =>
+                      toggleReaction.mutate({ messageId: item.id, emoji })
+                    }
+                    onOpenLetter={(letterId) =>
+                      router.push(`/letter?letterId=${letterId}` as any)
+                    }
+                    activeVoiceId={activeVoiceId}
+                    setActiveVoiceId={setActiveVoiceId}
+                  />
+                );
+              }}
               contentContainerStyle={{
                 paddingHorizontal: 14,
                 paddingTop: 12,
@@ -624,14 +853,40 @@ export default function ChatScreen() {
 
           {/* Composer */}
           <Composer
-            onSendText={(body) => sendText.mutate({ body })}
-            onSendVoice={(uri) => sendVoice.mutate({ uri })}
-            sending={sendText.isPending || sendVoice.isPending}
+            onSendText={handleSendText}
+            onSendVoice={handleSendVoice}
+            onOpenLetterPicker={() => setLetterPickerOpen(true)}
+            sending={
+              sendText.isPending ||
+              sendVoice.isPending ||
+              sendSharedLetter.isPending
+            }
+            replyingTo={replyingTo}
+            onClearReply={() => setReplyingTo(null)}
           />
 
           <SafeAreaView edges={["bottom"]} />
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Reaction picker overlay */}
+      <ReactionPicker
+        visible={!!pickerOpenForId}
+        onSelect={(emoji) => {
+          if (pickerOpenForId) {
+            toggleReaction.mutate({ messageId: pickerOpenForId, emoji });
+          }
+          setPickerOpenForId(null);
+        }}
+        onDismiss={() => setPickerOpenForId(null)}
+      />
+
+      {/* Letter picker overlay */}
+      <LetterPickerModal
+        visible={letterPickerOpen}
+        onClose={() => setLetterPickerOpen(false)}
+        onSelect={handlePickLetter}
+      />
     </View>
   );
 }
