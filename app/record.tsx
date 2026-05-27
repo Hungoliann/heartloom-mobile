@@ -628,6 +628,7 @@ export default function RecordScreen() {
                 onWriteOwn={() => setCustomPrompt(customPrompt ?? "")}
                 onChangeCustomPrompt={setCustomPrompt}
                 onNext={goNext}
+                onSkipToWrite={() => transitionForward(() => setStep(4))}
               />
             )}
             {step === 2 && (
@@ -669,6 +670,7 @@ export default function RecordScreen() {
             {step === 4 && (
               <StepReview
                 name={name}
+                hasAudio={hasRecording}
                 seconds={durationMs > 0 ? Math.floor(durationMs / 1000) : seconds}
                 positionMs={positionMs}
                 durationMs={durationMs}
@@ -684,6 +686,7 @@ export default function RecordScreen() {
                   setHasRecording(false);
                   setStep(3);
                 }}
+                onAddAudio={() => transitionForward(() => setStep(2))}
                 onNext={goNext}
               />
             )}
@@ -900,6 +903,7 @@ function StepSeed({
   onWriteOwn,
   onChangeCustomPrompt,
   onNext,
+  onSkipToWrite,
 }: {
   name: string;
   prompt: (typeof PROMPTS)[0];
@@ -909,6 +913,7 @@ function StepSeed({
   onWriteOwn: () => void;
   onChangeCustomPrompt: (text: string) => void;
   onNext: () => void;
+  onSkipToWrite: () => void;
 }) {
   const line3 = prompt.line3.replace("{name}", name);
   const isCustom = customPrompt !== null;
@@ -1024,6 +1029,21 @@ function StepSeed({
       </View>
 
       <PrimaryBtn label="I'm ready to record" onPress={onNext} />
+
+      <Pressable
+        onPress={onSkipToWrite}
+        style={({ pressed }) => ({
+          marginTop: 12,
+          alignSelf: "center",
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+          opacity: pressed ? 0.6 : 1,
+        })}
+      >
+        <Text style={{ fontFamily: SERIF, fontSize: 14, color: Colors.inkSoft }}>
+          Type it out instead →
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -1493,6 +1513,7 @@ function StepRecording({
 // ─── Step 4: Review ───────────────────────────────────────────────────────────
 function StepReview({
   name,
+  hasAudio,
   seconds,
   positionMs,
   durationMs,
@@ -1504,9 +1525,11 @@ function StepReview({
   letterBody,
   setLetterBody,
   onReRecord,
+  onAddAudio,
   onNext,
 }: {
   name: string;
+  hasAudio: boolean;
   seconds: number;
   positionMs: number;
   durationMs: number;
@@ -1518,6 +1541,7 @@ function StepReview({
   letterBody: string;
   setLetterBody: (v: string) => void;
   onReRecord: () => Promise<void>;
+  onAddAudio: () => void;
   onNext: () => void;
 }) {
   return (
@@ -1531,10 +1555,20 @@ function StepReview({
           marginBottom: 24,
         }}
       >
-        Listen back.{"\n"}
-        <Text style={{ fontStyle: "italic" }}>Or don't.</Text> It's already safe.
+        {hasAudio ? (
+          <>
+            Listen back.{"\n"}
+            <Text style={{ fontStyle: "italic" }}>Or don't.</Text> It's already safe.
+          </>
+        ) : (
+          <>
+            Write your letter{"\n"}
+            <Text style={{ fontStyle: "italic" }}>for {name}.</Text>
+          </>
+        )}
       </Text>
 
+      {hasAudio && (
       <View
         style={{
           backgroundColor: CARD_BG,
@@ -1678,6 +1712,7 @@ function StepReview({
           </Text>
         </Pressable>
       </View>
+      )}
 
       {/* Compose: the actual letter text */}
       <Text
@@ -1730,7 +1765,11 @@ function StepReview({
 
       {/* Actions */}
       <View style={{ flexDirection: "row", gap: 10 }}>
-        <GhostBtn label="Re-record" onPress={onReRecord} />
+        {hasAudio ? (
+          <GhostBtn label="Re-record" onPress={onReRecord} />
+        ) : (
+          <GhostBtn label="🎙  Add a recording" onPress={onAddAudio} />
+        )}
         <View style={{ flex: 1 }}>
           <PrimaryBtn label="Keep this one" onPress={onNext} />
         </View>
