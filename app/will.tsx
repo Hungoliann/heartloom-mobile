@@ -406,7 +406,7 @@ export default function Will() {
             })}
           >
             <Text style={{ fontSize: 13, fontWeight: "500", color: Colors.inkSoft, letterSpacing: 0.2 }}>
-              Talk to Naomi first
+              Preview the Concierge (coming soon)
             </Text>
           </Pressable>
         </Animated.ScrollView>

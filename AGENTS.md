@@ -3,7 +3,7 @@
 Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before writing any code.
 
 
-## vexp <!-- vexp v2.0.17 -->
+## vexp <!-- vexp v2.0.19 -->
 
 **MANDATORY: use `run_pipeline` — do NOT grep or glob the codebase.**
 vexp returns pre-indexed, graph-ranked context in a single call.

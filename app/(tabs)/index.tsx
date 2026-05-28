@@ -116,29 +116,12 @@ export default function HomeScreen() {
   const { data: pinnedLetter } = usePinnedLetter();
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(24)).current;
-  const pulseScale = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0.55)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(slideY, { toValue: 0, duration: 700, useNativeDriver: true }),
     ]).start();
-
-    const runPulse = () => {
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(pulseScale, { toValue: 2.0, duration: 2000, useNativeDriver: true }),
-          Animated.timing(pulseOpacity, { toValue: 0, duration: 2000, useNativeDriver: true }),
-        ]),
-        Animated.parallel([
-          Animated.timing(pulseScale, { toValue: 1, duration: 0, useNativeDriver: true }),
-          Animated.timing(pulseOpacity, { toValue: 0.55, duration: 0, useNativeDriver: true }),
-        ]),
-      ]).start(() => runPulse());
-    };
-    const t = setTimeout(runPulse, 800);
-    return () => clearTimeout(t);
   }, []);
 
   return (
@@ -315,9 +298,9 @@ export default function HomeScreen() {
               style={{
                 marginHorizontal: 22,
                 marginBottom: 16,
-                backgroundColor: "rgba(156,175,136,0.14)",
+                backgroundColor: "rgba(210,127,20,0.10)",
                 borderWidth: 1,
-                borderColor: "rgba(156,175,136,0.4)",
+                borderColor: "rgba(210,127,20,0.35)",
                 borderRadius: 14,
                 padding: 10,
                 paddingHorizontal: 12,
@@ -326,25 +309,14 @@ export default function HomeScreen() {
                 gap: 10,
               }}
             >
-              {/* Pulsing green dot */}
+              {/* Amber status dot */}
               <View style={{ width: 18, height: 18, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Animated.View
-                  style={{
-                    position: "absolute",
-                    width: 18,
-                    height: 18,
-                    borderRadius: 9,
-                    backgroundColor: Colors.sageDeep,
-                    transform: [{ scale: pulseScale }],
-                    opacity: pulseOpacity,
-                  }}
-                />
                 <View
                   style={{
                     width: 9,
                     height: 9,
                     borderRadius: 4.5,
-                    backgroundColor: Colors.sageDeep,
+                    backgroundColor: Colors.amber,
                   }}
                 />
               </View>
@@ -359,10 +331,10 @@ export default function HomeScreen() {
                     marginBottom: 1,
                   }}
                 >
-                  Concierge available now
+                  Concierge — coming soon
                 </Text>
                 <Text style={{ fontSize: 11, color: Colors.inkMuted, lineHeight: 16 }}>
-                  Average wait: under 4 minutes · Mon–Sat, 7a–9p PT
+                  A real human for Medicare, hospice & estate calls
                 </Text>
               </View>
 
@@ -370,7 +342,7 @@ export default function HomeScreen() {
               <Pressable
                 onPress={() => router.push("/(tabs)/concierge" as any)}
                 style={({ pressed }) => ({
-                  backgroundColor: Colors.sageDeep,
+                  backgroundColor: Colors.amber,
                   borderRadius: 999,
                   paddingVertical: 6,
                   paddingHorizontal: 12,
@@ -389,7 +361,7 @@ export default function HomeScreen() {
                     letterSpacing: 0.4,
                   }}
                 >
-                  Connect
+                  Preview
                 </Text>
               </Pressable>
             </View>
