@@ -135,6 +135,8 @@ export default function SignUpScreen() {
                     placeholderTextColor="#C4B8A6"
                     autoCapitalize="words"
                     returnKeyType="next"
+                    textContentType="givenName"
+                    autoComplete="name-given"
                     style={inputStyle}
                   />
                 </View>
@@ -147,6 +149,8 @@ export default function SignUpScreen() {
                     placeholderTextColor="#C4B8A6"
                     autoCapitalize="words"
                     returnKeyType="next"
+                    textContentType="familyName"
+                    autoComplete="name-family"
                     style={inputStyle}
                   />
                 </View>
@@ -162,6 +166,8 @@ export default function SignUpScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   returnKeyType="next"
+                  textContentType="emailAddress"
+                  autoComplete="email"
                   style={inputStyle}
                 />
               </View>
@@ -176,6 +182,8 @@ export default function SignUpScreen() {
                   secureTextEntry
                   returnKeyType="go"
                   onSubmitEditing={handleCreate}
+                  textContentType="newPassword"
+                  autoComplete="password-new"
                   style={inputStyle}
                 />
               </View>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useAuthStore } from "../../src/store/auth.store";
@@ -24,8 +25,8 @@ export default function TabsLayout() {
           backgroundColor: "#FAF3E2",
           borderTopColor: "rgba(45,36,26,0.08)",
           borderTopWidth: 1,
-          height: 76,
-          paddingBottom: 16,
+          height: Platform.OS === "ios" ? 88 : 76,
+          paddingBottom: Platform.OS === "ios" ? 24 : 16,
           paddingTop: 9,
         },
         tabBarLabelStyle: {

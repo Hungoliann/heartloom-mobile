@@ -239,7 +239,7 @@ async function uploadAudio(uri: string, userId: string): Promise<string | null> 
     const response = await fetch(uri);
     const blob = await response.blob();
     const ext = uri.split('.').pop() ?? 'm4a';
-    const path = `${userId}/${Date.now()}.${ext}`;
+    const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
     const { error } = await supabase.storage
       .from('voice-memos')
       .upload(path, blob, { contentType: `audio/${ext}` });

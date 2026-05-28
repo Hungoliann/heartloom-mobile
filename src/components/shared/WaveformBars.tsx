@@ -7,7 +7,6 @@ const MIN_ACTIVE_HEIGHT = 8;
 const REST_HEIGHT = 4;
 const AMBER = "#D27F14";
 
-// Per-bar height multiplier, always positive, gives organic variation
 const BAR_SHAPE = Array.from({ length: BAR_COUNT }, (_, i) =>
   0.3 + Math.abs(Math.sin((i / BAR_COUNT) * Math.PI * 3)) * 0.7
 );
@@ -19,16 +18,16 @@ interface WaveformBarsProps {
 
 export default function WaveformBars({ active, meteringLevel }: WaveformBarsProps) {
   const bars = useRef(
-    Array.from({ length: BAR_COUNT }, () => new Animated.Value(REST_HEIGHT))
+    Array.from({ length: BAR_COUNT }, () => new Animated.Value(REST_HEIGHT / MAX_HEIGHT))
   ).current;
 
   useEffect(() => {
     if (!active) {
       bars.forEach((bar) => {
         Animated.timing(bar, {
-          toValue: REST_HEIGHT,
+          toValue: REST_HEIGHT / MAX_HEIGHT,
           duration: 200,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }).start();
       });
       return;
@@ -37,9 +36,9 @@ export default function WaveformBars({ active, meteringLevel }: WaveformBarsProp
     bars.forEach((bar, i) => {
       const target = Math.max(MIN_ACTIVE_HEIGHT, meteringLevel * BAR_SHAPE[i] * MAX_HEIGHT);
       Animated.timing(bar, {
-        toValue: target,
+        toValue: target / MAX_HEIGHT,
         duration: 80,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }).start();
     });
   }, [active, meteringLevel]);
@@ -50,7 +49,7 @@ export default function WaveformBars({ active, meteringLevel }: WaveformBarsProp
     <View
       style={{
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "flex-end",
         height: MAX_HEIGHT,
         gap: 2,
         justifyContent: "center",
@@ -62,10 +61,11 @@ export default function WaveformBars({ active, meteringLevel }: WaveformBarsProp
           key={i}
           style={{
             width: Math.max(3, barWidth),
-            height: bar,
+            height: MAX_HEIGHT,
             backgroundColor: AMBER,
             borderRadius: 4,
             opacity: active ? 0.85 : 0.35,
+            transform: [{ scaleY: bar }],
           }}
         />
       ))}

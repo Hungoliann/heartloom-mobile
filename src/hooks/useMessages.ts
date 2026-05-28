@@ -11,6 +11,22 @@ import { useAuthStore } from "../store/auth.store";
 import { useFamily } from "./useFamily";
 import type { Database } from "../types/database";
 
+function uniqueId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Maps a raw error into friendlier, user-facing text. Network-style failures
+ * get a connection hint; everything else falls through to the original message.
+ */
+export function friendlyError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/network|fetch|timeout|offline|connection/i.test(msg)) {
+    return "You appear to be offline. Check your connection and try again.";
+  }
+  return msg;
+}
+
 // NOTE: Generated types not yet refreshed — the messages table is gaining new
 // columns (media_url, media_type, deleted_at, reply_to_id, shared_letter_id,
 // edited_at, duration_ms), a sibling `message_reactions` table exists, and the
@@ -67,6 +83,21 @@ function messagesKey(userId: string | undefined) {
 export function useMessages() {
   const userId = useAuthStore((s) => s.user?.id);
 
+  const familyQuery = useQuery({
+    queryKey: ["profile-family-id", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("family_id")
+        .eq("id", userId!)
+        .single();
+      if (error) throw error;
+      return data?.family_id as string | null;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // cache for 5 minutes
+  });
+
   const q = useInfiniteQuery<
     Page,
     Error,
@@ -77,14 +108,7 @@ export function useMessages() {
     queryKey: messagesKey(userId),
     initialPageParam: null,
     queryFn: async ({ pageParam }) => {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("family_id")
-        .eq("id", userId!)
-        .single();
-      if (profileError) throw profileError;
-
-      const familyId = profile?.family_id;
+      const familyId = familyQuery.data;
       if (!familyId) return { rows: [], nextCursor: null };
 
       let query = supabase
@@ -109,7 +133,7 @@ export function useMessages() {
       return { rows, nextCursor };
     },
     getNextPageParam: (last) => last.nextCursor,
-    enabled: !!userId,
+    enabled: !!userId && !!familyQuery.data,
   });
 
   const messages = useMemo<MessageWithProfile[]>(() => {
@@ -156,7 +180,12 @@ async function insertMentions(messageId: string, userIds: string[] | undefined) 
   }
 }
 
+let _cachedFamilyId: { userId: string; familyId: string; ts: number } | null = null;
+
 async function fetchFamilyId(userId: string): Promise<string> {
+  if (_cachedFamilyId && _cachedFamilyId.userId === userId && Date.now() - _cachedFamilyId.ts < 5 * 60 * 1000) {
+    return _cachedFamilyId.familyId;
+  }
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("family_id")
@@ -165,6 +194,7 @@ async function fetchFamilyId(userId: string): Promise<string> {
   if (error) throw error;
   const familyId = profile?.family_id;
   if (!familyId) throw new Error("No family");
+  _cachedFamilyId = { userId, familyId, ts: Date.now() };
   return familyId;
 }
 
@@ -335,7 +365,7 @@ export function useSendVoiceMessage() {
       const response = await fetch(uri);
       const blob = await response.blob();
       const ext = (uri.split(".").pop() || "m4a").toLowerCase();
-      const path = `${user.id}/chat-${Date.now()}.${ext}`;
+      const path = `${user.id}/chat-${uniqueId()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("voice-memos")
@@ -491,7 +521,7 @@ export function useSendImageMessage() {
         ? rawExt
         : "jpg";
       const contentType = ext === "png" ? "image/png" : `image/${ext === "jpg" ? "jpeg" : ext}`;
-      const path = `${user.id}/chat-${Date.now()}.${ext}`;
+      const path = `${user.id}/chat-${uniqueId()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("chat-images")
@@ -564,30 +594,42 @@ export function useToggleReaction() {
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
-      const { data: existing, error: selectError } = await (supabase as any)
+      // Delete-first approach: avoids the select-then-mutate race condition.
+      // Two concurrent deletes are safe (one no-ops). Two concurrent inserts
+      // after delete: one succeeds, the other hits the unique constraint and
+      // is caught below.
+      const { data: deleted } = await (supabase as any)
         .from("message_reactions")
-        .select("message_id")
+        .delete()
         .eq("message_id", messageId)
         .eq("user_id", user.id)
         .eq("emoji", emoji)
-        .maybeSingle();
-      if (selectError) throw selectError;
+        .select("message_id");
 
-      if (existing) {
-        const { error } = await (supabase as any)
-          .from("message_reactions")
-          .delete()
-          .eq("message_id", messageId)
-          .eq("user_id", user.id)
-          .eq("emoji", emoji);
-        if (error) throw error;
+      if (deleted && deleted.length > 0) {
         return { messageId, emoji, toggled: "off" as const };
       }
 
-      const { error } = await (supabase as any)
-        .from("message_reactions")
-        .insert({ message_id: messageId, user_id: user.id, emoji });
-      if (error) throw error;
+      // Nothing was deleted — reaction didn't exist, so insert it.
+      try {
+        const { error } = await (supabase as any)
+          .from("message_reactions")
+          .insert({ message_id: messageId, user_id: user.id, emoji });
+        if (error) {
+          // Unique constraint violation (code 23505) means a concurrent
+          // request already inserted — treat as "already toggled on".
+          if (error.code === "23505") {
+            return { messageId, emoji, toggled: "on" as const };
+          }
+          throw error;
+        }
+      } catch (err: any) {
+        // Also guard against the constraint error surfacing as an exception
+        if (err?.code === "23505") {
+          return { messageId, emoji, toggled: "on" as const };
+        }
+        throw err;
+      }
       return { messageId, emoji, toggled: "on" as const };
     },
     onSuccess: () => {
@@ -843,7 +885,7 @@ export function useSearchMessages(
       if (error) throw error;
       return (data ?? []) as MessageWithProfile[];
     },
-    enabled: !!familyId && trimmed.length > 0,
+    enabled: !!familyId && trimmed.length >= 2,
   });
 }
 
@@ -910,8 +952,17 @@ export function useChatRealtime(
   useEffect(() => {
     if (!enabled || !familyId) return;
 
-    const invalidate = () =>
-      queryClient.invalidateQueries({ queryKey: ["messages"] });
+    // Debounce invalidation — batch rapid realtime events into a single refetch
+    let invalidateTimer: ReturnType<typeof setTimeout> | null = null;
+    const debouncedInvalidate = (key: readonly unknown[]) => {
+      if (invalidateTimer) clearTimeout(invalidateTimer);
+      invalidateTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: key });
+        invalidateTimer = null;
+      }, 300);
+    };
+
+    const invalidateMessages = () => debouncedInvalidate(["messages"]);
     const invalidateReads = () =>
       queryClient.invalidateQueries({ queryKey: ["family-reads", familyId] });
 
@@ -925,7 +976,7 @@ export function useChatRealtime(
           table: "messages",
           filter: `family_id=eq.${familyId}`,
         },
-        invalidate
+        invalidateMessages
       )
       .on(
         "postgres_changes" as any,
@@ -935,17 +986,17 @@ export function useChatRealtime(
           table: "messages",
           filter: `family_id=eq.${familyId}`,
         },
-        invalidate
+        invalidateMessages
       )
       .on(
         "postgres_changes" as any,
         { event: "INSERT", schema: "public", table: "message_reactions" },
-        invalidate
+        invalidateMessages
       )
       .on(
         "postgres_changes" as any,
         { event: "DELETE", schema: "public", table: "message_reactions" },
-        invalidate
+        invalidateMessages
       )
       .on(
         "postgres_changes" as any,
@@ -960,6 +1011,7 @@ export function useChatRealtime(
       .subscribe();
 
     return () => {
+      if (invalidateTimer) clearTimeout(invalidateTimer);
       supabase.removeChannel(channel);
     };
   }, [enabled, familyId, queryClient]);

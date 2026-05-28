@@ -16,6 +16,10 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
     return { hasError: true, message };
   }
 
+  componentDidCatch(error: unknown, info: React.ErrorInfo) {
+    console.error("[ErrorBoundary] caught error:", error, info.componentStack);
+  }
+
   reset = () => this.setState({ hasError: false, message: "" });
 
   render() {
@@ -27,7 +31,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
           Something went wrong.
         </Text>
         <Text style={{ fontSize: 13, color: Colors.inkMuted, textAlign: "center", lineHeight: 20, marginBottom: 28 }}>
-          {this.state.message || "An unexpected error occurred."}
+          We&apos;ve hit an unexpected snag. Your letters and memories are safe. Try again, and if it keeps happening, please restart the app.
         </Text>
         <Pressable
           onPress={this.reset}

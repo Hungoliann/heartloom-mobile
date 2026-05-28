@@ -51,7 +51,7 @@ export function ImageViewerModal({
           onPress={onClose}
           style={({ pressed }) => ({
             position: "absolute",
-            top: 56,
+            top: Platform.OS === "ios" ? 60 : 48,
             right: 18,
             width: 40,
             height: 40,

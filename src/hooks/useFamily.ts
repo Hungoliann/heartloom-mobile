@@ -99,7 +99,11 @@ export function useCreateFamily() {
         .update({ family_id: family.id })
         .eq("id", userId);
 
-      if (profErr) throw profErr;
+      if (profErr) {
+        // Rollback: delete the orphaned family
+        await supabase.from("families").delete().eq("id", family.id);
+        throw profErr;
+      }
 
       return family as Family;
     },
@@ -153,40 +157,52 @@ export function useAcceptInvite() {
       const code = rawCode.trim().toUpperCase();
       if (!code) throw new Error("Please enter an invite code");
 
-      // 1. Look up the invite.
-      const { data: invite, error: lookupErr } = await (supabase as any)
-        .from("family_invites")
-        .select("id, family_id, used_by, used_at, expires_at")
-        .eq("invite_code", code)
-        .maybeSingle();
-
-      if (lookupErr) throw new Error("Could not check code. Try again.");
-      if (!invite) throw new Error("Invalid invite code");
-
-      if (invite.used_by || invite.used_at) {
-        throw new Error("This code has already been used");
-      }
-      if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) {
-        throw new Error("This code has expired");
-      }
-
-      // 2. Mark the invite used (RLS allows update when used_by is null).
-      const { error: updateErr } = await (supabase as any)
+      // 1. Atomic claim: update only succeeds if used_by is still null.
+      const { data: claimed, error: claimErr } = await (supabase as any)
         .from("family_invites")
         .update({ used_by: userId, used_at: new Date().toISOString() })
-        .eq("id", invite.id);
+        .eq("invite_code", code)
+        .is("used_by", null)
+        .gte("expires_at", new Date().toISOString())
+        .select("id, family_id")
+        .maybeSingle();
 
-      if (updateErr) throw new Error("Could not redeem code. Try again.");
+      if (claimErr) throw new Error("Could not redeem code. Try again.");
+
+      if (!claimed) {
+        // 2. The atomic update matched zero rows — figure out why for a
+        //    user-friendly message (code not found, already used, or expired).
+        const { data: existing } = await (supabase as any)
+          .from("family_invites")
+          .select("used_by, expires_at")
+          .eq("invite_code", code)
+          .maybeSingle();
+
+        if (!existing) throw new Error("Invalid invite code");
+
+        if (existing.used_by) {
+          throw new Error("This code has already been used");
+        }
+        if (
+          existing.expires_at &&
+          new Date(existing.expires_at).getTime() < Date.now()
+        ) {
+          throw new Error("This code has expired");
+        }
+
+        // Fallback — shouldn't happen but covers edge cases.
+        throw new Error("Could not redeem code. Try again.");
+      }
 
       // 3. Attach the user to the family.
       const { error: profErr } = await supabase
         .from("profiles")
-        .update({ family_id: invite.family_id })
+        .update({ family_id: claimed.family_id })
         .eq("id", userId);
 
       if (profErr) throw profErr;
 
-      return { family_id: invite.family_id as string };
+      return { family_id: claimed.family_id as string };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-family"] });

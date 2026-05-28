@@ -98,6 +98,8 @@ export default function SignInScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="next"
+                  textContentType="emailAddress"
+                  autoComplete="email"
                 />
               </View>
 
@@ -112,6 +114,8 @@ export default function SignInScreen() {
                   secureTextEntry
                   returnKeyType="go"
                   onSubmitEditing={handleSignIn}
+                  textContentType="password"
+                  autoComplete="password"
                 />
               </View>
 

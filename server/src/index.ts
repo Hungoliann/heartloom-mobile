@@ -6,6 +6,39 @@ import { createClient } from "@supabase/supabase-js";
 const app = express();
 app.use(express.json());
 
+// ─── Simple in-memory rate limiter (no external dependency) ─────────────────
+function createRateLimiter(windowMs: number, maxRequests: number) {
+  const hits = new Map<string, { count: number; resetAt: number }>();
+
+  // Periodic cleanup to prevent memory leaks — purge expired entries every 5 min
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of hits) {
+      if (now > entry.resetAt) hits.delete(key);
+    }
+  }, 5 * 60 * 1000).unref();
+
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const key = req.ip ?? "unknown";
+    const now = Date.now();
+    const entry = hits.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      hits.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+
+    entry.count++;
+    if (entry.count > maxRequests) {
+      return res.status(429).json({ error: "Too many requests" });
+    }
+    return next();
+  };
+}
+
+const webhookLimiter = createRateLimiter(60_000, 100); // 100 req / min
+const healthLimiter = createRateLimiter(60_000, 30);   // 30 req / min
+
 // Re-create the Inngest client (server-side only, no EXPO_PUBLIC_ prefix)
 const inngest = new Inngest({
   id: "heartloom",
@@ -19,9 +52,9 @@ const supabase = createClient(
 );
 
 // Health check — also surfaces pending letter count for debugging
-app.get("/", (_req, res) => res.json({ status: "ok", service: "heartloom-server" }));
+app.get("/", healthLimiter, (_req, res) => res.json({ status: "ok", service: "heartloom-server" }));
 
-app.get("/health", async (_req, res) => {
+app.get("/health", healthLimiter, async (_req, res) => {
   try {
     const nowIso = new Date().toISOString();
     const { count, error } = await supabase
@@ -349,7 +382,7 @@ const messageSent = inngest.createFunction(
 // Supabase Database Webhook receiver — fires on INSERT into public.messages.
 // We don't do work here: we just hand the event to Inngest and 200 fast so the
 // webhook doesn't time out or retry.
-app.post("/api/inngest/messages/inserted", async (req, res) => {
+app.post("/api/inngest/messages/inserted", webhookLimiter, async (req, res) => {
   const secret = req.header("x-webhook-secret");
   if (!process.env.SUPABASE_WEBHOOK_SECRET || secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
     console.warn(`[chat-webhook] rejected: bad or missing x-webhook-secret`);
@@ -379,7 +412,7 @@ app.post("/api/inngest/messages/inserted", async (req, res) => {
 });
 
 // ─── Letter audio transcription webhook ──────────────────────────────────────
-app.post("/api/inngest/letters/audio-uploaded", async (req, res) => {
+app.post("/api/inngest/letters/audio-uploaded", webhookLimiter, async (req, res) => {
   const secret = req.headers["x-webhook-secret"];
   if (secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
     return res.status(401).json({ error: "unauthorized" });

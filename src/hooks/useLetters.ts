@@ -16,7 +16,8 @@ export function useLetters() {
         .from("letters")
         .select("*")
         .eq("author_id", userId!)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data as Letter[];
     },

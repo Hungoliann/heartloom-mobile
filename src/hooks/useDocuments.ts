@@ -16,7 +16,8 @@ export function useDocuments(category?: Document["category"]) {
         .from("documents")
         .select("*")
         .eq("owner_id", userId!)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (category) query = query.eq("category", category);
 

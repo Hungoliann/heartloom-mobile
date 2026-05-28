@@ -12,8 +12,10 @@ import {
   Lora_500Medium,
   Lora_500Medium_Italic,
 } from "@expo-google-fonts/lora";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuthStore } from "../src/store/auth.store";
 import { supabase } from "../src/lib/supabase";
+import { OfflineBanner } from "../src/components/shared/OfflineBanner";
 import "../global.css";
 
 // Prevent the splash screen from auto-hiding before auth initializes
@@ -21,7 +23,16 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 2, staleTime: 1000 * 60 * 5 },
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: 1,
+    },
   },
 });
 
@@ -153,6 +164,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
+    <SafeAreaProvider>
     <QueryClientProvider client={queryClient}>
       <AuthBootstrap />
       <PushNotificationBootstrap />
@@ -189,7 +201,9 @@ export default function RootLayout() {
         <Stack.Screen name="privacy" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="terms" options={{ animation: "slide_from_right" }} />
       </Stack>
+      <OfflineBanner />
     </QueryClientProvider>
+    </SafeAreaProvider>
     </ErrorBoundary>
   );
 }

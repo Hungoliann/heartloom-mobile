@@ -4,7 +4,7 @@ import { useRef, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   Animated,
   Alert,
 } from "react-native";
@@ -99,114 +99,119 @@ export default function LegacyScreen() {
           </View>
 
           {/* Letters list */}
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 14, paddingBottom: 100 }}>
-            {/* Loading skeletons */}
-            {isLoading && [1, 2, 3].map((i) => (
-              <View
-                key={i}
-                style={{ height: 140, borderRadius: 20, backgroundColor: "rgba(45,36,26,0.06)", marginBottom: 14 }}
-              />
-            ))}
-
-            {/* Empty state */}
-            {!isLoading && letters.length === 0 && (
-              <View style={{ alignItems: "center", paddingVertical: 48, gap: 12 }}>
-                <Text style={{ fontSize: 32 }}>✉</Text>
-                <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 20, color: "#2C1F0E", textAlign: "center" }}>
-                  No letters yet.
-                </Text>
-                <Text style={{ fontSize: 14, color: "#8C7B65", textAlign: "center", paddingHorizontal: 32 }}>
-                  Write something for someone you love — they'll receive it when the time is right.
-                </Text>
-                <Pressable
-                  onPress={() => router.push("/record")}
-                  style={({ pressed }) => ({
-                    marginTop: 8,
-                    backgroundColor: "#D27F14",
-                    borderRadius: 14,
-                    paddingVertical: 13,
-                    paddingHorizontal: 28,
-                    opacity: pressed ? 0.85 : 1,
-                  })}
-                >
-                  <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "600" }}>Write your first letter →</Text>
-                </Pressable>
-              </View>
-            )}
-
-            {/* Letter cards */}
-            {!isLoading && mappedLetters.map((letter) => {
+          <FlatList
+            data={isLoading ? [] : mappedLetters}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item: letter }) => {
               const isDeleting = deleteLetter.isPending && deleteLetter.variables?.id === letter.id;
               return (
-              <Animated.View
-                key={letter.id}
-                style={{ opacity, transform: [{ translateY }] }}
-              >
-                <Pressable
-                  onPress={() => router.push({ pathname: "/letter", params: { letterId: letter.id } })}
-                  onLongPress={() => confirmDelete(letter.id, letter.mediaUrl)}
-                  disabled={isDeleting}
-                  style={({ pressed }) => ({
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: 20,
-                    padding: 20,
-                    borderWidth: 1.5,
-                    borderColor: "#EDE4D4",
-                    opacity: isDeleting ? 0.4 : pressed ? 0.88 : 1,
-                    transform: [{ scale: pressed ? 0.98 : 1 }],
-                    shadowColor: "#2C1F0E",
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.07,
-                    shadowRadius: 10,
-                    elevation: 3,
-                  })}
+                <Animated.View
+                  style={{ opacity, transform: [{ translateY }] }}
                 >
-                  {/* Card header */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: letter.color + "22", alignItems: "center", justifyContent: "center" }}>
-                        <Text style={{ fontSize: 20 }}>{letter.emoji}</Text>
+                  <Pressable
+                    onPress={() => router.push({ pathname: "/letter", params: { letterId: letter.id } })}
+                    onLongPress={() => confirmDelete(letter.id, letter.mediaUrl)}
+                    disabled={isDeleting}
+                    style={({ pressed }) => ({
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: 20,
+                      padding: 20,
+                      borderWidth: 1.5,
+                      borderColor: "#EDE4D4",
+                      opacity: isDeleting ? 0.4 : pressed ? 0.88 : 1,
+                      transform: [{ scale: pressed ? 0.98 : 1 }],
+                      shadowColor: "#2C1F0E",
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.07,
+                      shadowRadius: 10,
+                      elevation: 3,
+                    })}
+                  >
+                    {/* Card header */}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: letter.color + "22", alignItems: "center", justifyContent: "center" }}>
+                          <Text style={{ fontSize: 20 }}>{letter.emoji}</Text>
+                        </View>
+                        <View>
+                          <Text style={{ fontSize: 12, color: "#8C7B65" }}>For</Text>
+                          <Text style={{ fontSize: 15, color: "#2C1F0E", fontWeight: "600" }}>{letter.for}</Text>
+                        </View>
                       </View>
-                      <View>
-                        <Text style={{ fontSize: 12, color: "#8C7B65" }}>For</Text>
-                        <Text style={{ fontSize: 15, color: "#2C1F0E", fontWeight: "600" }}>{letter.for}</Text>
+
+                      <View style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 8,
+                        backgroundColor: letter.status === "delivered" ? "#8BAE7222" : "#D4A85322",
+                      }}>
+                        <Text style={{ fontSize: 11, fontWeight: "600", color: letter.status === "delivered" ? "#5C7A45" : "#B8863C" }}>
+                          {letter.status === "delivered" ? "✓ Delivered" : "🔒 Sealed"}
+                        </Text>
                       </View>
                     </View>
 
-                    <View style={{
-                      paddingHorizontal: 10,
-                      paddingVertical: 5,
-                      borderRadius: 8,
-                      backgroundColor: letter.status === "delivered" ? "#8BAE7222" : "#D4A85322",
-                    }}>
-                      <Text style={{ fontSize: 11, fontWeight: "600", color: letter.status === "delivered" ? "#5C7A45" : "#B8863C" }}>
-                        {letter.status === "delivered" ? "✓ Delivered" : "🔒 Sealed"}
-                      </Text>
+                    {/* Title */}
+                    <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 17, color: "#2C1F0E", lineHeight: 24, marginBottom: 8 }}>
+                      "{letter.title}"
+                    </Text>
+
+                    {/* Preview */}
+                    <Text style={{ fontSize: 13, color: "#8C7B65", lineHeight: 18, marginBottom: 14 }} numberOfLines={2}>
+                      {letter.preview}
+                    </Text>
+
+                    {/* Footer */}
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderTopColor: "#F5EDD6", paddingTop: 12 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                        <Feather name={letter.status === "delivered" ? "check-circle" : "clock"} size={13} color={letter.status === "delivered" ? "#8BAE72" : "#D4A853"} />
+                        <Text style={{ fontSize: 12, color: "#8C7B65" }}>{letter.deliverLabel}</Text>
+                      </View>
                     </View>
-                  </View>
-
-                  {/* Title */}
-                  <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 17, color: "#2C1F0E", lineHeight: 24, marginBottom: 8 }}>
-                    "{letter.title}"
-                  </Text>
-
-                  {/* Preview */}
-                  <Text style={{ fontSize: 13, color: "#8C7B65", lineHeight: 18, marginBottom: 14 }} numberOfLines={2}>
-                    {letter.preview}
-                  </Text>
-
-                  {/* Footer */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderTopColor: "#F5EDD6", paddingTop: 12 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                      <Feather name={letter.status === "delivered" ? "check-circle" : "clock"} size={13} color={letter.status === "delivered" ? "#8BAE72" : "#D4A853"} />
-                      <Text style={{ fontSize: 12, color: "#8C7B65" }}>{letter.deliverLabel}</Text>
-                    </View>
-                  </View>
-                </Pressable>
-              </Animated.View>
+                  </Pressable>
+                </Animated.View>
               );
-            })}
-          </ScrollView>
+            }}
+            ListEmptyComponent={
+              isLoading ? (
+                <View style={{ gap: 14 }}>
+                  {[1, 2, 3].map((i) => (
+                    <View
+                      key={i}
+                      style={{ height: 140, borderRadius: 20, backgroundColor: "rgba(45,36,26,0.06)" }}
+                    />
+                  ))}
+                </View>
+              ) : (
+                <View style={{ alignItems: "center", paddingVertical: 48, gap: 12 }}>
+                  <Text style={{ fontSize: 32 }}>✉</Text>
+                  <Text style={{ fontFamily: SERIF_ITALIC, fontStyle: "italic", fontSize: 20, color: "#2C1F0E", textAlign: "center" }}>
+                    No letters yet.
+                  </Text>
+                  <Text style={{ fontSize: 14, color: "#8C7B65", textAlign: "center", paddingHorizontal: 32 }}>
+                    Write something for someone you love — they'll receive it when the time is right.
+                  </Text>
+                  <Pressable
+                    onPress={() => router.push("/record")}
+                    style={({ pressed }) => ({
+                      marginTop: 8,
+                      backgroundColor: "#D27F14",
+                      borderRadius: 14,
+                      paddingVertical: 13,
+                      paddingHorizontal: 28,
+                      opacity: pressed ? 0.85 : 1,
+                    })}
+                  >
+                    <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "600" }}>Write your first letter →</Text>
+                  </Pressable>
+                </View>
+              )
+            }
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 14, paddingBottom: 100 }}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={10}
+          />
         </Animated.View>
 
         {/* Compose FAB */}

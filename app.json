@@ -15,6 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.heartloom.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Heartloom uses the camera to capture photos for your memory archive.",
         "NSPhotoLibraryUsageDescription": "Heartloom accesses your photo library to attach images to memories.",
@@ -28,10 +29,9 @@
         "backgroundColor": "#FAF3E2"
       },
       "package": "com.heartloom.app",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]

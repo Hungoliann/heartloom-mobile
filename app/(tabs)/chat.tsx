@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -99,7 +99,7 @@ function useSignedAudioUrl(mediaUrl: string | null | undefined) {
 }
 
 // ─── Voice bubble ───────────────────────────────────────────────────────────
-function VoiceBubble({
+const VoiceBubble = memo(function VoiceBubble({
   mediaUrl,
   isOut,
   storedDurationMs,
@@ -195,10 +195,10 @@ function VoiceBubble({
       </View>
     </View>
   );
-}
+});
 
 // ─── Mention-aware body text ────────────────────────────────────────────────
-function MentionBody({
+const MentionBody = memo(function MentionBody({
   body,
   mentionNames,
   isOut,
@@ -254,10 +254,10 @@ function MentionBody({
       )}
     </Text>
   );
-}
+});
 
 // ─── Message row ────────────────────────────────────────────────────────────
-function MessageRow({
+const MessageRow = memo(function MessageRow({
   msg,
   isOut,
   currentUserId,
@@ -485,7 +485,7 @@ function MessageRow({
       {chips}
     </Animated.View>
   );
-}
+});
 
 // ─── No-family empty state ──────────────────────────────────────────────────
 function NoFamilyState({ onOpenFamily }: { onOpenFamily: () => void }) {
@@ -1086,7 +1086,7 @@ export default function ChatScreen() {
     if (nearBottomRef.current) markAsRead();
   }, [familyId, messages.length, markAsRead]);
 
-  function handleLongPress(msg: MessageWithProfile) {
+  const handleLongPress = useCallback((msg: MessageWithProfile) => {
     const isOut = msg.author_id === user?.id;
     const currentlyPinned = !!(msg as any).pinned_at;
     const buttons: any[] = [
@@ -1118,7 +1118,7 @@ export default function ChatScreen() {
     }
     buttons.push({ text: "Cancel", style: "cancel" });
     Alert.alert("Message", undefined, buttons);
-  }
+  }, [user?.id, togglePin, deleteMessage]);
 
   function handleSendText(body: string, mentionedUserIds: string[]) {
     sendText.mutate({
@@ -1166,6 +1166,45 @@ export default function ChatScreen() {
       Alert.alert("Could not pick image", err?.message ?? "Please try again.");
     }
   }
+
+  const renderMessage = useCallback(({ item }: { item: MessageWithProfile }) => {
+    const parentId = (item as any).reply_to_id as string | null;
+    const parent = parentId ? byId.get(parentId) ?? null : null;
+    const readers = readersByMessageId.get(item.id) ?? [];
+    const mentionIds =
+      (item.message_mentions ?? []).map((mm) => mm.user_id) ?? [];
+    const mentionNames = mentionIds
+      .map((uid) => memberNameById.get(uid))
+      .filter((n): n is string => !!n);
+    return (
+      <View>
+        <MessageRow
+          msg={item}
+          isOut={item.author_id === user?.id}
+          currentUserId={user?.id ?? ""}
+          parent={parent}
+          mentionNames={mentionNames}
+          highlighted={highlightedMessageId === item.id}
+          onLongPress={() => handleLongPress(item)}
+          onToggleReaction={(emoji) =>
+            toggleReaction.mutate({ messageId: item.id, emoji })
+          }
+          onOpenLetter={(letterId) =>
+            router.push(`/letter?letterId=${letterId}` as any)
+          }
+          onOpenImage={(url) => setViewerUrl(url)}
+          onTapReply={(id) => scrollToMessage(id)}
+          activeVoiceId={activeVoiceId}
+          setActiveVoiceId={setActiveVoiceId}
+        />
+        {readers.length > 0 ? (
+          <View style={{ alignItems: "flex-end", marginTop: 0 }}>
+            <ReadReceiptAvatars readers={readers} />
+          </View>
+        ) : null}
+      </View>
+    );
+  }, [user?.id, byId, readersByMessageId, memberNameById, highlightedMessageId, handleLongPress, toggleReaction, router, scrollToMessage, activeVoiceId, setActiveVoiceId]);
 
   // ── Loading state for family lookup ──────────────────────────────────────
   if (familyLoading) {
@@ -1319,44 +1358,11 @@ export default function ChatScreen() {
               data={visible}
               inverted
               keyExtractor={(m) => m.id}
-              renderItem={({ item }) => {
-                const parentId = (item as any).reply_to_id as string | null;
-                const parent = parentId ? byId.get(parentId) ?? null : null;
-                const readers = readersByMessageId.get(item.id) ?? [];
-                const mentionIds =
-                  (item.message_mentions ?? []).map((mm) => mm.user_id) ?? [];
-                const mentionNames = mentionIds
-                  .map((uid) => memberNameById.get(uid))
-                  .filter((n): n is string => !!n);
-                return (
-                  <View>
-                    <MessageRow
-                      msg={item}
-                      isOut={item.author_id === user?.id}
-                      currentUserId={user?.id ?? ""}
-                      parent={parent}
-                      mentionNames={mentionNames}
-                      highlighted={highlightedMessageId === item.id}
-                      onLongPress={() => handleLongPress(item)}
-                      onToggleReaction={(emoji) =>
-                        toggleReaction.mutate({ messageId: item.id, emoji })
-                      }
-                      onOpenLetter={(letterId) =>
-                        router.push(`/letter?letterId=${letterId}` as any)
-                      }
-                      onOpenImage={(url) => setViewerUrl(url)}
-                      onTapReply={(id) => scrollToMessage(id)}
-                      activeVoiceId={activeVoiceId}
-                      setActiveVoiceId={setActiveVoiceId}
-                    />
-                    {readers.length > 0 ? (
-                      <View style={{ alignItems: "flex-end", marginTop: 0 }}>
-                        <ReadReceiptAvatars readers={readers} />
-                      </View>
-                    ) : null}
-                  </View>
-                );
-              }}
+              maxToRenderPerBatch={15}
+              windowSize={11}
+              removeClippedSubviews={true}
+              initialNumToRender={20}
+              renderItem={renderMessage}
               onScrollToIndexFailed={(info) => {
                 // Item not yet laid out — wait briefly then retry.
                 setTimeout(() => {
